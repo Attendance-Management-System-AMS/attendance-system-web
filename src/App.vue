@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
-import Header from '@/components/Header.vue'
-import Sidebar from '@/components/Sidebar.vue'
+import AppHeader from '@/components/AppHeader.vue'
+import AppSidebar from '@/components/AppSidebar.vue'
 
 const route = useRoute()
 </script>
@@ -10,9 +10,9 @@ const route = useRoute()
   <div class="min-h-screen bg-slate-50 text-slate-900">
     <!-- Hiển thị Sidebar & Header nếu không có flag hideLayout trong meta của route -->
     <template v-if="!route.meta.hideLayout">
-      <Sidebar />
+      <AppSidebar />
       <div class="min-h-screen pl-64 transition-all duration-300">
-        <Header />
+        <AppHeader />
         <main class="px-6 py-6 lg:px-8">
           <RouterView />
         </main>
