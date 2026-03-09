@@ -45,6 +45,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/kiosk',
+      name: 'kiosk',
+      component: () => import('@/components/AttendanceKiosk.vue'),
+      meta: {
+        hideLayout: true,
+      },
+    },
+    {
       path: '/about',
       name: 'about',
       component: AboutView,
