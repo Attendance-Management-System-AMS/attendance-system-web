@@ -8,13 +8,19 @@ export function useAttendance() {
     // Query danh sách
     const attendanceQuery = useQuery<Attendance[]>({
         queryKey: ['attendance'],
-        queryFn: async () => (await attendanceApi.getAll()).data,
+        queryFn: async () => {
+            const response = await attendanceApi.getAll()
+            if (response.data && response.data.success && response.data.result) {
+                return response.data.result.content || []
+            }
+            return []
+        },
         staleTime: 1000 * 60 * 1, // 1 phút
     })
 
     // Mutation check-in
     const checkIn = useMutation({
-        mutationFn: (descriptor: number[]) => attendanceApi.checkIn(descriptor),
+        mutationFn: (descriptor: number[]) => attendanceApi.checkIn(descriptor).then(data => data.result),
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['attendance'] })
         },

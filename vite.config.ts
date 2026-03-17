@@ -52,6 +52,13 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: ['gonidial-joya-competent.ngrok-free.dev'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   resolve: {
     alias: {

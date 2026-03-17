@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import type { Attendance } from '@/types/attendance';
+import type { ApiResponse, Page } from '@/types/api';
 
 export interface AttendanceResponse {
   employeeName?: string;
@@ -7,7 +8,7 @@ export interface AttendanceResponse {
 }
 
 export const attendanceApi = {
-  getAll: () => api.get<Attendance[]>('/attendance'),
+  getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
   checkIn: (descriptor: number[]) =>
-    api.post<AttendanceResponse>('/attendance/check-in', { descriptor }).then(res => res.data),
+    api.post<ApiResponse<AttendanceResponse>>('/attendance/check-in', { descriptor }).then(res => res.data),
 };

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:9000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -26,7 +26,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle specific status codes here (e.g., 401, 403, 500)
+    // Xử lý lỗi Network Error (Backend down, CORS, etc.)
+    if (!error.response) {
+      console.error('Network Error: Không thể kết nối đến Backend API.', {
+        message: error.message,
+        baseURL: api.defaults.baseURL,
+        config: error.config
+      })
+    } else {
+      console.error('API Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      })
+    }
     return Promise.reject(error)
   }
 )
