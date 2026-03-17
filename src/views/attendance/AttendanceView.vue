@@ -1,37 +1,28 @@
-// ...existing code from AttendanceView.vue will be copied here
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Timer } from 'lucide-vue-next'
+import { useAttendance } from '@/composables/useAttendance'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SearchToolbar from '@/components/ui/SearchToolbar.vue'
 import FilterSelect from '@/components/ui/FilterSelect.vue'
-import StatusBadge from '@/components/ui/StatusBadge.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
+import Badge from '@/components/ui/badge/Badge.vue'
+import Avatar from '@/components/ui/avatar/Avatar.vue'
+import AvatarImage from '@/components/ui/avatar/AvatarImage.vue'
+import AvatarFallback from '@/components/ui/avatar/AvatarFallback.vue'
+import type { Attendance, AttendanceStatus } from '@/types/attendance'
 
-type StatusKey = 'present' | 'late' | 'absent' | 'working' | 'leave'
-
-interface AttendanceRecord {
-    id: string
-    name: string
-    empCode: string
-    dept: string
-    avatar: string
-    shift: string
-    shiftTime: string
-    checkIn: string
-    checkOut: string
-    overtime: string
-    status: StatusKey
-    lateMinutes?: number
-}
+const { attendanceQuery } = useAttendance()
+const { data: recordsRaw, isLoading, isError, error } = attendanceQuery
+const records = computed(() => recordsRaw.value ?? [])
 
 const search = ref('')
 const filterDept = ref('')
 const filterShift = ref('')
 const filterStatus = ref('')
 const deleteDialog = ref(false)
-const deleteTarget = ref<AttendanceRecord | null>(null)
+const deleteTarget = ref<Attendance | null>(null)
 
 const departments = [
     { label: 'Nhân sự', value: 'hr' },
@@ -42,130 +33,19 @@ const departments = [
 ]
 
 const shifts = [
-    { label: 'Ca sáng (08:00–17:30)', value: 'morning' },
-    { label: 'Ca chiều (13:00–22:00)', value: 'afternoon' },
-    { label: 'Ca đêm (22:00–06:00)', value: 'night' },
+    { label: 'Ca sáng', value: 'morning' },
+    { label: 'Ca chiều', value: 'afternoon' },
+    { label: 'Ca đêm', value: 'night' },
 ]
 
 const statuses = [
-    { label: 'Đúng giờ', value: 'present' },
-    { label: 'Đi trễ', value: 'late' },
-    { label: 'Vắng mặt', value: 'absent' },
-    { label: 'Đang làm', value: 'working' },
-    { label: 'Nghỉ phép', value: 'leave' },
-]
-
-const records: AttendanceRecord[] = [
-    {
-        id: 'att-001',
-        name: 'Trần Minh Anh',
-        empCode: 'NV001',
-        dept: 'Nhân sự',
-        avatar: 'MA',
-        shift: 'Ca sáng',
-        shiftTime: '08:00–17:30',
-        checkIn: '07:58',
-        checkOut: '17:32',
-        overtime: '0h',
-        status: 'present',
-    },
-    {
-        id: 'att-002',
-        name: 'Nguyễn Đức Dũng',
-        empCode: 'NV002',
-        dept: 'Công nghệ',
-        avatar: 'ND',
-        shift: 'Ca sáng',
-        shiftTime: '08:00–17:30',
-        checkIn: '08:23',
-        checkOut: '18:10',
-        overtime: '0h40',
-        status: 'late',
-        lateMinutes: 23,
-    },
-    {
-        id: 'att-003',
-        name: 'Lê Hoài Nam',
-        empCode: 'NV003',
-        dept: 'Tài chính',
-        avatar: 'HN',
-        shift: 'Ca sáng',
-        shiftTime: '08:00–17:30',
-        checkIn: '07:55',
-        checkOut: '17:30',
-        overtime: '0h',
-        status: 'present',
-    },
-    {
-        id: 'att-004',
-        name: 'Phạm Thị Thủy',
-        empCode: 'NV004',
-        dept: 'Kinh doanh',
-        avatar: 'PT',
-        shift: 'Ca sáng',
-        shiftTime: '08:00–17:30',
-        checkIn: '--',
-        checkOut: '--',
-        overtime: '--',
-        status: 'leave',
-    },
-    {
-        id: 'att-005',
-        name: 'Ngô Phương Linh',
-        empCode: 'NV005',
-        dept: 'Vận hành',
-        avatar: 'PL',
-        shift: 'Ca chiều',
-        shiftTime: '13:00–22:00',
-        checkIn: '13:02',
-        checkOut: '--',
-        overtime: '--',
-        status: 'working',
-    },
-    {
-        id: 'att-006',
-        name: 'Võ Minh Khoa',
-        empCode: 'NV006',
-        dept: 'IT',
-        avatar: 'MK',
-        shift: 'Ca chiều',
-        shiftTime: '13:00–22:00',
-        checkIn: '--',
-        checkOut: '--',
-        overtime: '--',
-        status: 'absent',
-    },
-    {
-        id: 'att-007',
-        name: 'Đỗ Thị Hằng',
-        empCode: 'NV007',
-        dept: 'Nhân sự',
-        avatar: 'TH',
-        shift: 'Ca sáng',
-        shiftTime: '08:00–17:30',
-        checkIn: '08:01',
-        checkOut: '17:35',
-        overtime: '0h05',
-        status: 'present',
-    },
-    {
-        id: 'att-008',
-        name: 'Bùi Quốc Tuấn',
-        empCode: 'NV008',
-        dept: 'Tài chính',
-        avatar: 'QT',
-        shift: 'Ca sáng',
-        shiftTime: '08:00–17:30',
-        checkIn: '08:45',
-        checkOut: '17:30',
-        overtime: '0h',
-        status: 'late',
-        lateMinutes: 45,
-    },
+    { label: 'Có mặt', value: 'Có mặt' },
+    { label: 'Đi muộn', value: 'Đi muộn' },
+    { label: 'Nghỉ phép', value: 'Nghỉ phép' },
 ]
 
 const handleDelete = (id: string | number) => {
-    const record = records.find((r) => r.id === String(id))
+    const record = records.value.find(r => r.id === String(id))
     if (record) {
         deleteTarget.value = record
         deleteDialog.value = true
@@ -175,18 +55,13 @@ const handleDelete = (id: string | number) => {
 const confirmDelete = () => {
     deleteDialog.value = false
     deleteTarget.value = null
-    // In real app: call API to delete
 }
 
-const avatarColors = [
-    'bg-indigo-100 text-indigo-700',
-    'bg-emerald-100 text-emerald-700',
-    'bg-amber-100 text-amber-700',
-    'bg-rose-100 text-rose-700',
-    'bg-slate-100 text-slate-700',
-]
-
-const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
+const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'secondary'> = {
+    'Có mặt': 'success',
+    'Đi muộn': 'warning',
+    'Nghỉ phép': 'secondary',
+}
 </script>
 
 <template>
@@ -210,8 +85,20 @@ const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
             </template>
         </SearchToolbar>
 
+        <!-- Loading / Error states -->
+        <div v-if="isLoading" class="text-center py-12 text-slate-500">
+            Đang tải dữ liệu chấm công...
+        </div>
+
+        <div v-else-if="isError" class="text-center py-12 text-red-600">
+            Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
+            <button class="ml-4 text-indigo-600 underline" @click="() => attendanceQuery.refetch()">
+                Thử lại
+            </button>
+        </div>
+
         <!-- Table -->
-        <div
+        <div v-else
             class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -219,11 +106,7 @@ const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
                         <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
                             <th
                                 class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Nhân viên & Phòng ban
-                            </th>
-                            <th
-                                class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Ca làm việc
+                                Nhân viên
                             </th>
                             <th
                                 class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -232,10 +115,6 @@ const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
                             <th
                                 class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
                                 Giờ ra
-                            </th>
-                            <th
-                                class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Làm thêm
                             </th>
                             <th
                                 class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -248,50 +127,40 @@ const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr v-for="(row, idx) in records" :key="row.id"
+                        <tr v-for="record in records" :key="record.id"
                             class="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    <div :class="[
-                                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                                        getAvatarColor(idx),
-                                    ]">
-                                        {{ row.avatar }}
-                                    </div>
+                                    <Avatar class="size-9">
+                                        <AvatarImage :src="record.employee.avatarUrl ?? ''"
+                                            :alt="record.employee.name" />
+                                        <AvatarFallback>
+                                            {{ record.employee.name.slice(0, 2).toUpperCase() }}
+                                        </AvatarFallback>
+                                    </Avatar>
                                     <div>
                                         <p class="text-sm font-semibold text-slate-900 dark:text-white">
-                                            {{ row.name }}
+                                            {{ record.employee.name }}
                                         </p>
-                                        <p class="text-xs text-slate-400 font-mono">
-                                            {{ row.empCode }} · {{ row.dept }}
+                                        <p class="text-xs text-slate-400">
+                                            {{ record.employee.department }} • {{ record.employee.role }}
                                         </p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
-                                <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    {{ row.shift }}
-                                </p>
-                                <p class="text-xs text-slate-400">{{ row.shiftTime }}</p>
+                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                {{ record.checkIn }}
                             </td>
-                            <td class="px-4 py-3 font-mono text-sm font-medium text-slate-700 dark:text-slate-300">
-                                {{ row.checkIn }}
-                            </td>
-                            <td class="px-4 py-3 font-mono text-sm font-medium text-slate-700 dark:text-slate-300">
-                                {{ row.checkOut }}
+                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                {{ record.checkOut }}
                             </td>
                             <td class="px-4 py-3">
-                                <span class="text-sm text-slate-500 font-mono">{{ row.overtime }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <StatusBadge :status="row.status" :custom-label="row.status === 'late' && row.lateMinutes
-                                    ? `Trễ ${row.lateMinutes} phút`
-                                    : undefined
-                                    " />
+                                <Badge :variant="badgeVariantByStatus[record.status]">
+                                    {{ record.status }}
+                                </Badge>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <ActionDropdown :item-id="row.id" :edit-to="`/attendance/${row.id}/edit`"
-                                    @delete="handleDelete" />
+                                <ActionDropdown :item-id="record.id" @delete="handleDelete" />
                             </td>
                         </tr>
                     </tbody>
@@ -299,9 +168,8 @@ const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
             </div>
         </div>
 
-        <!-- Delete confirm dialog -->
-        <DeleteConfirmDialog :open="deleteDialog" title="Xóa bản ghi chấm công"
-            description="Bạn có chắc chắn muốn xóa bản ghi chấm công của nhân viên này không?"
-            :item-name="deleteTarget?.name" @confirm="confirmDelete" @cancel="deleteDialog = false" />
+        <DeleteConfirmDialog :open="deleteDialog" title="Xóa bản ghi"
+            description="Bạn có chắc chắn muốn xóa bản ghi chấm công này không?"
+            :item-name="deleteTarget?.employee.name" @confirm="confirmDelete" @cancel="deleteDialog = false" />
     </div>
 </template>

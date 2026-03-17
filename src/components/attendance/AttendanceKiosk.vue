@@ -2,7 +2,6 @@
 import { reactive, onMounted, onUnmounted } from 'vue'
 import { useNow, useDateFormat } from '@vueuse/core'
 import { CheckCircle2, XCircle } from 'lucide-vue-next'
-import { attendanceService } from '@/services/attendance.service' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { useFaceDetection } from '@/composables/useFaceDetection'
 
 // --- State ---
@@ -45,7 +44,7 @@ const handleCheckIn = async (descriptor: Float32Array) => {
 
     /*
     // Code gọi BE thực tế (Tạm khóa)
-    const data = await attendanceService.checkIn(descriptorArray)
+    const data = await attendanceApi.checkIn(descriptorArray)
     ui.feedback = {
       status: 'success',
       msg: data.message || 'Chấm công thành công!',
@@ -113,31 +112,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    class="fixed inset-0 bg-slate-950 flex flex-col font-sans select-none overflow-hidden text-white"
-  >
+  <div class="fixed inset-0 bg-slate-950 flex flex-col font-sans select-none overflow-hidden text-white">
     <main class="relative flex-1 flex items-center justify-center">
-      <video
-        ref="videoRef"
-        autoplay
-        muted
-        playsinline
-        class="absolute inset-0 w-full h-full object-cover scale-x-[-1] opacity-60"
-      ></video>
+      <video ref="videoRef" autoplay muted playsinline
+        class="absolute inset-0 w-full h-full object-cover scale-x-[-1] opacity-60"></video>
 
       <!-- HUD Layer -->
       <div class="absolute inset-0 z-10 p-8 flex flex-col pointer-events-none">
         <div class="flex justify-between items-start w-full">
           <div
-            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-4"
-          >
+            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-4">
             <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
             <h1 class="text-xl font-black tracking-tighter">AMS KIOSK</h1>
           </div>
 
-          <div
-            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl text-right"
-          >
+          <div class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl text-right">
             <div class="text-3xl font-mono font-black tracking-tighter">{{ time }}</div>
             <div class="text-[10px] text-white/40 font-bold uppercase tracking-widest">
               {{ date }}
@@ -148,20 +137,20 @@ onUnmounted(() => {
         <div v-if="isLoaded && !ui.locked" class="flex-1 flex items-center justify-center">
           <div class="w-72 h-72 sm:w-80 sm:h-80 relative">
             <div
-              class="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-2xl opacity-50"
-            ></div>
+              class="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-2xl opacity-50">
+            </div>
             <div
-              class="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-2xl opacity-50"
-            ></div>
+              class="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-2xl opacity-50">
+            </div>
             <div
-              class="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-2xl opacity-50"
-            ></div>
+              class="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-2xl opacity-50">
+            </div>
             <div
-              class="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-2xl opacity-50"
-            ></div>
+              class="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-2xl opacity-50">
+            </div>
             <div
-              class="absolute inset-x-0 h-0.5 bg-linear-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_20px_#3b82f6] animate-scan"
-            ></div>
+              class="absolute inset-x-0 h-0.5 bg-linear-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_20px_#3b82f6] animate-scan">
+            </div>
           </div>
         </div>
       </div>
@@ -170,22 +159,18 @@ onUnmounted(() => {
 
       <!-- Simplified Notification -->
       <Transition name="notification">
-        <div
-          v-if="ui.feedback.status !== 'idle'"
-          class="absolute top-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-6 pointer-events-none"
-        >
-          <div
-            :class="[
-              'bg-black/70 backdrop-blur-xl border border-white/10 px-8 py-5 rounded-2xl shadow-2xl flex items-center justify-center gap-4 transition-all duration-500',
-              ui.feedback.status === 'success' ? 'border-emerald-500/40' : 'border-rose-500/40',
-            ]"
-          >
+        <div v-if="ui.feedback.status !== 'idle'"
+          class="absolute top-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-6 pointer-events-none">
+          <div :class="[
+            'bg-black/70 backdrop-blur-xl border border-white/10 px-8 py-5 rounded-2xl shadow-2xl flex items-center justify-center gap-4 transition-all duration-500',
+            ui.feedback.status === 'success' ? 'border-emerald-500/40' : 'border-rose-500/40',
+          ]">
             <CheckCircle2 v-if="ui.feedback.status === 'success'" class="w-7 h-7 text-emerald-400" />
             <XCircle v-else class="w-7 h-7 text-rose-400" />
 
             <p class="text-lg font-bold text-white tracking-tight text-center">
               <span v-if="ui.feedback.name" class="text-blue-400">{{ ui.feedback.name }}</span>
-              <br/>
+              <br />
               <span v-if="ui.feedback.status === 'success'" class="text-emerald-400">{{ ui.feedback.msg }}</span>
               <span v-else class="text-rose-400">{{ ui.feedback.msg }}</span>
             </p>
@@ -202,27 +187,34 @@ onUnmounted(() => {
     top: 0;
     opacity: 0;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     top: 100%;
     opacity: 0;
   }
 }
+
 .animate-scan {
   animation: scan 3s linear infinite;
 }
+
 .notification-enter-active {
   transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
 .notification-leave-active {
   transition: all 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045);
 }
+
 .notification-enter-from {
   transform: translate(-50%, -100px) scale(0.9);
   opacity: 0;
 }
+
 .notification-leave-to {
   transform: translate(-50%, -40px) scale(0.95);
   opacity: 0;
