@@ -28,7 +28,7 @@ export default [
     {
         path: '/kiosk',
         name: 'kiosk',
-        component: () => import('@/components/AttendanceKiosk.vue'),
+        component: () => import('@/components/attendance/AttendanceKiosk.vue'),
         meta: {
             hideLayout: true,
             title: 'Kiosk Chấm công',

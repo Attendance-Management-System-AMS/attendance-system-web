@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { CheckCircle2, Clock3, Plane, Timer, UserCheck, Users } from 'lucide-vue-next'
-import AttendanceTable from '@/components/AttendanceTable.vue'
-import StatCard from '@/components/StatCard.vue'
+import AttendanceTable from '@/components/attendance/AttendanceTable.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -42,32 +42,34 @@ onUnmounted(() => {
 
 const statCards = [
   {
-    title: 'Tổng nhân sự',
+    label: 'Tổng nhân sự',
     value: '128',
-    description: 'Đang làm việc tại 6 phòng ban',
+    change: 'Đang làm việc tại 6 phòng ban',
     icon: Users,
-    accent: 'blue' as const,
+    color: 'indigo' as const,
   },
   {
-    title: 'Có mặt',
+    label: 'Có mặt',
     value: '112',
-    description: 'Tỷ lệ đúng giờ 94%',
+    change: 'Tỷ lệ đúng giờ 94%',
+    changeType: 'positive' as const,
     icon: UserCheck,
-    accent: 'emerald' as const,
+    color: 'emerald' as const,
   },
   {
-    title: 'Đi muộn',
+    label: 'Đi muộn',
     value: '9',
-    description: 'Trễ dưới 15 phút',
+    change: 'Trễ dưới 15 phút',
+    changeType: 'negative' as const,
     icon: Timer,
-    accent: 'amber' as const,
+    color: 'amber' as const,
   },
   {
-    title: 'Nghỉ phép',
+    label: 'Nghỉ phép',
     value: '7',
-    description: 'Đã duyệt trong tuần',
+    change: 'Đã duyệt trong tuần',
     icon: Plane,
-    accent: 'rose' as const,
+    color: 'rose' as const,
   },
 ]
 
@@ -148,15 +150,8 @@ const attendanceRecords: Attendance[] = [
 <template>
   <section class="space-y-6">
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <StatCard
-        v-for="card in statCards"
-        :key="card.title"
-        :title="card.title"
-        :value="card.value"
-        :description="card.description"
-        :icon="card.icon"
-        :accent="card.accent"
-      />
+      <StatCard v-for="card in statCards" :key="card.label" :label="card.label" :value="card.value"
+        :change="card.change" :change-type="card.changeType" :icon="card.icon" :color="card.color" />
     </div>
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">

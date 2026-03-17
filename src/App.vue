@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import { RouterView, useRoute } from 'vue-router'
-import DashboardLayout from '@/components/layout/DashboardLayout.vue'
+import { RouterView } from 'vue-router'
 
-const route = useRoute()
 </script>
 
 <template>
-  <template v-if="!route.meta.hideLayout">
-      <RouterView />
-  </template>
-  <template v-else>
-    <RouterView />
-  </template>
+  <RouterView />
 </template>
