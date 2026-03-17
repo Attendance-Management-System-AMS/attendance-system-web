@@ -84,9 +84,9 @@ const menuItems = [
             class="flex items-center gap-1 text-indigo-200 hover:text-white transition-colors"
           >
             <Home v-if="idx === 0" class="h-3.5 w-3.5" />
-            <span v-else class="truncate max-w-[120px]">{{ crumb.label }}</span>
+            <span v-else class="truncate max-w-30">{{ crumb.label }}</span>
           </RouterLink>
-          <span v-else class="font-semibold text-white truncate max-w-[150px]">
+          <span v-else class="font-semibold text-white truncate max-w-37.5">
             {{ crumb.label }}
           </span>
         </template>

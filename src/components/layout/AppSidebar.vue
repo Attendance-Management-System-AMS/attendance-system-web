@@ -79,7 +79,7 @@ const isActive = (path: string) =>
     :class="[
       'fixed inset-y-0 left-0 z-30 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
       'dark:bg-slate-950 dark:border-slate-800',
-      props.collapsed ? 'w-[56px]' : 'w-[240px]',
+      props.collapsed ? 'w-14' : 'w-60',
     ]"
   >
     <!-- Logo section -->

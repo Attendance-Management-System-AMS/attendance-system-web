@@ -7,9 +7,7 @@ const route = useRoute()
 
 <template>
   <template v-if="!route.meta.hideLayout">
-    <DashboardLayout>
       <RouterView />
-    </DashboardLayout>
   </template>
   <template v-else>
     <RouterView />

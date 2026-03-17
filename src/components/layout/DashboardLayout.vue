@@ -19,7 +19,7 @@ const toggleSidebar = () => {
     <div
       :class="[
         'flex flex-1 flex-col min-w-0 transition-all duration-300 ease-in-out',
-        sidebarCollapsed ? 'pl-[56px]' : 'pl-[240px]',
+        sidebarCollapsed ? 'pl-14' : 'pl-60',
       ]"
     >
       <!-- Navbar -->
@@ -27,7 +27,7 @@ const toggleSidebar = () => {
 
       <!-- Page content -->
       <main class="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
-        <slot />
+        <router-view />
       </main>
     </div>
   </div>

@@ -160,7 +160,7 @@ onUnmounted(() => {
               class="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-2xl opacity-50"
             ></div>
             <div
-              class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_20px_#3b82f6] animate-scan"
+              class="absolute inset-x-0 h-0.5 bg-linear-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_20px_#3b82f6] animate-scan"
             ></div>
           </div>
         </div>
