@@ -1,11 +1,4 @@
-export interface Employee {
-  id: string
-  name: string
-  role: string
-  department: string
-  avatarUrl?: string
-}
-
+import type { Employee } from "./employee"
 export type AttendanceStatus = 'Có mặt' | 'Đi muộn' | 'Nghỉ phép'
 
 export interface Attendance {

@@ -1,63 +1,61 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-import HomeView from '@/views/HomeView.vue'
-import AboutView from '@/views/AboutView.vue'
-import PlaceholderView from '@/views/PlaceholderView.vue'
+// Import routes từ các module
+import dashboard from './routes/dashboard'
+import attendance from './routes/attendance'
+import employees from './routes/employees'
+import departments from './routes/departments'
+import shifts from './routes/shifts'
+import timesheets from './routes/timesheets'
+import reports from './routes/reports'
+import misc from './routes/misc'
+
+const adminChildren: RouteRecordRaw[] = [
+  ...dashboard,
+  ...attendance,
+  ...employees,
+  ...departments,
+  ...shifts,
+  ...timesheets,
+  ...reports,
+  ...misc.filter(route => !route.meta?.hideLayout),
+]
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    redirect: '/dashboard',
+  },
+
+  // Tất cả trang layout chung
+  {
+    path: '/',
+    component: () => import('@/components/layout/DashboardLayout.vue'),
+    children: adminChildren,
+  },
+
+  // Trang không dùng layout
+  ...misc.filter(route => route.meta?.hideLayout),
+
+  // 404 fallback
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('@/views/placeholder/PlaceholderView.vue'),
+    meta: { title: 'Không tìm thấy trang' },
+  },
+]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/nhan-su',
-      name: 'nhan-su',
-      component: PlaceholderView,
-      meta: {
-        title: 'Quản lý nhân sự',
-      },
-    },
-    {
-      path: '/cham-cong',
-      name: 'cham-cong',
-      component: PlaceholderView,
-      meta: {
-        title: 'Quản lý chấm công',
-      },
-    },
-    {
-      path: '/bao-cao',
-      name: 'bao-cao',
-      component: PlaceholderView,
-      meta: {
-        title: 'Báo cáo tổng hợp',
-      },
-    },
-    {
-      path: '/cai-dat',
-      name: 'cai-dat',
-      component: PlaceholderView,
-      meta: {
-        title: 'Cấu hình hệ thống',
-      },
-    },
-    {
-      path: '/kiosk',
-      name: 'kiosk',
-      component: () => import('@/components/AttendanceKiosk.vue'),
-      meta: {
-        hideLayout: true,
-      },
-    },
-    {
-      path: '/about',
-      name: 'about',
-      component: AboutView,
-    },
-  ],
+  routes,
+})
+
+// Cập nhật tiêu đề trang
+router.afterEach((to) => {
+  const title = to.meta.title as string | undefined
+  document.title = title ? `${title} — TimeMaster AMS` : 'TimeMaster AMS'
 })
 
 export default router
