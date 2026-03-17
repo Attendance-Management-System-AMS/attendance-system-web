@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Construction } from 'lucide-vue-next'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
 const route = useRoute()
 
@@ -11,16 +12,17 @@ const title = computed(() =>
 </script>
 
 <template>
-  <Card class="border-slate-200">
-    <CardHeader>
-      <CardTitle class="text-lg font-semibold text-slate-900">
-        {{ title }}
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <p class="text-sm text-slate-500">
-        Nội dung đang được hoàn thiện theo tiêu chuẩn Enterprise. Vui lòng quay lại sau.
+  <div class="space-y-6">
+    <PageHeader :title="title" />
+
+    <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white py-24 dark:border-slate-800 dark:bg-slate-900">
+      <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950 mb-4">
+        <Construction class="h-8 w-8 text-indigo-400" />
+      </div>
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">Đang phát triển</h3>
+      <p class="mt-1.5 text-sm text-slate-400 text-center max-w-xs">
+        Tính năng <span class="font-semibold text-indigo-600">{{ title }}</span> đang được hoàn thiện theo tiêu chuẩn Enterprise.
       </p>
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 </template>
