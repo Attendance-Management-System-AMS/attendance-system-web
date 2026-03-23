@@ -90,7 +90,7 @@ const handleSubmit = async () => {
 
   try {
     await updatePosition.mutateAsync({ id: positionId.value as any, data: payload })
-    router.push('/shifts')
+    router.push('/positions')
   } catch (err) {
     console.error('Update position failed:', err)
     submitError.value = 'Cập nhật thất bại. Vui lòng thử lại.'
@@ -205,7 +205,7 @@ const handleSubmit = async () => {
               </button>
 
               <button
-                @click="router.push('/shifts')"
+                @click="router.push('/positions')"
                 class="flex w-full items-center justify-center h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
               >
                 Hủy bỏ

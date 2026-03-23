@@ -37,7 +37,7 @@ const confirmDelete = () => {
     <PageHeader title="Chức vụ" description="Quản lý chức vụ nhân sự">
       <template #actions>
         <RouterLink
-          to="/shifts/new"
+          to="/positions/new"
           class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none"
         >
           Tạo mới
@@ -102,7 +102,7 @@ const confirmDelete = () => {
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                 <ActionDropdown
                   :item-id="position.id"
-                  :edit-to="`/shifts/${position.id}/edit`"
+                  :edit-to="`/positions/${position.id}/edit`"
                   @delete="handleDelete"
                 />
               </td>
