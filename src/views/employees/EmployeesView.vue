@@ -8,6 +8,7 @@ import SearchToolbar from '@/components/ui/SearchToolbar.vue'
 import FilterSelect from '@/components/ui/FilterSelect.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
+import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
 import type { Employee } from '@/types/employee'
 
 const { employeesQuery, deleteEmployee } = useEmployees()
@@ -156,20 +157,19 @@ const confirmDelete = () => {
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <tr v-if="isLoading">
-              <td colspan="7" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
-                Đang tải danh sách nhân viên...
-              </td>
-            </tr>
-            <tr v-else-if="isError">
-              <td colspan="7" class="px-4 py-12 text-center text-red-600 dark:text-red-400">
-                Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
-                <button class="ml-4 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400"
-                  @click="() => employeesQuery.refetch()">
-                  Thử lại
-                </button>
-              </td>
-            </tr>
+            <LoadingErrorState
+              v-if="isLoading || isError"
+              mode="row"
+              :colspan="7"
+              :is-loading="isLoading"
+              :is-error="isError"
+              :error="error"
+              loadingText="Đang tải danh sách nhân viên..."
+              errorText="Không thể tải danh sách nhân viên"
+              retryLabel="Thử lại"
+              @retry="() => employeesQuery.refetch()"
+            />
+
             <tr v-else-if="filteredEmployees.length === 0">
               <td colspan="7" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                 Không có nhân viên nào

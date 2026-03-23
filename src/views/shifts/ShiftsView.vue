@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { BriefcaseBusiness } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 import { usePositions } from '@/composables/usePositions'
 import type { Position } from '@/types/position'
+import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
 
 const { positionsQuery, deletePosition } = usePositions()
 const { data: positionsRaw, isLoading, isError, error } = positionsQuery
@@ -34,9 +36,12 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Chức vụ" description="Quản lý chức vụ nhân sự">
       <template #actions>
-        <div class="rounded-xl border border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-800">
-          Đồng bộ từ API
-        </div>
+        <RouterLink
+          to="/shifts/new"
+          class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none"
+        >
+          Tạo mới
+        </RouterLink>
       </template>
     </PageHeader>
 
@@ -49,26 +54,26 @@ const confirmDelete = () => {
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Chức vụ</th>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Mã</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Mô tả</th>
-              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Số NV</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Phòng ban</th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Level</th>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Trạng thái</th>
               <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Hành động</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
-            <tr v-if="isLoading">
-              <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
-                Đang tải danh sách chức vụ...
-              </td>
-            </tr>
-            <tr v-else-if="isError">
-              <td colspan="6" class="px-6 py-12 text-center text-red-600 dark:text-red-400">
-                Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
-                <button class="ml-4 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400" @click="() => positionsQuery.refetch()">
-                  Thử lại
-                </button>
-              </td>
-            </tr>
+            <LoadingErrorState
+              v-if="isLoading || isError"
+              mode="row"
+              :colspan="6"
+              :is-loading="isLoading"
+              :is-error="isError"
+              :error="error"
+              loadingText="Đang tải danh sách chức vụ..."
+              errorText="Không thể tải danh sách chức vụ"
+              retryLabel="Thử lại"
+              @retry="() => positionsQuery.refetch()"
+            />
+
             <tr v-else-if="positions.length === 0">
               <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                 Chưa có chức vụ nào
@@ -84,8 +89,8 @@ const confirmDelete = () => {
                 </div>
               </td>
               <td class="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-300">{{ position.code || '—' }}</td>
-              <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">{{ position.description || '—' }}</td>
-              <td class="px-6 py-4 text-center text-sm font-semibold text-slate-700 dark:text-slate-200">{{ position.employeeCount ?? 0 }}</td>
+              <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">{{ position.departmentName || '—' }}</td>
+              <td class="px-6 py-4 text-center text-sm font-semibold text-slate-700 dark:text-slate-200">{{ position.level || '—' }}</td>
               <td class="px-6 py-4">
                 <span :class="[
                   'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
@@ -95,7 +100,11 @@ const confirmDelete = () => {
                 </span>
               </td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                <ActionDropdown :item-id="position.id" @delete="handleDelete" />
+                <ActionDropdown
+                  :item-id="position.id"
+                  :edit-to="`/shifts/${position.id}/edit`"
+                  @delete="handleDelete"
+                />
               </td>
             </tr>
           </tbody>

@@ -1,27 +1,34 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Briefcase, RefreshCw, Shield, User } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
+import { useQuery } from '@tanstack/vue-query'
+import { employeeApi } from '@/services/employee.service'
+import { useEmployees } from '@/composables/useEmployees'
+import type { Employee, UpdateEmployee } from '@/types/employee'
 
 const router = useRouter()
 const route = useRoute()
 
-// Pre-filled data (simulated from existing employee)
+const { updateEmployee } = useEmployees()
+
+const employeeId = computed(() => Number(route.params.id))
+
 const form = reactive({
-  fullName: 'Nguyễn Đức Dũng',
-  empCode: 'NV002',
-  nationalId: '038201012345',
-  phone: '0912345678',
-  email: 'ducdung@timemaster.vn',
-  address: '123 Nguyễn Huệ, Q.1, TP.HCM',
-  department: 'Công nghệ',
-  position: 'Trưởng nhóm kỹ thuật',
-  shift: 'Ca sáng (08:00–17:30)',
-  joinDate: '2022-01-15',
-  username: 'duc.dung',
-  role: 'manager',
+  fullName: '',
+  empCode: '',
+  nationalId: '',
+  phone: '',
+  email: '',
+  address: '',
+  department: '',
+  position: '',
+  shift: '',
+  joinDate: '',
+  username: '',
+  role: '',
   isActive: true,
 })
 
@@ -37,6 +44,58 @@ const inputClass =
   'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
 
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
+
+const submitError = ref('')
+
+const employeeQuery = useQuery<Employee>({
+  queryKey: ['employee', employeeId],
+  enabled: computed(() => Number.isFinite(employeeId.value) && employeeId.value > 0),
+  queryFn: async () => {
+    const res = await employeeApi.getById(employeeId.value)
+    return res.data.result
+  },
+})
+
+watchEffect(() => {
+  const e = employeeQuery.data.value
+  if (!e) return
+
+  form.fullName = e.fullName ?? ''
+  form.empCode = e.employeeCode ?? ''
+  form.email = e.email ?? ''
+  form.joinDate = e.joinDate ?? ''
+
+  form.department = e.departmentName ?? ''
+  form.position = e.positionName ?? ''
+  form.shift = e.shift ?? ''
+
+  form.isActive = (e.status ?? 'active').toLowerCase() === 'active'
+})
+
+const handleSubmit = async () => {
+  submitError.value = ''
+
+  if (!form.fullName.trim() || !form.empCode.trim() || !form.email.trim()) {
+    submitError.value = 'Vui lòng điền đầy đủ họ tên, mã nhân viên và email.'
+    return
+  }
+
+  const payload: UpdateEmployee = {
+    fullName: form.fullName.trim(),
+    employeeCode: form.empCode.trim(),
+    email: form.email.trim(),
+    status: form.isActive ? 'active' : 'inactive',
+    joinDate: form.joinDate || undefined,
+  }
+
+  try {
+    await updateEmployee.mutateAsync({ id: employeeId.value, data: payload })
+    router.push(`/employees/${employeeId.value}`)
+  } catch (err) {
+    console.error('Update employee failed:', err)
+    submitError.value = 'Cập nhật thất bại. Vui lòng thử lại.'
+  }
+}
 </script>
 
 <template>
@@ -155,10 +214,15 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
         <!-- Action buttons -->
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
           <button
-            class="flex w-full items-center justify-center gap-2 h-11 rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-colors dark:shadow-none"
+            @click="handleSubmit"
+            :disabled="updateEmployee.isPending.value"
+            :class="[
+              'flex w-full items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-colors dark:shadow-none',
+              updateEmployee.isPending.value ? 'bg-emerald-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700',
+            ]"
           >
             <RefreshCw class="h-4 w-4" />
-            Cập nhật thay đổi
+            {{ updateEmployee.isPending.value ? 'Đang cập nhật...' : 'Cập nhật thay đổi' }}
           </button>
           <button
             @click="router.push('/employees')"
@@ -172,6 +236,10 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
               <span class="text-[10px] text-slate-400">Mã nhân viên</span>
               <span class="font-mono text-[11px] font-bold text-slate-600">{{ form.empCode }}</span>
             </div>
+          </div>
+
+          <div v-if="submitError" class="pt-2 text-sm text-rose-600">
+            {{ submitError }}
           </div>
         </div>
       </div>

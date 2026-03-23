@@ -11,9 +11,9 @@ export function useDepartments() {
         queryKey: ['departments'],
         queryFn: async () => {
             const response = await departmentApi.getAll()
-            if (response.data && response.data.success && response.data.result) {
-                return response.data.result.content || []
-            }
+            const result = response.data?.result as Department[] | { content?: Department[] } | undefined
+            if (Array.isArray(result)) return result
+            if (result && Array.isArray(result.content)) return result.content
             return []
         },
         staleTime: 1000 * 60 * 3, // 3 phút
@@ -82,9 +82,19 @@ export function useDepartments() {
         },
     })
 
+    // Mutation cập nhật
+    const updateDepartment = useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Partial<Department> }) =>
+            departmentApi.update(id, data).then((res) => res.data.result),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['departments'] })
+        },
+    })
+
     return {
         departmentsQuery,
         createDepartment,
         deleteDepartment,
+        updateDepartment,
     }
 }

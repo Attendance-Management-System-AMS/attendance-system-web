@@ -11,12 +11,10 @@ export function useEmployees() {
     queryFn: async () => {
       try {
         const response = await employeeApi.getAll()
-        // console.log('Employees API Response:', response.data)
+        const result = response.data?.result as Employee[] | { content?: Employee[] } | undefined
 
-        // Bóc tách mảng
-        if (response.data && response.data.success && response.data.result) {
-          return response.data.result.content || []
-        }
+        if (Array.isArray(result)) return result
+        if (result && Array.isArray(result.content)) return result.content
         return []
       } catch (err) {
         console.error('Failed to fetch employees:', err)

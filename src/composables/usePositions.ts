@@ -9,7 +9,10 @@ export function usePositions() {
     queryKey: ['positions'],
     queryFn: async () => {
       const response = await positionApi.getAll()
-      return response.data?.result?.content || []
+      const result = response.data?.result as Position[] | { content?: Position[] } | undefined
+      if (Array.isArray(result)) return result
+      if (result && Array.isArray(result.content)) return result.content
+      return []
     },
     staleTime: 1000 * 60 * 3,
     gcTime: 1000 * 60 * 10,
@@ -25,9 +28,16 @@ export function usePositions() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['positions'] }),
   })
 
+  const updatePosition = useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: Partial<CreatePosition> }) =>
+      positionApi.update(id, data).then((res) => res.data.result),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['positions'] }),
+  })
+
   return {
     positionsQuery,
     createPosition,
     deletePosition,
+    updatePosition,
   }
 }

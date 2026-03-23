@@ -9,13 +9,21 @@ export function useLeaves() {
     queryKey: ['leaves'],
     queryFn: async () => {
       const response = await leaveApi.getAll()
-      return response.data?.result?.content || []
+      const result = response.data?.result as LeaveRequest[] | { content?: LeaveRequest[] } | undefined
+      if (Array.isArray(result)) return result
+      if (result && Array.isArray(result.content)) return result.content
+      return []
     },
     staleTime: 1000 * 60 * 1,
   })
 
   const createLeave = useMutation({
     mutationFn: (data: CreateLeaveRequest) => leaveApi.create(data).then((res) => res.data.result),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['leaves'] }),
+  })
+
+  const deleteLeave = useMutation({
+    mutationFn: (id: string | number) => leaveApi.delete(id),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['leaves'] }),
   })
 
@@ -32,6 +40,7 @@ export function useLeaves() {
   return {
     leavesQuery,
     createLeave,
+    deleteLeave,
     approveLeave,
     rejectLeave,
   }

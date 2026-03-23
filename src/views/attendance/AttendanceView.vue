@@ -11,6 +11,7 @@ import Badge from '@/components/ui/badge/Badge.vue'
 import Avatar from '@/components/ui/avatar/Avatar.vue'
 import AvatarImage from '@/components/ui/avatar/AvatarImage.vue'
 import AvatarFallback from '@/components/ui/avatar/AvatarFallback.vue'
+import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
 import type { Attendance, AttendanceStatus } from '@/types/attendance'
 
 const { attendanceQuery } = useAttendance()
@@ -115,19 +116,19 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr v-if="isLoading">
-                            <td colspan="5" class="px-4 py-12 text-center text-slate-500">
-                                Đang tải dữ liệu chấm công...
-                            </td>
-                        </tr>
-                        <tr v-else-if="isError">
-                            <td colspan="5" class="px-4 py-12 text-center text-red-600">
-                                Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
-                                <button class="ml-4 text-indigo-600 underline" @click="() => attendanceQuery.refetch()">
-                                    Thử lại
-                                </button>
-                            </td>
-                        </tr>
+                        <LoadingErrorState
+                          v-if="isLoading || isError"
+                          mode="row"
+                          :colspan="5"
+                          :is-loading="isLoading"
+                          :is-error="isError"
+                          :error="error"
+                          loadingText="Đang tải dữ liệu chấm công..."
+                          errorText="Không thể tải dữ liệu chấm công"
+                          retryLabel="Thử lại"
+                          @retry="() => attendanceQuery.refetch()"
+                        />
+
                         <tr v-else-if="records.length === 0">
                             <td colspan="5" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                                 Chưa có dữ liệu chấm công

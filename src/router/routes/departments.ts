@@ -10,6 +10,12 @@ export default [
                 component: () => import('@/views/departments/DepartmentsView.vue'),
                 meta: { title: 'Phòng ban' },
             },
+            {
+                path: ':id/edit',
+                name: 'departments-edit',
+                component: () => import('@/views/departments/DepartmentEditView.vue'),
+                meta: { title: 'Sửa phòng ban' },
+            },
         ],
     },
 ] as RouteRecordRaw[]
