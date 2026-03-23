@@ -1,137 +1,124 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Clock, Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { BriefcaseBusiness } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import ActionDropdown from '@/components/ui/ActionDropdown.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
+import { usePositions } from '@/composables/usePositions'
+import type { Position } from '@/types/position'
+import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
 
-interface Shift {
-    id: string
-    name: string
-    startTime: string
-    endTime: string
-    gracePeriod: number
-    employeeCount: number
-    status: 'active' | 'inactive'
-    color: string
-}
+const { positionsQuery, deletePosition } = usePositions()
+const { data: positionsRaw, isLoading, isError, error } = positionsQuery
+const positions = computed(() => positionsRaw.value ?? [])
 
 const deleteDialog = ref(false)
-const deleteTarget = ref<Shift | null>(null)
+const deleteTarget = ref<Position | null>(null)
 
-const shifts: Shift[] = [
-    { id: 'shift-001', name: 'Ca Sáng', startTime: '08:00', endTime: '17:30', gracePeriod: 15, employeeCount: 85, status: 'active', color: 'indigo' },
-    { id: 'shift-002', name: 'Ca Chiều', startTime: '13:00', endTime: '22:00', gracePeriod: 15, employeeCount: 28, status: 'active', color: 'amber' },
-    { id: 'shift-003', name: 'Ca Đêm', startTime: '22:00', endTime: '06:00', gracePeriod: 15, employeeCount: 15, status: 'active', color: 'rose' },
-    { id: 'shift-004', name: 'Ca Hành Chính', startTime: '08:00', endTime: '12:00', gracePeriod: 10, employeeCount: 20, status: 'active', color: 'emerald' },
-    { id: 'shift-005', name: 'Ca Tối', startTime: '18:00', endTime: '22:00', gracePeriod: 10, employeeCount: 8, status: 'inactive', color: 'slate' },
-    { id: 'shift-006', name: 'Ca Linh Hoạt', startTime: '09:00', endTime: '18:00', gracePeriod: 30, employeeCount: 12, status: 'active', color: 'indigo' },
-]
-
-const colorConfig: Record<string, { bg: string; icon: string; badge: string }> = {
-    indigo: { bg: 'bg-indigo-50 dark:bg-indigo-950/50', icon: 'text-indigo-600', badge: 'bg-indigo-600' },
-    amber: { bg: 'bg-amber-50 dark:bg-amber-950/50', icon: 'text-amber-600', badge: 'bg-amber-500' },
-    rose: { bg: 'bg-rose-50 dark:bg-rose-950/50', icon: 'text-rose-600', badge: 'bg-rose-600' },
-    emerald: { bg: 'bg-emerald-50 dark:bg-emerald-950/50', icon: 'text-emerald-600', badge: 'bg-emerald-600' },
-    slate: { bg: 'bg-slate-50 dark:bg-slate-800', icon: 'text-slate-500', badge: 'bg-slate-400' },
+const handleDelete = (id: string | number) => {
+  const item = positions.value.find((position) => String(position.id) === String(id))
+  if (item) {
+    deleteTarget.value = item
+    deleteDialog.value = true
+  }
 }
 
-const handleDelete = (shift: Shift) => {
-    deleteTarget.value = shift
-    deleteDialog.value = true
+const confirmDelete = () => {
+  if (deleteTarget.value) {
+    deletePosition.mutate(deleteTarget.value.id)
+  }
+  deleteDialog.value = false
 }
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader title="Ca làm việc" description="Quản lý các ca làm việc và lịch phân công">
-            <template #actions>
-                <button
-                    class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none">
-                    <Plus class="h-4 w-4" />
-                    Thêm ca làm
-                </button>
-            </template>
-        </PageHeader>
+  <div class="space-y-6">
+    <PageHeader title="Chức vụ" description="Quản lý chức vụ nhân sự">
+      <template #actions>
+        <RouterLink
+          to="/positions/new"
+          class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none"
+        >
+          Tạo mới
+        </RouterLink>
+      </template>
+    </PageHeader>
 
-        <!-- Card grid -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="shift in shifts" :key="shift.id"
-                class="group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-200 dark:border-slate-800 dark:bg-slate-900">
-                <!-- Header -->
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div :class="[
-                            'flex h-11 w-11 items-center justify-center rounded-xl',
-                            colorConfig[shift.color]?.bg ?? 'bg-slate-100',
-                        ]">
-                            <Clock :class="['h-5 w-5', colorConfig[shift.color]?.icon ?? 'text-slate-500']" />
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ shift.name }}</h3>
-                            <span :class="[
-                                'inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold',
-                                shift.status === 'active'
-                                    ? 'bg-emerald-50 text-emerald-600'
-                                    : 'bg-slate-100 text-slate-500',
-                            ]">
-                                {{ shift.status === 'active' ? 'Đang hoạt động' : 'Tạm ngưng' }}
-                            </span>
-                        </div>
-                    </div>
+    <div
+      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
+    >
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+          <thead class="bg-slate-50 dark:bg-slate-900">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Chức vụ</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Mã</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Phòng ban</th>
+              <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Level</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Trạng thái</th>
+              <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Hành động</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
+            <LoadingErrorState
+              v-if="isLoading || isError"
+              mode="row"
+              :colspan="6"
+              :is-loading="isLoading"
+              :is-error="isError"
+              :error="error"
+              loadingText="Đang tải danh sách chức vụ..."
+              errorText="Không thể tải danh sách chức vụ"
+              retryLabel="Thử lại"
+              @retry="() => positionsQuery.refetch()"
+            />
 
-                    <!-- Action menu -->
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                            class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-                            <Pencil class="h-3.5 w-3.5" />
-                        </button>
-                        <button @click="handleDelete(shift)"
-                            class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors">
-                            <Trash2 class="h-3.5 w-3.5" />
-                        </button>
-                    </div>
+            <tr v-else-if="positions.length === 0">
+              <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                Chưa có chức vụ nào
+              </td>
+            </tr>
+            <tr v-else v-for="position in positions" :key="position.id" class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+              <td class="whitespace-nowrap px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-sm font-bold dark:bg-indigo-900 dark:text-indigo-300">
+                    <BriefcaseBusiness class="h-4 w-4" />
+                  </div>
+                  <span class="font-medium text-slate-900 dark:text-white">{{ position.name }}</span>
                 </div>
-
-                <!-- Time range -->
-                <div class="mb-4 rounded-xl bg-slate-50 dark:bg-slate-800 px-4 py-3">
-                    <div class="flex items-center justify-between">
-                        <div class="text-center">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bắt đầu</p>
-                            <p class="mt-0.5 font-mono text-lg font-black text-slate-900 dark:text-white">{{
-                                shift.startTime }}
-                            </p>
-                        </div>
-                        <div class="flex-1 mx-3 h-px bg-slate-200 dark:bg-slate-700 relative">
-                            <div
-                                :class="['absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full', colorConfig[shift.color]?.badge ?? 'bg-slate-400']">
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kết thúc</p>
-                            <p class="mt-0.5 font-mono text-lg font-black text-slate-900 dark:text-white">{{
-                                shift.endTime }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stats row -->
-                <div class="flex items-center justify-between text-xs">
-                    <div>
-                        <span class="text-slate-400">Cho phép trễ </span>
-                        <span class="font-bold text-slate-700 dark:text-slate-300">{{ shift.gracePeriod }} phút</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <div class="h-1.5 w-1.5 rounded-full bg-indigo-500"></div>
-                        <span class="font-bold text-slate-700 dark:text-slate-300">{{ shift.employeeCount }}</span>
-                        <span class="text-slate-400">nhân viên</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <DeleteConfirmDialog :open="deleteDialog" title="Xóa ca làm việc"
-            description="Bạn có chắc chắn muốn xóa ca làm việc này?" :item-name="deleteTarget?.name"
-            @confirm="deleteDialog = false" @cancel="deleteDialog = false" />
+              </td>
+              <td class="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-300">{{ position.code || '—' }}</td>
+              <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">{{ position.departmentName || '—' }}</td>
+              <td class="px-6 py-4 text-center text-sm font-semibold text-slate-700 dark:text-slate-200">{{ position.level || '—' }}</td>
+              <td class="px-6 py-4">
+                <span :class="[
+                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
+                  position.status === 'inactive' ? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-100',
+                ]">
+                  {{ position.status === 'inactive' ? 'Ngừng hoạt động' : 'Hoạt động' }}
+                </span>
+              </td>
+              <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                <ActionDropdown
+                  :item-id="position.id"
+                  :edit-to="`/positions/${position.id}/edit`"
+                  @delete="handleDelete"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
+    <DeleteConfirmDialog
+      :open="deleteDialog"
+      title="Xóa chức vụ"
+      description="Bạn có chắc chắn muốn xóa chức vụ này không?"
+      :item-name="deleteTarget?.name"
+      @confirm="confirmDelete"
+      @cancel="deleteDialog = false"
+    />
+  </div>
 </template>

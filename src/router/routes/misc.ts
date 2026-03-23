@@ -2,6 +2,12 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export default [
     {
+        path: '/profile',
+        name: 'profile',
+        component: () => import('@/views/placeholder/PlaceholderView.vue'),
+        meta: { title: 'Hồ sơ cá nhân' },
+    },
+    {
         path: '/schedule',
         name: 'schedule',
         component: () => import('@/views/placeholder/PlaceholderView.vue'),

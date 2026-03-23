@@ -6,8 +6,9 @@ import dashboard from './routes/dashboard'
 import attendance from './routes/attendance'
 import employees from './routes/employees'
 import departments from './routes/departments'
-import shifts from './routes/shifts'
-import timesheets from './routes/timesheets'
+import positions from './routes/positions'
+import leaves from './routes/leaves'
+import legacyRedirects from './routes/legacyRedirects'
 import reports from './routes/reports'
 import misc from './routes/misc'
 
@@ -16,10 +17,11 @@ const adminChildren: RouteRecordRaw[] = [
   ...attendance,
   ...employees,
   ...departments,
-  ...shifts,
-  ...timesheets,
+  ...positions,
+  ...leaves,
   ...reports,
-  ...misc.filter(route => !route.meta?.hideLayout),
+  ...legacyRedirects,
+  ...misc.filter((route) => !route.meta?.hideLayout),
 ]
 
 const routes: RouteRecordRaw[] = [

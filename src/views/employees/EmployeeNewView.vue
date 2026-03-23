@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Briefcase, Save, Shield, User } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
+import { useEmployees } from '@/composables/useEmployees'
+import type { CreateEmployee } from '@/types/employee'
 
 const router = useRouter()
+const { createEmployee } = useEmployees()
 
 const form = reactive({
   fullName: '',
@@ -35,6 +38,64 @@ const inputClass =
   'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
 
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
+
+type FieldName = 'fullName' | 'empCode' | 'email' | 'department' | 'position' | 'shift' | 'username'
+type FieldErrors = Record<FieldName, string>
+
+const errors = reactive<FieldErrors>({
+  fullName: '',
+  empCode: '',
+  email: '',
+  department: '',
+  position: '',
+  shift: '',
+  username: '',
+})
+
+const submitMessage = ref('')
+
+const validateForm = () => {
+  errors.fullName = form.fullName.trim() ? '' : 'Vui lòng nhập họ và tên'
+  errors.empCode = form.empCode.trim() ? '' : 'Vui lòng nhập mã nhân viên'
+  errors.email = form.email.trim()
+    ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Email không đúng định dạng')
+    : 'Vui lòng nhập email'
+  errors.department = form.department ? '' : 'Vui lòng chọn phòng ban'
+  errors.position = form.position.trim() ? '' : 'Vui lòng nhập chức vụ'
+  errors.shift = form.shift ? '' : 'Vui lòng chọn ca làm việc'
+  errors.username = form.username.trim() ? '' : 'Vui lòng nhập tên đăng nhập'
+
+  return Object.values(errors).every((value) => !value)
+}
+
+const hasErrors = computed(() => Object.values(errors).some((value) => Boolean(value)))
+const isSubmitting = computed(() => createEmployee.isPending.value)
+
+const handleSubmit = async () => {
+  submitMessage.value = ''
+  const isValid = validateForm()
+
+  if (!isValid) {
+    submitMessage.value = 'Vui lòng điền đầy đủ các trường bắt buộc trước khi lưu.'
+    return
+  }
+
+  const payload: CreateEmployee = {
+    fullName: form.fullName.trim(),
+    employeeCode: form.empCode.trim(),
+    email: form.email.trim(),
+    status: form.isActive ? 'active' : 'inactive',
+    joinDate: form.joinDate || undefined,
+  }
+
+  try {
+    await createEmployee.mutateAsync(payload)
+    router.push('/employees')
+  } catch (error) {
+    submitMessage.value = 'Tạo nhân viên thất bại. Vui lòng thử lại.'
+    console.error('Create employee failed:', error)
+  }
+}
 </script>
 
 <template>
@@ -52,6 +113,18 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
     </PageHeader>
 
     <div class="grid grid-cols-3 gap-6">
+      <div
+        v-if="submitMessage"
+        :class="[
+          'col-span-3 rounded-xl border px-4 py-3 text-sm',
+          hasErrors
+            ? 'border-rose-200 bg-rose-50 text-rose-700'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        ]"
+      >
+        {{ submitMessage }}
+      </div>
+
       <!-- Left: Main form -->
       <div class="col-span-2 space-y-6">
         <!-- Personal info -->
@@ -59,11 +132,13 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
           <div class="grid grid-cols-2 gap-4">
             <div class="col-span-2">
               <label :class="labelClass">Họ và tên <span class="text-rose-500">*</span></label>
-              <input v-model="form.fullName" type="text" placeholder="Nguyễn Văn A" :class="inputClass" />
+              <input v-model="form.fullName" type="text" placeholder="Nguyễn Văn A" :class="[inputClass, errors.fullName && 'border-rose-400']" />
+              <p v-if="errors.fullName" class="mt-1 text-xs text-rose-600">{{ errors.fullName }}</p>
             </div>
             <div>
               <label :class="labelClass">Mã nhân viên <span class="text-rose-500">*</span></label>
-              <input v-model="form.empCode" type="text" placeholder="NV001" :class="inputClass" class="font-mono" />
+              <input v-model="form.empCode" type="text" placeholder="NV001" :class="[inputClass, errors.empCode && 'border-rose-400']" class="font-mono" />
+              <p v-if="errors.empCode" class="mt-1 text-xs text-rose-600">{{ errors.empCode }}</p>
             </div>
             <div>
               <label :class="labelClass">Số CCCD</label>
@@ -75,7 +150,8 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
             </div>
             <div>
               <label :class="labelClass">Email <span class="text-rose-500">*</span></label>
-              <input v-model="form.email" type="email" placeholder="nhanvien@company.vn" :class="inputClass" />
+              <input v-model="form.email" type="email" placeholder="nhanvien@company.vn" :class="[inputClass, errors.email && 'border-rose-400']" />
+              <p v-if="errors.email" class="mt-1 text-xs text-rose-600">{{ errors.email }}</p>
             </div>
             <div class="col-span-2">
               <label :class="labelClass">Địa chỉ</label>
@@ -89,21 +165,24 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label :class="labelClass">Phòng ban <span class="text-rose-500">*</span></label>
-              <select v-model="form.department" :class="inputClass">
+              <select v-model="form.department" :class="[inputClass, errors.department && 'border-rose-400']">
                 <option value="">-- Chọn phòng ban --</option>
                 <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
               </select>
+              <p v-if="errors.department" class="mt-1 text-xs text-rose-600">{{ errors.department }}</p>
             </div>
             <div>
               <label :class="labelClass">Chức vụ <span class="text-rose-500">*</span></label>
-              <input v-model="form.position" type="text" placeholder="Chuyên viên, Trưởng nhóm..." :class="inputClass" />
+              <input v-model="form.position" type="text" placeholder="Chuyên viên, Trưởng nhóm..." :class="[inputClass, errors.position && 'border-rose-400']" />
+              <p v-if="errors.position" class="mt-1 text-xs text-rose-600">{{ errors.position }}</p>
             </div>
             <div>
               <label :class="labelClass">Ca làm việc <span class="text-rose-500">*</span></label>
-              <select v-model="form.shift" :class="inputClass">
+              <select v-model="form.shift" :class="[inputClass, errors.shift && 'border-rose-400']">
                 <option value="">-- Chọn ca --</option>
                 <option v-for="s in shifts" :key="s" :value="s">{{ s }}</option>
               </select>
+              <p v-if="errors.shift" class="mt-1 text-xs text-rose-600">{{ errors.shift }}</p>
             </div>
             <div>
               <label :class="labelClass">Ngày vào làm</label>
@@ -120,7 +199,8 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
           <div class="space-y-4">
             <div>
               <label :class="labelClass">Tên đăng nhập <span class="text-rose-500">*</span></label>
-              <input v-model="form.username" type="text" placeholder="ten.dangnhap" :class="inputClass" class="font-mono" />
+              <input v-model="form.username" type="text" placeholder="ten.dangnhap" :class="[inputClass, errors.username && 'border-rose-400']" class="font-mono" />
+              <p v-if="errors.username" class="mt-1 text-xs text-rose-600">{{ errors.username }}</p>
             </div>
             <div>
               <label :class="labelClass">Vai trò</label>
@@ -155,10 +235,15 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
         <!-- Action buttons -->
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
           <button
-            class="flex w-full items-center justify-center gap-2 h-11 rounded-xl bg-indigo-600 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none"
+            @click="handleSubmit"
+            :disabled="isSubmitting"
+            :class="[
+              'flex w-full items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-colors dark:shadow-none',
+              isSubmitting ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700',
+            ]"
           >
             <Save class="h-4 w-4" />
-            Lưu nhân viên
+            {{ isSubmitting ? 'Đang lưu...' : 'Lưu nhân viên' }}
           </button>
           <button
             @click="router.push('/employees')"
