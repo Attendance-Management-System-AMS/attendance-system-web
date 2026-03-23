@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick, watch, onBeforeUnmount } from 'vue'
 import { MoreHorizontal, Eye, Pencil, Trash2 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import { onClickOutside } from '@vueuse/core'
 
 const props = defineProps<{
   editTo?: string
@@ -15,11 +14,81 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
-const menuRef = ref<HTMLElement | null>(null)
+const triggerRef = ref<HTMLElement | null>(null)
+const dropdownRef = ref<HTMLElement | null>(null)
 const router = useRouter()
+const menuStyle = ref<Record<string, string>>({})
 
-onClickOutside(menuRef, () => {
+const MENU_WIDTH = 192
+const VIEWPORT_PADDING = 8
+const MENU_GAP = 6
+
+const updateMenuPosition = () => {
+  const trigger = triggerRef.value
+  if (!trigger) return
+
+  const rect = trigger.getBoundingClientRect()
+  const dropdownHeight = dropdownRef.value?.offsetHeight ?? 170
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+
+  let left = rect.right - MENU_WIDTH
+  if (left < VIEWPORT_PADDING) left = VIEWPORT_PADDING
+  if (left + MENU_WIDTH > viewportWidth - VIEWPORT_PADDING) {
+    left = viewportWidth - VIEWPORT_PADDING - MENU_WIDTH
+  }
+
+  let top = rect.bottom + MENU_GAP
+  if (top + dropdownHeight > viewportHeight - VIEWPORT_PADDING) {
+    top = rect.top - dropdownHeight - MENU_GAP
+  }
+  if (top < VIEWPORT_PADDING) top = VIEWPORT_PADDING
+
+  menuStyle.value = {
+    position: 'fixed',
+    top: `${top}px`,
+    left: `${left}px`,
+    width: `${MENU_WIDTH}px`,
+  }
+}
+
+const closeOnOutsideClick = (event: MouseEvent) => {
+  if (!isOpen.value) return
+  const target = event.target as Node | null
+  if (!target) return
+  if (triggerRef.value?.contains(target) || dropdownRef.value?.contains(target)) return
   isOpen.value = false
+}
+
+const closeOnEscape = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') isOpen.value = false
+}
+
+const toggleMenu = async () => {
+  isOpen.value = !isOpen.value
+  if (isOpen.value) {
+    await nextTick()
+    updateMenuPosition()
+  }
+}
+
+watch(isOpen, async (open) => {
+  if (open) {
+    await nextTick()
+    updateMenuPosition()
+  }
+})
+
+window.addEventListener('mousedown', closeOnOutsideClick)
+window.addEventListener('keydown', closeOnEscape)
+window.addEventListener('resize', updateMenuPosition)
+window.addEventListener('scroll', updateMenuPosition, true)
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mousedown', closeOnOutsideClick)
+  window.removeEventListener('keydown', closeOnEscape)
+  window.removeEventListener('resize', updateMenuPosition)
+  window.removeEventListener('scroll', updateMenuPosition, true)
 })
 
 const handleEdit = () => {
@@ -39,14 +108,17 @@ const handleDelete = () => {
 </script>
 
 <template>
-  <div ref="menuRef" class="relative">
+  <div class="relative">
     <button
-      @click.stop="isOpen = !isOpen"
+      ref="triggerRef"
+      @click.stop="toggleMenu"
       class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors dark:hover:bg-slate-800 dark:hover:text-slate-300"
     >
       <MoreHorizontal class="h-4 w-4" />
     </button>
+  </div>
 
+  <Teleport to="body">
     <Transition
       enter-active-class="transition duration-100 ease-out"
       enter-from-class="opacity-0 scale-95"
@@ -56,8 +128,10 @@ const handleDelete = () => {
       leave-to-class="opacity-0 scale-95"
     >
       <div
+        ref="dropdownRef"
         v-if="isOpen"
-        class="absolute right-0 top-full z-50 mt-1 w-48 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden dark:bg-slate-900 dark:border-slate-800"
+        :style="menuStyle"
+        class="z-[1000] rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden dark:bg-slate-900 dark:border-slate-800"
       >
         <div class="p-1">
           <button
@@ -88,5 +162,5 @@ const handleDelete = () => {
         </div>
       </div>
     </Transition>
-  </div>
+  </Teleport>
 </template>

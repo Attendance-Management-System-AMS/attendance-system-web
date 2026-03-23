@@ -5,6 +5,6 @@ export default [
         path: '/timesheets',
         name: 'timesheets',
         component: () => import('@/views/timesheets/TimesheetsView.vue'),
-        meta: { title: 'Bảng công' },
+        meta: { title: 'Nghỉ phép' },
     },
 ] as RouteRecordRaw[]

@@ -17,6 +17,12 @@ export default [
                 meta: { title: 'Thêm nhân viên' },
             },
             {
+                path: ':id',
+                name: 'employee-detail',
+                component: () => import('@/views/employees/EmployeeDetailView.vue'),
+                meta: { title: 'Chi tiết nhân viên' },
+            },
+            {
                 path: ':id/edit',
                 name: 'employee-edit',
                 component: () => import('@/views/employees/EmployeeEditView.vue'),

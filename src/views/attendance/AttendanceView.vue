@@ -85,20 +85,8 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
             </template>
         </SearchToolbar>
 
-        <!-- Loading / Error states -->
-        <div v-if="isLoading" class="text-center py-12 text-slate-500">
-            Đang tải dữ liệu chấm công...
-        </div>
-
-        <div v-else-if="isError" class="text-center py-12 text-red-600">
-            Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
-            <button class="ml-4 text-indigo-600 underline" @click="() => attendanceQuery.refetch()">
-                Thử lại
-            </button>
-        </div>
-
         <!-- Table -->
-        <div v-else
+        <div
             class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -127,7 +115,25 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr v-for="record in records" :key="record.id"
+                        <tr v-if="isLoading">
+                            <td colspan="5" class="px-4 py-12 text-center text-slate-500">
+                                Đang tải dữ liệu chấm công...
+                            </td>
+                        </tr>
+                        <tr v-else-if="isError">
+                            <td colspan="5" class="px-4 py-12 text-center text-red-600">
+                                Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
+                                <button class="ml-4 text-indigo-600 underline" @click="() => attendanceQuery.refetch()">
+                                    Thử lại
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-else-if="records.length === 0">
+                            <td colspan="5" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+                                Chưa có dữ liệu chấm công
+                            </td>
+                        </tr>
+                        <tr v-else v-for="record in records" :key="record.id"
                             class="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">

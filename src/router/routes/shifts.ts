@@ -5,6 +5,6 @@ export default [
         path: '/shifts',
         name: 'shifts',
         component: () => import('@/views/shifts/ShiftsView.vue'),
-        meta: { title: 'Ca làm việc' },
+        meta: { title: 'Chức vụ' },
     },
 ] as RouteRecordRaw[]

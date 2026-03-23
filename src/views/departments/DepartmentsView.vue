@@ -75,29 +75,8 @@ const confirmDelete = () => {
 
         <SearchToolbar v-model="search" placeholder="Tìm kiếm phòng ban, trưởng phòng..." />
 
-        <!-- Loading / Error / Empty states -->
-        <div v-if="isLoading" class="text-center py-12 text-slate-500 dark:text-slate-400">
-            Đang tải danh sách phòng ban...
-        </div>
-
-        <div v-else-if="isError" class="text-center py-12 text-red-600 dark:text-red-400">
-            Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
-            <button class="ml-4 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400"
-                @click="() => departmentsQuery.refetch()">
-                Thử lại
-            </button>
-        </div>
-
-        <div v-else-if="filteredDepartments.length === 0" class="text-center py-12 text-slate-500 dark:text-slate-400">
-            Không tìm thấy phòng ban nào
-            <button @click="isCreateModalOpen = true"
-                class="ml-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400">
-                Thêm mới ngay
-            </button>
-        </div>
-
         <!-- Bảng danh sách -->
-        <div v-else
+        <div
             class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
@@ -130,7 +109,30 @@ const confirmDelete = () => {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
-                        <tr v-for="dept in filteredDepartments" :key="dept.id"
+                        <tr v-if="isLoading">
+                            <td colspan="8" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                Đang tải danh sách phòng ban...
+                            </td>
+                        </tr>
+                        <tr v-else-if="isError">
+                            <td colspan="8" class="px-6 py-12 text-center text-red-600 dark:text-red-400">
+                                Lỗi: {{ (error as Error)?.message || 'Không thể tải dữ liệu' }}
+                                <button class="ml-4 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400"
+                                    @click="() => departmentsQuery.refetch()">
+                                    Thử lại
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-else-if="filteredDepartments.length === 0">
+                            <td colspan="8" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                Không tìm thấy phòng ban nào
+                                <button @click="isCreateModalOpen = true"
+                                    class="ml-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400">
+                                    Thêm mới ngay
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-else v-for="dept in filteredDepartments" :key="dept.id"
                             class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <!-- Các cột như trước, bạn copy phần <td> từ code cũ -->
                             <td class="whitespace-nowrap px-6 py-4">

@@ -50,13 +50,13 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Nhân viên', to: '/employees', icon: Users },
       { label: 'Phòng ban', to: '/departments', icon: Building2 },
-      { label: 'Ca làm việc', to: '/shifts', icon: Clock },
+      { label: 'Chức vụ', to: '/shifts', icon: Clock },
     ],
   },
   {
     label: 'Báo cáo',
     items: [
-      { label: 'Bảng công', to: '/timesheets', icon: ClipboardList },
+      { label: 'Nghỉ phép', to: '/timesheets', icon: ClipboardList },
       { label: 'Phân tích', to: '/reports', icon: BarChart3 },
       { label: 'Xuất báo cáo', to: '/export', icon: Download },
     ],
