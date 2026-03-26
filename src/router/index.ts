@@ -44,7 +44,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('@/views/placeholder/PlaceholderView.vue'),
+    component: () => import('@/views/errors/NotFoundView.vue'),
     meta: { title: 'Không tìm thấy trang' },
   },
 ]

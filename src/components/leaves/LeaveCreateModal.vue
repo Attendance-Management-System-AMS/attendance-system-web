@@ -11,8 +11,11 @@ import {
 } from 'reka-ui'
 import type { CreateLeaveRequest } from '@/types/leave'
 
-const props = defineProps<{
+defineProps<{
   open: boolean
+  /** Lỗi từ API sau khi gọi POST /leaves */
+  serverError?: string | null
+  isSubmitting?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -22,20 +25,18 @@ const emit = defineEmits<{
 
 const employeeId = ref<number | null>(null)
 const reason = ref('')
-const leaveType = ref('') // optional
-const startDate = ref('')
-const endDate = ref('')
+const leaveType = ref('')
+const fromDate = ref('')
+const toDate = ref('')
 
-const loading = ref(false)
 const error = ref<string | null>(null)
 
 const resetForm = () => {
   employeeId.value = null
   reason.value = ''
   leaveType.value = ''
-  startDate.value = ''
-  endDate.value = ''
-  loading.value = false
+  fromDate.value = ''
+  toDate.value = ''
   error.value = null
 }
 
@@ -47,42 +48,33 @@ const handleClose = () => {
 const handleSubmit = () => {
   error.value = null
 
-  if (employeeId.value === null) {
-    error.value = 'employeeId là bắt buộc'
+  if (employeeId.value === null || Number.isNaN(employeeId.value)) {
+    error.value = 'Vui lòng nhập mã nhân viên (employeeId) hợp lệ'
     return
   }
   if (!reason.value.trim()) {
     error.value = 'Lý do là bắt buộc'
     return
   }
-  if (!startDate.value || !endDate.value) {
+  if (!fromDate.value || !toDate.value) {
     error.value = 'Vui lòng chọn thời gian bắt đầu/kết thúc'
     return
   }
 
-  loading.value = true
-  try {
-    const payload: CreateLeaveRequest = {
-      employeeId: employeeId.value,
-      reason: reason.value.trim(),
-      leaveType: leaveType.value.trim() || undefined,
-      startDate: startDate.value,
-      endDate: endDate.value,
-    }
-
-    emit('created', payload)
-    resetForm()
-    emit('close')
-  } catch (err: any) {
-    error.value = err?.message || 'Lỗi khi tạo đơn nghỉ'
-  } finally {
-    loading.value = false
+  const payload: CreateLeaveRequest = {
+    employeeId: employeeId.value,
+    leaveType: leaveType.value.trim() || 'ANNUAL',
+    fromDate: fromDate.value,
+    toDate: toDate.value,
+    reason: reason.value.trim(),
   }
+
+  emit('created', payload)
 }
 </script>
 
 <template>
-  <DialogRoot :open="open" @update:open="handleClose">
+  <DialogRoot :open="open" @update:open="(v: boolean) => !v && handleClose()">
     <DialogPortal>
       <DialogOverlay
         class="fixed inset-0 bg-black/40 backdrop-blur-sm data-[state=open]:animate-overlayShow data-[state=closed]:animate-overlayHide"
@@ -94,19 +86,21 @@ const handleSubmit = () => {
           Tạo đơn nghỉ phép
         </DialogTitle>
         <DialogDescription class="mb-5 mt-2 leading-normal text-slate-600 dark:text-slate-400">
-          Nhập thông tin để tạo đơn nghỉ phép mới.
+          Dữ liệu gửi lên <code class="rounded bg-slate-100 px-1 text-xs dark:bg-slate-800">POST /leaves</code>. Nếu lỗi 400,
+          kiểm tra backend (employee tồn tại, enum loại nghỉ, định dạng ngày).
         </DialogDescription>
 
         <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              EmployeeId <span class="text-red-500">*</span>
+              Mã nhân viên (employeeId) <span class="text-red-500">*</span>
             </label>
             <input
               v-model.number="employeeId"
               type="number"
+              min="1"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-              placeholder="Ví dụ: 1"
+              placeholder="ID nhân viên trong hệ thống (ví dụ: 1)"
             />
           </div>
 
@@ -125,42 +119,49 @@ const handleSubmit = () => {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                LeaveType
+                Loại nghỉ (leaveType)
               </label>
-              <input
+              <select
                 v-model="leaveType"
-                type="text"
                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                placeholder="Ví dụ: annual"
-              />
+              >
+                <option value="">ANNUAL (mặc định)</option>
+                <option value="ANNUAL">ANNUAL — Nghỉ phép năm</option>
+                <option value="SICK">SICK — Nghỉ ốm</option>
+                <option value="UNPAID">UNPAID — Không lương</option>
+              </select>
             </div>
 
             <div>
               <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Trạng thái (tự động)
+                Trạng thái (do backend)
               </label>
-              <input disabled value="pending" type="text"
-                class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800" />
+              <input
+                disabled
+                value="pending"
+                type="text"
+                class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"
+              />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                StartDate <span class="text-red-500">*</span>
+                Từ ngày <span class="text-red-500">*</span>
               </label>
               <input
-                v-model="startDate"
+                v-model="fromDate"
                 type="date"
                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <div>
               <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                EndDate <span class="text-red-500">*</span>
+                Đến ngày <span class="text-red-500">*</span>
               </label>
               <input
-                v-model="endDate"
+                v-model="toDate"
                 type="date"
                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
               />
@@ -168,13 +169,19 @@ const handleSubmit = () => {
           </div>
 
           <p v-if="error" class="text-sm text-rose-600">{{ error }}</p>
+          <p
+            v-if="serverError"
+            class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200"
+          >
+            {{ serverError }}
+          </p>
 
           <div class="mt-6 flex justify-end gap-3">
             <DialogClose as-child>
               <button
                 type="button"
                 class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-                :disabled="loading"
+                :disabled="isSubmitting"
               >
                 Hủy
               </button>
@@ -183,9 +190,9 @@ const handleSubmit = () => {
             <button
               type="submit"
               class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-              :disabled="loading"
+              :disabled="isSubmitting"
             >
-              {{ loading ? 'Đang tạo...' : 'Tạo đơn' }}
+              {{ isSubmitting ? 'Đang gửi lên server...' : 'Tạo đơn' }}
             </button>
           </div>
         </form>
@@ -235,4 +242,3 @@ const handleSubmit = () => {
   }
 }
 </style>
-

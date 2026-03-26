@@ -5,19 +5,29 @@ import { ArrowLeft, BriefcaseBusiness, Save, Shield } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { usePositions } from '@/composables/usePositions'
+import { useDepartments } from '@/composables/useDepartments'
 import type { CreatePosition } from '@/types/position'
+import type { Department } from '@/types/department'
 
 const router = useRouter()
 const { createPosition } = usePositions()
+const { departmentsQuery } = useDepartments()
+const departments = computed<Department[]>(() => departmentsQuery.data.value ?? [])
 
 const form = reactive({
   name: '',
   code: '',
   description: '',
-  departmentId: null as number | null,
-  level: null as number | null,
+  departmentId: '',
+  level: 1,
   status: 'active' as 'active' | 'inactive' | string,
 })
+
+function departmentIdForApi(v: string): string | number | undefined {
+  if (v === '') return undefined
+  if (/^\d+$/.test(v)) return Number(v)
+  return v
+}
 
 type FieldName = 'name' | 'departmentId' | 'level' | 'status'
 const errors = reactive<Record<FieldName, string>>({
@@ -37,8 +47,8 @@ const hasErrors = computed(() => Object.values(errors).some(Boolean))
 
 const validate = () => {
   errors.name = form.name.trim() ? '' : 'Vui lòng nhập tên chức vụ'
-  errors.departmentId = form.departmentId !== null && Number.isFinite(form.departmentId) ? '' : 'Vui lòng nhập departmentId'
-  errors.level = form.level !== null && Number.isFinite(form.level) ? '' : 'Vui lòng nhập level'
+  errors.departmentId = form.departmentId ? '' : 'Vui lòng chọn phòng ban'
+  errors.level = Number.isFinite(form.level) ? '' : 'Vui lòng nhập level hợp lệ'
   errors.status = form.status ? '' : 'Vui lòng chọn trạng thái'
 
   return !hasErrors.value
@@ -55,8 +65,8 @@ const handleSubmit = async () => {
     name: form.name.trim(),
     code: form.code.trim() || undefined,
     description: form.description.trim() || undefined,
-    departmentId: form.departmentId ?? undefined,
-    level: form.level ?? undefined,
+    departmentId: departmentIdForApi(form.departmentId),
+    level: Number.isFinite(form.level) ? form.level : 1,
     status: form.status,
   }
 
@@ -107,21 +117,32 @@ const handleSubmit = async () => {
 
             <div>
               <label :class="labelClass">
-                DepartmentId <span class="text-rose-500">*</span>
+                Phòng ban <span class="text-rose-500">*</span>
               </label>
-              <input
-                v-model.number="form.departmentId"
-                type="number"
+              <select
+                v-model="form.departmentId"
+                :disabled="departmentsQuery.isLoading.value"
                 :class="[inputClass, errors.departmentId && 'border-rose-400']"
-              />
-              <p v-if="errors.departmentId" class="mt-1 text-xs text-rose-600">{{ errors.departmentId }}</p>
+              >
+                <option value="" disabled>— Chọn phòng ban —</option>
+                <option v-for="d in departments" :key="d.id" :value="String(d.id)">
+                  {{ d.name }}
+                </option>
+              </select>
+              <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-slate-500">Đang tải danh sách phòng ban…</p>
+              <p v-else-if="errors.departmentId" class="mt-1 text-xs text-rose-600">{{ errors.departmentId }}</p>
             </div>
 
             <div>
               <label :class="labelClass">
                 Level <span class="text-rose-500">*</span>
               </label>
-              <input v-model.number="form.level" type="number" :class="[inputClass, errors.level && 'border-rose-400']" />
+              <input
+                v-model.number="form.level"
+                type="number"
+                min="1"
+                :class="[inputClass, errors.level && 'border-rose-400']"
+              />
               <p v-if="errors.level" class="mt-1 text-xs text-rose-600">{{ errors.level }}</p>
             </div>
 

@@ -1,14 +1,29 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Briefcase, Save, Shield, User } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { useEmployees } from '@/composables/useEmployees'
+import { useDepartments } from '@/composables/useDepartments'
+import { usePositions } from '@/composables/usePositions'
 import type { CreateEmployee } from '@/types/employee'
+import type { Department } from '@/types/department'
+import type { Position } from '@/types/position'
 
 const router = useRouter()
 const { createEmployee } = useEmployees()
+const { departmentsQuery } = useDepartments()
+const { positionsQuery } = usePositions()
+
+const departments = computed<Department[]>(() => departmentsQuery.data.value ?? [])
+const positions = computed<Position[]>(() => positionsQuery.data.value ?? [])
+
+const filteredPositions = computed(() => {
+  const deptId = form.departmentId
+  if (!deptId) return []
+  return positions.value.filter((p) => String(p.departmentId ?? '') === String(deptId))
+})
 
 const form = reactive({
   fullName: '',
@@ -17,8 +32,8 @@ const form = reactive({
   phone: '',
   email: '',
   address: '',
-  department: '',
-  position: '',
+  departmentId: '',
+  positionId: '',
   shift: '',
   joinDate: '',
   username: '',
@@ -26,7 +41,18 @@ const form = reactive({
   isActive: true,
 })
 
-const departments = ['Nhân sự', 'Công nghệ', 'Tài chính', 'Kinh doanh', 'Vận hành', 'IT']
+watch(
+  () => form.departmentId,
+  () => {
+    form.positionId = ''
+  },
+)
+
+function numericIdForApi(v: string): number | undefined {
+  if (v === '') return undefined
+  const n = Number(v)
+  return Number.isFinite(n) ? n : undefined
+}
 const shifts = ['Ca sáng (08:00–17:30)', 'Ca chiều (13:00–22:00)', 'Ca đêm (22:00–06:00)']
 const roles = [
   { label: 'Nhân viên', value: 'employee' },
@@ -39,15 +65,15 @@ const inputClass =
 
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
 
-type FieldName = 'fullName' | 'empCode' | 'email' | 'department' | 'position' | 'shift' | 'username'
+type FieldName = 'fullName' | 'empCode' | 'email' | 'departmentId' | 'positionId' | 'shift' | 'username'
 type FieldErrors = Record<FieldName, string>
 
 const errors = reactive<FieldErrors>({
   fullName: '',
   empCode: '',
   email: '',
-  department: '',
-  position: '',
+  departmentId: '',
+  positionId: '',
   shift: '',
   username: '',
 })
@@ -60,8 +86,8 @@ const validateForm = () => {
   errors.email = form.email.trim()
     ? (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? '' : 'Email không đúng định dạng')
     : 'Vui lòng nhập email'
-  errors.department = form.department ? '' : 'Vui lòng chọn phòng ban'
-  errors.position = form.position.trim() ? '' : 'Vui lòng nhập chức vụ'
+  errors.departmentId = form.departmentId ? '' : 'Vui lòng chọn phòng ban'
+  errors.positionId = form.positionId ? '' : 'Vui lòng chọn chức vụ'
   errors.shift = form.shift ? '' : 'Vui lòng chọn ca làm việc'
   errors.username = form.username.trim() ? '' : 'Vui lòng nhập tên đăng nhập'
 
@@ -84,6 +110,8 @@ const handleSubmit = async () => {
     fullName: form.fullName.trim(),
     employeeCode: form.empCode.trim(),
     email: form.email.trim(),
+    departmentId: numericIdForApi(form.departmentId),
+    positionId: numericIdForApi(form.positionId),
     status: form.isActive ? 'active' : 'inactive',
     joinDate: form.joinDate || undefined,
   }
@@ -165,16 +193,41 @@ const handleSubmit = async () => {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label :class="labelClass">Phòng ban <span class="text-rose-500">*</span></label>
-              <select v-model="form.department" :class="[inputClass, errors.department && 'border-rose-400']">
-                <option value="">-- Chọn phòng ban --</option>
-                <option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
+              <select
+                v-model="form.departmentId"
+                :disabled="departmentsQuery.isLoading.value"
+                :class="[inputClass, errors.departmentId && 'border-rose-400']"
+              >
+                <option value="" disabled>— Chọn phòng ban —</option>
+                <option v-for="d in departments" :key="d.id" :value="String(d.id)">
+                  {{ d.name }}
+                </option>
               </select>
-              <p v-if="errors.department" class="mt-1 text-xs text-rose-600">{{ errors.department }}</p>
+              <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-slate-500">Đang tải phòng ban…</p>
+              <p v-else-if="errors.departmentId" class="mt-1 text-xs text-rose-600">{{ errors.departmentId }}</p>
             </div>
             <div>
               <label :class="labelClass">Chức vụ <span class="text-rose-500">*</span></label>
-              <input v-model="form.position" type="text" placeholder="Chuyên viên, Trưởng nhóm..." :class="[inputClass, errors.position && 'border-rose-400']" />
-              <p v-if="errors.position" class="mt-1 text-xs text-rose-600">{{ errors.position }}</p>
+              <select
+                v-model="form.positionId"
+                :disabled="!form.departmentId || positionsQuery.isLoading.value"
+                :class="[inputClass, errors.positionId && 'border-rose-400']"
+              >
+                <option value="" disabled>
+                  {{ form.departmentId ? '— Chọn chức vụ —' : '— Chọn phòng ban trước —' }}
+                </option>
+                <option v-for="p in filteredPositions" :key="p.id" :value="String(p.id)">
+                  {{ p.name }}
+                </option>
+              </select>
+              <p v-if="positionsQuery.isLoading.value" class="mt-1 text-xs text-slate-500">Đang tải chức vụ…</p>
+              <p v-else-if="errors.positionId" class="mt-1 text-xs text-rose-600">{{ errors.positionId }}</p>
+              <p
+                v-else-if="form.departmentId && !filteredPositions.length"
+                class="mt-1 text-xs text-amber-600"
+              >
+                Chưa có chức vụ cho phòng ban này. Hãy thêm chức vụ trong mục Chức vụ.
+              </p>
             </div>
             <div>
               <label :class="labelClass">Ca làm việc <span class="text-rose-500">*</span></label>

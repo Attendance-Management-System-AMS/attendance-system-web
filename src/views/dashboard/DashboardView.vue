@@ -8,6 +8,7 @@ import {
     Users,
     UserX,
 } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
@@ -73,11 +74,13 @@ const weeklyData = [
     <div class="space-y-6">
         <PageHeader title="Dashboard" description="Tổng quan chấm công hệ thống TimeMaster">
             <template #actions>
-                <button
-                    class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all">
+                <RouterLink
+                    to="/export"
+                    class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:border-indigo-200 hover:bg-indigo-50/80 hover:text-indigo-700 transition-all dark:border-slate-700 dark:bg-slate-900 dark:hover:border-indigo-500/40 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-300"
+                >
                     <Download class="h-4 w-4" />
                     Xuất báo cáo
-                </button>
+                </RouterLink>
             </template>
         </PageHeader>
 

@@ -1,29 +1,41 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, BriefcaseBusiness, Pencil, Save, Shield } from 'lucide-vue-next'
+import { ArrowLeft, BriefcaseBusiness, Save, Shield } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { positionApi } from '@/services/position.service'
 import { usePositions } from '@/composables/usePositions'
+import { useDepartments } from '@/composables/useDepartments'
 import type { CreatePosition } from '@/types/position'
+import type { Department } from '@/types/department'
 import { useQuery } from '@tanstack/vue-query'
 
 const router = useRouter()
 const route = useRoute()
 const { updatePosition } = usePositions()
+const { departmentsQuery } = useDepartments()
+const departments = computed<Department[]>(() => departmentsQuery.data.value ?? [])
 
-const positionId = computed(() => {
+function departmentIdForApi(v: string): string | number | undefined {
+  if (v === '') return undefined
+  if (/^\d+$/.test(v)) return Number(v)
+  return v
+}
+
+const positionId = computed((): string | number | undefined => {
   const raw = route.params.id
-  const num = Number(raw)
-  return Number.isFinite(num) ? num : raw
+  const r = Array.isArray(raw) ? raw[0] : raw
+  if (r === undefined || r === '') return undefined
+  const num = Number(r)
+  return Number.isFinite(num) ? num : String(r)
 })
 
 const form = reactive({
   name: '',
   code: '',
   description: '',
-  departmentId: null as number | null,
+  departmentId: '',
   level: null as number | null,
   status: 'active' as 'active' | 'inactive' | string,
 })
@@ -44,7 +56,7 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
 
 const validate = () => {
   errors.name = form.name.trim() ? '' : 'Vui lòng nhập tên chức vụ'
-  errors.departmentId = form.departmentId !== null && Number.isFinite(form.departmentId) ? '' : 'Vui lòng nhập departmentId'
+  errors.departmentId = form.departmentId ? '' : 'Vui lòng chọn phòng ban'
   errors.level = form.level !== null && Number.isFinite(form.level) ? '' : 'Vui lòng nhập level'
   errors.status = form.status ? '' : 'Vui lòng chọn trạng thái'
 
@@ -53,9 +65,10 @@ const validate = () => {
 
 const positionQuery = useQuery({
   queryKey: ['position', positionId],
-  enabled: computed(() => Boolean(positionId.value)),
+  enabled: computed(() => positionId.value != null),
   queryFn: async () => {
-    const res = await positionApi.getById(positionId.value)
+    const id = positionId.value!
+    const res = await positionApi.getById(id)
     return res.data.result
   },
 })
@@ -67,7 +80,7 @@ watchEffect(() => {
   form.name = p.name ?? ''
   form.code = p.code ?? ''
   form.description = p.description ?? ''
-  form.departmentId = typeof p.departmentId === 'number' ? p.departmentId : p.departmentId ? Number(p.departmentId) : null
+  form.departmentId = p.departmentId != null && p.departmentId !== '' ? String(p.departmentId) : ''
   form.level = typeof p.level === 'number' ? p.level : p.level ? Number(p.level) : null
   form.status = p.status ?? 'active'
 })
@@ -83,13 +96,13 @@ const handleSubmit = async () => {
     name: form.name.trim(),
     code: form.code.trim() || undefined,
     description: form.description.trim() || undefined,
-    departmentId: form.departmentId ?? undefined,
+    departmentId: departmentIdForApi(form.departmentId),
     level: form.level !== null ? form.level : undefined,
     status: form.status,
   }
 
   try {
-    await updatePosition.mutateAsync({ id: positionId.value as any, data: payload })
+    await updatePosition.mutateAsync({ id: positionId.value!, data: payload })
     router.push('/positions')
   } catch (err) {
     console.error('Update position failed:', err)
@@ -152,14 +165,20 @@ const handleSubmit = async () => {
 
               <div>
                 <label :class="labelClass">
-                  DepartmentId <span class="text-rose-500">*</span>
+                  Phòng ban <span class="text-rose-500">*</span>
                 </label>
-                <input
-                  v-model.number="form.departmentId"
-                  type="number"
+                <select
+                  v-model="form.departmentId"
+                  :disabled="departmentsQuery.isLoading.value"
                   :class="[inputClass, errors.departmentId && 'border-rose-400']"
-                />
-                <p v-if="errors.departmentId" class="mt-1 text-xs text-rose-600">{{ errors.departmentId }}</p>
+                >
+                  <option value="" disabled>— Chọn phòng ban —</option>
+                  <option v-for="d in departments" :key="d.id" :value="String(d.id)">
+                    {{ d.name }}
+                  </option>
+                </select>
+                <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-slate-500">Đang tải danh sách phòng ban…</p>
+                <p v-else-if="errors.departmentId" class="mt-1 text-xs text-rose-600">{{ errors.departmentId }}</p>
               </div>
 
               <div>

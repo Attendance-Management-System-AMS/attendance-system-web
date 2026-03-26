@@ -47,7 +47,7 @@ const handleCreated = (data: { name: string; description: string }) => {
 }
 
 const handleDelete = (id: string | number) => {
-    const dept = departments.value.find((d: Department) => d.id === id.toString())
+    const dept = departments.value.find((d: Department) => String(d.id) === String(id))
     if (dept) {
         deleteTarget.value = dept
         deleteDialog.value = true
@@ -56,7 +56,7 @@ const handleDelete = (id: string | number) => {
 
 const confirmDelete = () => {
     if (deleteTarget.value) {
-        deleteDepartment.mutate(deleteTarget.value.id)
+        deleteDepartment.mutate(String(deleteTarget.value.id))
     }
     deleteDialog.value = false
 }
@@ -90,9 +90,6 @@ const confirmDelete = () => {
                                 class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 Mô tả</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                Trưởng phòng</th>
-                            <th
                                 class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 Số NV</th>
                             <th
@@ -102,9 +99,6 @@ const confirmDelete = () => {
                                 class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 Trạng thái</th>
                             <th
-                                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                Địa điểm</th>
-                            <th
                                 class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 Hành động</th>
                         </tr>
@@ -113,7 +107,7 @@ const confirmDelete = () => {
                         <LoadingErrorState
                           v-if="isLoading || isError"
                           mode="row"
-                          :colspan="8"
+                          :colspan="6"
                           :is-loading="isLoading"
                           :is-error="isError"
                           :error="error"
@@ -124,7 +118,7 @@ const confirmDelete = () => {
                         />
 
                         <tr v-else-if="filteredDepartments.length === 0">
-                            <td colspan="8" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                            <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                                 Không tìm thấy phòng ban nào
                                 <button @click="isCreateModalOpen = true"
                                     class="ml-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400">
@@ -134,7 +128,6 @@ const confirmDelete = () => {
                         </tr>
                         <tr v-else v-for="dept in filteredDepartments" :key="dept.id"
                             class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <!-- Các cột như trước, bạn copy phần <td> từ code cũ -->
                             <td class="whitespace-nowrap px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div
