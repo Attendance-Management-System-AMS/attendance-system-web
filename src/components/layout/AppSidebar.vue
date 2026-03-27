@@ -38,12 +38,11 @@ const route = useRoute()
 
 const navGroups: NavGroup[] = [
   {
-    label: 'Tổng quan & Vận hành',
+    label: 'Tổng quan',
     items: [
       { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
       { label: 'Chấm công hôm nay', to: '/attendance', icon: Timer },
       { label: 'Lịch làm việc', to: '/schedule', icon: CalendarDays },
-      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays },
     ],
   },
   {
@@ -52,13 +51,19 @@ const navGroups: NavGroup[] = [
       { label: 'Nhân viên', to: '/employees', icon: Users },
       { label: 'Phòng ban', to: '/departments', icon: Building2 },
       { label: 'Chức vụ', to: '/positions', icon: Clock },
+      { label: 'Nghỉ phép', to: '/leaves', icon: ClipboardList },
+    ],
+  },
+  {
+    label: 'Thiết lập chấm công',
+    items: [
       { label: 'Ca làm việc', to: '/shifts', icon: Timer },
+      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays },
     ],
   },
   {
     label: 'Báo cáo',
     items: [
-      { label: 'Nghỉ phép', to: '/leaves', icon: ClipboardList },
       { label: 'Phân tích', to: '/reports', icon: BarChart3 },
       { label: 'Xuất báo cáo', to: '/export', icon: Download },
     ],

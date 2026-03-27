@@ -9,6 +9,10 @@ export interface AttendanceResponse {
 
 export const attendanceApi = {
   getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
+  getToday: (date?: string) =>
+    api.get<ApiResponse<Attendance[]>>('/attendance/today', {
+      params: date ? { date } : undefined,
+    }),
   checkIn: (descriptor: number[]) =>
     api.post<ApiResponse<AttendanceResponse>>('/attendance/check-in', { descriptor }).then(res => res.data),
 };

@@ -5,13 +5,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 export function useAttendance() {
     const queryClient = useQueryClient()
 
-    // Query danh sách
+    // Query danh sách chấm công hôm nay
     const attendanceQuery = useQuery<Attendance[]>({
-        queryKey: ['attendance'],
+        queryKey: ['attendance', 'today'],
         queryFn: async () => {
-            const response = await attendanceApi.getAll()
+            const response = await attendanceApi.getToday()
             if (response.data && response.data.success && response.data.result) {
-                return response.data.result.content || []
+                return response.data.result || []
             }
             return []
         },
@@ -22,7 +22,7 @@ export function useAttendance() {
     const checkIn = useMutation({
         mutationFn: (descriptor: number[]) => attendanceApi.checkIn(descriptor).then(data => data.result),
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['attendance'] })
+            queryClient.invalidateQueries({ queryKey: ['attendance', 'today'] })
         },
     })
 
