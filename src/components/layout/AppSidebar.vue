@@ -43,6 +43,7 @@ const navGroups: NavGroup[] = [
       { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
       { label: 'Chấm công hôm nay', to: '/attendance', icon: Timer },
       { label: 'Lịch làm việc', to: '/schedule', icon: CalendarDays },
+      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays },
     ],
   },
   {
@@ -51,6 +52,7 @@ const navGroups: NavGroup[] = [
       { label: 'Nhân viên', to: '/employees', icon: Users },
       { label: 'Phòng ban', to: '/departments', icon: Building2 },
       { label: 'Chức vụ', to: '/positions', icon: Clock },
+      { label: 'Ca làm việc', to: '/shifts', icon: Timer },
     ],
   },
   {

@@ -4,7 +4,7 @@ export default [
   {
     path: '/positions',
     name: 'positions',
-    component: () => import('@/views/shifts/ShiftsView.vue'),
+    component: () => import('@/views/positions/PositionsView.vue'),
     meta: { title: 'Chức vụ' },
   },
   {
