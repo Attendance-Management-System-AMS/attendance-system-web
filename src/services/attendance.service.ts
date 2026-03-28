@@ -12,6 +12,14 @@ export interface AttendanceTodayApiRecord {
   createdAt: string
 }
 
+/** Snapshot nhân viên kèm response check-in (backend điền khi check-in bằng mặt). */
+export interface AttendanceEmployeeBrief {
+  fullName: string
+  employeeCode: string
+  departmentName: string | null
+  positionName: string | null
+}
+
 export interface AttendanceCheckInResult {
   id?: number
   employeeId?: number
@@ -20,6 +28,8 @@ export interface AttendanceCheckInResult {
   workDate?: string
   status?: string
   createdAt?: string
+  /** Có khi backend trả kèm (check-in bằng mặt) — tránh gọi thêm GET /employees. */
+  employee?: AttendanceEmployeeBrief | null
 }
 
 export const attendanceApi = {
