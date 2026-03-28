@@ -2,9 +2,15 @@ import api from '@/lib/api';
 import type { Attendance } from '@/types/attendance';
 import type { ApiResponse, Page } from '@/types/api';
 
-export interface AttendanceResponse {
-  employeeName?: string;
-  message: string;
+/** Payload trả về từ attendance-service (check-in / check-in-by-face) */
+export interface AttendanceCheckInResult {
+  id?: number
+  employeeId?: number
+  checkInTime?: string
+  checkOutTime?: string
+  workDate?: string
+  status?: string
+  createdAt?: string
 }
 
 export const attendanceApi = {
@@ -13,6 +19,9 @@ export const attendanceApi = {
     api.get<ApiResponse<Attendance[]>>('/attendance/today', {
       params: date ? { date } : undefined,
     }),
-  checkIn: (descriptor: number[]) =>
-    api.post<ApiResponse<AttendanceResponse>>('/attendance/check-in', { descriptor }).then(res => res.data),
+  /** Descriptor 128 phần tử (face-api.js) — HR so khớp rồi ghi nhận check-in */
+  checkInByFace: (descriptor: number[]) =>
+    api
+      .post<ApiResponse<AttendanceCheckInResult>>('/attendance/check-in-by-face', { descriptor })
+      .then((res) => res.data),
 };

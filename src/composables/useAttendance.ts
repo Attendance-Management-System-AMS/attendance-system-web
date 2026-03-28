@@ -18,9 +18,9 @@ export function useAttendance() {
         staleTime: 1000 * 60 * 1, // 1 phút
     })
 
-    // Mutation check-in
+    // Mutation check-in bằng khuôn mặt
     const checkIn = useMutation({
-        mutationFn: (descriptor: number[]) => attendanceApi.checkIn(descriptor).then(data => data.result),
+        mutationFn: (descriptor: number[]) => attendanceApi.checkInByFace(descriptor).then(data => data.result),
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['attendance', 'today'] })
         },

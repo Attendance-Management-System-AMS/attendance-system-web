@@ -1,5 +1,5 @@
 import { employeeApi } from '@/services/employee.service';
-import type { Employee, CreateEmployee, UpdateEmployee } from '@/types/employee';
+import type { Employee, CreateEmployee, UpdateEmployee, FaceDescriptorRequest } from '@/types/employee';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 
 export function useEmployees() {
@@ -54,10 +54,22 @@ export function useEmployees() {
     },
   })
 
+  const registerFaceDescriptor = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: FaceDescriptorRequest }) =>
+      employeeApi.registerFaceDescriptor(id, body).then((res) => res.data.result),
+    onSettled: (_data, _err, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      if (vars?.id != null) {
+        queryClient.invalidateQueries({ queryKey: ['employee', vars.id] })
+      }
+    },
+  })
+
   return {
     employeesQuery,
     createEmployee,
     updateEmployee,
     deleteEmployee,
+    registerFaceDescriptor,
   }
 }
