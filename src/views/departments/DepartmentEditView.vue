@@ -3,8 +3,6 @@ import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Building2, Save, Shield } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { departmentApi } from '@/services/department.service'
 import { queryKeys } from '@/lib/queryKeys'
 import type { Department } from '@/types/department'
@@ -29,6 +27,15 @@ const errors = reactive<Record<FieldName, string>>({
 })
 
 const submitError = ref('')
+
+// Computed property to safely extract error message
+const departmentErrorMessage = computed(() => {
+  const err = departmentQuery.error.value
+  if (err && typeof err === 'object' && 'message' in err) {
+    return (err as Error).message
+  }
+  return undefined
+})
 
 const inputClass =
   'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
@@ -103,7 +110,7 @@ const handleSubmit = async () => {
       v-else-if="departmentQuery.isError.value"
       class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
     >
-      {{ (departmentQuery.error.value as Error | undefined)?.message || 'Không thể tải chi tiết phòng ban.' }}
+      {{ departmentErrorMessage || 'Không thể tải chi tiết phòng ban.' }}
       <div>
         <button class="mt-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400" @click="departmentQuery.refetch()">
           Thử lại

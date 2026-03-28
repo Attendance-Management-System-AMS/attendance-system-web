@@ -3,12 +3,18 @@ import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Save, Shield, Timer } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { shiftApi } from '@/services/shift.service'
 import { queryKeys } from '@/lib/queryKeys'
 import { useShifts } from '@/composables/useShifts'
 import type { CreateShift, Shift } from '@/types/shift'
+
+const shiftErrorMessage = computed(() => {
+  const err = shiftQuery.error.value
+  if (err && typeof err === 'object' && 'message' in err) {
+    return (err as Error).message
+  }
+  return 'Không thể tải chi tiết ca làm.'
+})
 
 const router = useRouter()
 const route = useRoute()
@@ -132,7 +138,7 @@ const handleSubmit = async () => {
     </div>
 
     <div v-else-if="shiftQuery.isError.value" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-      {{ (shiftQuery.error.value as Error | undefined)?.message || 'Không thể tải chi tiết ca làm.' }}
+      {{ shiftErrorMessage }}
       <div>
         <button class="mt-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400" @click="shiftQuery.refetch()">
           Thử lại

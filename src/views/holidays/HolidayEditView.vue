@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, CalendarDays, Save, Shield } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { holidayApi } from '@/services/holiday.service'
 import { queryKeys } from '@/lib/queryKeys'
 import { useHolidays } from '@/composables/useHolidays'
@@ -37,6 +34,15 @@ const errors = reactive<Record<FieldName, string>>({
 })
 
 const submitError = ref('')
+
+// Computed property to safely get the error message
+const holidayErrorMessage = computed(() => {
+  const err = holidayQuery.error.value
+  if (err && typeof err === 'object' && 'message' in err) {
+    return (err as Error).message
+  }
+  return 'Không thể tải chi tiết ngày nghỉ.'
+})
 
 const inputClass =
   'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
@@ -115,7 +121,7 @@ const handleSubmit = async () => {
     </div>
 
     <div v-else-if="holidayQuery.isError.value" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-      {{ (holidayQuery.error.value as Error | undefined)?.message || 'Không thể tải chi tiết ngày nghỉ.' }}
+      {{ holidayErrorMessage }}
       <div>
         <button class="mt-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400" @click="holidayQuery.refetch()">
           Thử lại

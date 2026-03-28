@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Globe, Moon, Monitor, Palette, Sparkles, Sun } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 
 const lang = ref<'vi' | 'en'>('vi')
 const theme = ref<'light' | 'dark' | 'system'>('system')

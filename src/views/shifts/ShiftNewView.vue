@@ -2,8 +2,6 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Save, Shield, Timer } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { useShifts } from '@/composables/useShifts'
 import type { CreateShift } from '@/types/shift'
 

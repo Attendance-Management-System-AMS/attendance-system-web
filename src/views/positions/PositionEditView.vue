@@ -2,8 +2,6 @@
 import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, BriefcaseBusiness, Save, Shield } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { positionApi } from '@/services/position.service'
 import { usePositions } from '@/composables/usePositions'
 import { useDepartments } from '@/composables/useDepartments'
@@ -90,6 +88,14 @@ watchEffect(() => {
   form.status = p.status ?? 'active'
 })
 
+const positionErrorMessage = computed(() => {
+  const err = positionQuery.error.value
+  if (err && typeof err === 'object' && 'message' in err) {
+    return (err as Error).message
+  }
+  return ''
+})
+
 const handleSubmit = async () => {
   submitError.value = ''
   if (!validate()) {
@@ -138,7 +144,7 @@ const handleSubmit = async () => {
       v-else-if="positionQuery.isError.value"
       class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
     >
-      {{ (positionQuery.error.value as Error | undefined)?.message || 'Không thể tải chi tiết chức vụ.' }}
+      {{ positionErrorMessage || 'Không thể tải chi tiết chức vụ.' }}
       <div>
         <button class="mt-2 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400" @click="positionQuery.refetch()">
           Thử lại

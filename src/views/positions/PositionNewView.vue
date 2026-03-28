@@ -2,8 +2,6 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, BriefcaseBusiness, Save, Shield } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { usePositions } from '@/composables/usePositions'
 import { useDepartments } from '@/composables/useDepartments'
 import type { CreatePosition } from '@/types/position'

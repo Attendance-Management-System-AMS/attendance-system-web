@@ -2,8 +2,6 @@
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, CalendarDays, Save, Shield } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { useHolidays } from '@/composables/useHolidays'
 import type { CreateHoliday } from '@/types/holiday'
 
