@@ -3,7 +3,11 @@ import { reactive, onMounted, onUnmounted } from 'vue'
 import { useNow, useDateFormat } from '@vueuse/core'
 import axios from 'axios'
 import { Building2, Briefcase, CheckCircle2, Clock, Hash, User, XCircle } from 'lucide-vue-next'
-import { attendanceApi, type AttendanceCheckInResult } from '@/services/attendance.service'
+import {
+  attendanceApi,
+  type AttendanceCheckInResult,
+  type AttendanceEmployeeBrief,
+} from '@/services/attendance.service'
 import { employeeApi } from '@/services/employee.service'
 import { useFaceDetection } from '@/composables/useFaceDetection'
 import type { Employee } from '@/types/employee'
@@ -27,6 +31,31 @@ const ui = reactive({
   /** Chỉ dùng cho lỗi (camera, API…) — thành công hiển thị ở panel dưới */
   errorMsg: '' as string,
 })
+
+/** Dựng object hiển thị kiosk từ snapshot API — không cần GET /employees/:id. */
+function employeeFromBrief(
+  row: AttendanceCheckInResult,
+  brief: AttendanceEmployeeBrief,
+): Employee {
+  const id = row.employeeId ?? 0
+  return {
+    id,
+    employeeCode: brief.employeeCode,
+    fullName: brief.fullName,
+    gender: '',
+    email: '',
+    departmentId: null,
+    departmentName: brief.departmentName,
+    positionId: null,
+    positionName: brief.positionName,
+    managerId: null,
+    managerName: null,
+    status: '',
+    biometricHash: null,
+    joinDate: '',
+    createdAt: '',
+  }
+}
 
 function formatCheckInTime(iso: string | undefined): string {
   if (!iso) return '—'
@@ -54,12 +83,26 @@ const successPanel = reactive({
 
 async function showSuccessFromResult(result: AttendanceCheckInResult | undefined) {
   successPanel.show = true
-  successPanel.employee = null
-  successPanel.loadingProfile = true
   successPanel.checkInTime = formatCheckInTime(result?.checkInTime)
   successPanel.attendanceStatus = result?.status ?? ''
   successPanel.employeeId = result?.employeeId ?? null
 
+  const brief = result?.employee
+  const hasBrief =
+    brief &&
+    typeof brief.fullName === 'string' &&
+    brief.fullName.trim() !== '' &&
+    typeof brief.employeeCode === 'string' &&
+    brief.employeeCode.trim() !== ''
+
+  if (hasBrief && result) {
+    successPanel.loadingProfile = false
+    successPanel.employee = employeeFromBrief(result, brief)
+    return
+  }
+
+  successPanel.employee = null
+  successPanel.loadingProfile = true
   const id = result?.employeeId
   if (id != null) {
     try {
