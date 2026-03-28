@@ -10,7 +10,6 @@ import positions from './routes/positions'
 import shifts from './routes/shifts'
 import holidays from './routes/holidays'
 import leaves from './routes/leaves'
-import legacyRedirects from './routes/legacyRedirects'
 import reports from './routes/reports'
 import misc from './routes/misc'
 
@@ -24,7 +23,6 @@ const adminChildren: RouteRecordRaw[] = [
   ...holidays,
   ...leaves,
   ...reports,
-  ...legacyRedirects,
   ...misc.filter((route) => !route.meta?.hideLayout),
 ]
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { reactive, onMounted, onUnmounted } from 'vue'
 import { useNow, useDateFormat } from '@vueuse/core'
-import axios from 'axios'
 import { Building2, Briefcase, CheckCircle2, Clock, Hash, User, XCircle } from 'lucide-vue-next'
+import { getApiErrorMessage } from '@/lib/apiErrorMessage'
 import {
   attendanceApi,
   type AttendanceCheckInResult,
@@ -11,16 +11,6 @@ import {
 import { employeeApi } from '@/services/employee.service'
 import { useFaceDetection } from '@/composables/useFaceDetection'
 import type { Employee } from '@/types/employee'
-
-function parseApiError(err: unknown): string {
-  if (axios.isAxiosError(err)) {
-    const body = err.response?.data as { message?: string } | undefined
-    if (body?.message) return body.message
-    if (err.message) return err.message
-  }
-  if (err instanceof Error) return err.message
-  return 'Không thể chấm công.'
-}
 
 // --- State ---
 const time = useDateFormat(useNow(), 'HH:mm:ss')
@@ -144,7 +134,7 @@ const handleCheckIn = async (descriptor: Float32Array) => {
     ui.errorMsg = ''
     await showSuccessFromResult(data.result)
   } catch (err) {
-    ui.errorMsg = parseApiError(err)
+    ui.errorMsg = getApiErrorMessage(err, 'Không thể chấm công.')
     ui.progress = 0
   } finally {
     window.clearInterval(progressInterval)
@@ -193,7 +183,7 @@ onMounted(async () => {
     runScanner()
   } catch (err) {
     console.error('Khởi tạo lỗi:', err)
-    ui.errorMsg = 'Lỗi truy cập Camera hoặc AI!'
+    ui.errorMsg = getApiErrorMessage(err, 'Lỗi truy cập Camera hoặc AI!')
   }
 })
 

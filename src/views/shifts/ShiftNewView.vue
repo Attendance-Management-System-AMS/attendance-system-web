@@ -37,7 +37,6 @@ const validate = () => {
   errors.name = form.name.trim() ? '' : 'Vui lòng nhập tên ca'
   errors.startTime = form.startTime.trim() ? '' : 'Vui lòng nhập giờ bắt đầu'
   errors.endTime = form.endTime.trim() ? '' : 'Vui lòng nhập giờ kết thúc'
-  errors.status = '' // backend hiện không có status
   return !hasErrors.value
 }
 

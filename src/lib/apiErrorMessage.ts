@@ -1,5 +1,8 @@
 /** Lấy chuỗi lỗi đọc được từ response axios / backend Spring. */
-export function getApiErrorMessage(err: unknown): string {
+export function getApiErrorMessage(
+  err: unknown,
+  fallbackMessage = 'Không tạo được đơn. Xem tab Network → Response để biết chi tiết.',
+): string {
   const e = err as {
     response?: { status?: number; data?: unknown }
     message?: string
@@ -40,5 +43,5 @@ export function getApiErrorMessage(err: unknown): string {
   if (status === 400) return 'Dữ liệu không hợp lệ (400). Kiểm tra employeeId, ngày, loại nghỉ.'
 
   if (e.message && !e.message.startsWith('Request failed')) return e.message
-  return 'Không tạo được đơn. Xem tab Network → Response để biết chi tiết.'
+  return fallbackMessage
 }

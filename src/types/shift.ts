@@ -1,6 +1,7 @@
 export interface Shift {
   id: string | number
   name?: string
+  status?: string | null
   startTime?: string // HH:mm:ss
   endTime?: string // HH:mm:ss
   breakStart?: string | null // HH:mm:ss
@@ -17,4 +18,3 @@ export type CreateShift = {
   breakEnd?: string | null
   gracePeriod?: number | null
 }
-

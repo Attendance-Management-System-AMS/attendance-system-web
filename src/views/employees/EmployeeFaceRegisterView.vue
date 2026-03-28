@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import axios from 'axios'
-import { ArrowLeft, CheckCircle2, Info, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
+import { ArrowLeft, CheckCircle2, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
+import { getApiErrorMessage } from '@/lib/apiErrorMessage'
 import { employeeApi } from '@/services/employee.service'
 import { useEmployees } from '@/composables/useEmployees'
 import { useFaceDetection } from '@/composables/useFaceDetection'
@@ -63,16 +63,6 @@ const { videoRef, isLoaded, loadModels, setupCamera, detectFace, stopCamera } = 
 let scanTimer: number | undefined
 let faceDetectedStartTime: number | null = null
 
-function parseApiError(err: unknown): string {
-  if (axios.isAxiosError(err)) {
-    const msg = err.response?.data as { message?: string } | undefined
-    if (msg?.message) return msg.message
-    if (err.message) return err.message
-  }
-  if (err instanceof Error) return err.message
-  return 'Không thể đăng ký khuôn mặt.'
-}
-
 const submitDescriptor = async (descriptor: Float32Array) => {
   ui.locked = true
   ui.progress = 0
@@ -95,7 +85,10 @@ const submitDescriptor = async (descriptor: Float32Array) => {
     }
     await employeeQuery.refetch()
   } catch (err) {
-    ui.feedback = { status: 'error', msg: parseApiError(err) }
+    ui.feedback = {
+      status: 'error',
+      msg: getApiErrorMessage(err, 'Không thể đăng ký khuôn mặt.'),
+    }
   } finally {
     window.clearInterval(progressInterval)
   }
