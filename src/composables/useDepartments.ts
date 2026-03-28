@@ -1,6 +1,7 @@
 // src/composables/useDepartments.ts
 import { departmentApi } from '@/services/department.service';
 import type { Department } from '@/types/department';
+import { queryKeys } from '@/lib/queryKeys'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 
 export function useDepartments() {
@@ -8,7 +9,7 @@ export function useDepartments() {
 
     // Query danh sách
     const departmentsQuery = useQuery<Department[]>({
-        queryKey: ['departments'],
+        queryKey: queryKeys.departments.all(),
         queryFn: async () => {
             const response = await departmentApi.getAll()
             const result = response.data?.result as Department[] | { content?: Department[] } | undefined
@@ -26,10 +27,10 @@ export function useDepartments() {
             departmentApi.create(data).then(res => res.data.result),
 
         onMutate: async (newDept) => {
-            await queryClient.cancelQueries({ queryKey: ['departments'] })
-            const previous = queryClient.getQueryData<Department[]>(['departments'])
+            await queryClient.cancelQueries({ queryKey: queryKeys.departments.all() })
+            const previous = queryClient.getQueryData<Department[]>(queryKeys.departments.all())
 
-            queryClient.setQueryData<Department[]>(['departments'], old => [
+            queryClient.setQueryData<Department[]>(queryKeys.departments.all(), old => [
                 ...(old || []),
                 {
                     ...newDept,
@@ -47,12 +48,12 @@ export function useDepartments() {
 
         onError: (_err, _newDept, context) => {
             if (context?.previous) {
-                queryClient.setQueryData(['departments'], context.previous)
+                queryClient.setQueryData(queryKeys.departments.all(), context.previous)
             }
         },
 
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['departments'] })
+            queryClient.invalidateQueries({ queryKey: queryKeys.departments.all() })
         },
     })
 
@@ -61,10 +62,10 @@ export function useDepartments() {
         mutationFn: (id: string) => departmentApi.delete(id),
 
         onMutate: async (id) => {
-            await queryClient.cancelQueries({ queryKey: ['departments'] })
-            const previous = queryClient.getQueryData<Department[]>(['departments'])
+            await queryClient.cancelQueries({ queryKey: queryKeys.departments.all() })
+            const previous = queryClient.getQueryData<Department[]>(queryKeys.departments.all())
 
-            queryClient.setQueryData<Department[]>(['departments'], old =>
+            queryClient.setQueryData<Department[]>(queryKeys.departments.all(), old =>
                 (old || []).filter(d => String(d.id) !== String(id))
             )
 
@@ -73,12 +74,12 @@ export function useDepartments() {
 
         onError: (_err, _id, context) => {
             if (context?.previous) {
-                queryClient.setQueryData(['departments'], context.previous)
+                queryClient.setQueryData(queryKeys.departments.all(), context.previous)
             }
         },
 
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['departments'] })
+            queryClient.invalidateQueries({ queryKey: queryKeys.departments.all() })
         },
     })
 
@@ -87,7 +88,7 @@ export function useDepartments() {
         mutationFn: ({ id, data }: { id: string; data: Partial<Department> }) =>
             departmentApi.update(id, data).then((res) => res.data.result),
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['departments'] })
+            queryClient.invalidateQueries({ queryKey: queryKeys.departments.all() })
         },
     })
 

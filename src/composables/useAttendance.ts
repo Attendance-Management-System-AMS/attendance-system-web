@@ -1,6 +1,7 @@
 import { attendanceApi } from '@/services/attendance.service'
 import { employeeApi } from '@/services/employee.service'
 import { mergeTodayAttendance } from '@/lib/attendanceMap'
+import { queryKeys } from '@/lib/queryKeys'
 import type { Attendance } from '@/types/attendance'
 import type { Employee } from '@/types/employee'
 import type { Page } from '@/types/api'
@@ -24,7 +25,7 @@ export function useAttendance() {
 
     // Query danh sách chấm công hôm nay (map DTO API + join nhân viên theo employeeId)
     const attendanceQuery = useQuery<Attendance[]>({
-        queryKey: ['attendance', 'today'],
+        queryKey: queryKeys.attendance.today(),
         queryFn: async () => {
             const [attRes, empRes] = await Promise.all([
                 attendanceApi.getToday(),
@@ -43,7 +44,7 @@ export function useAttendance() {
     const checkIn = useMutation({
         mutationFn: (descriptor: number[]) => attendanceApi.checkInByFace(descriptor).then(data => data.result),
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['attendance', 'today'] })
+            queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() })
         },
     })
 

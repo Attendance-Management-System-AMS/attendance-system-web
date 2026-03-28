@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { ArrowLeft, CheckCircle2, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
 import { getApiErrorMessage } from '@/lib/apiErrorMessage'
+import { queryKeys } from '@/lib/queryKeys'
 import { employeeApi } from '@/services/employee.service'
 import { useEmployees } from '@/composables/useEmployees'
 import { useFaceDetection } from '@/composables/useFaceDetection'
@@ -16,7 +17,7 @@ const { registerFaceDescriptor } = useEmployees()
 const employeeId = computed(() => Number(route.params.id))
 
 const employeeQuery = useQuery<Employee>({
-  queryKey: computed(() => ['employee', employeeId.value]),
+  queryKey: computed(() => queryKeys.employees.detail(employeeId.value)),
   queryFn: async () => {
     const res = await employeeApi.getById(employeeId.value)
     return res.data.result

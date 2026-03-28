@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/vue-query'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { departmentApi } from '@/services/department.service'
+import { queryKeys } from '@/lib/queryKeys'
 import type { Department } from '@/types/department'
 import { useDepartments } from '@/composables/useDepartments'
 
@@ -34,7 +35,7 @@ const inputClass =
 const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
 
 const departmentQuery = useQuery<Department>({
-  queryKey: ['department', departmentId],
+  queryKey: computed(() => queryKeys.departments.detail(departmentId.value)),
   enabled: computed(() => Boolean(departmentId.value)),
   queryFn: async () => {
     const res = await departmentApi.getById(departmentId.value)

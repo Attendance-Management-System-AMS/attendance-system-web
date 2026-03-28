@@ -15,7 +15,7 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/dev-dist/**']),
 
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
@@ -23,4 +23,12 @@ export default defineConfigWithVueTs(
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
 
   skipFormatting,
+
+  {
+    name: 'app/ui-primitives',
+    files: ['**/src/components/ui/**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
 )

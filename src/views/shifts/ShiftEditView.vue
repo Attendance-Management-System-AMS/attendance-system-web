@@ -6,8 +6,9 @@ import { useQuery } from '@tanstack/vue-query'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { shiftApi } from '@/services/shift.service'
+import { queryKeys } from '@/lib/queryKeys'
 import { useShifts } from '@/composables/useShifts'
-import type { CreateShift } from '@/types/shift'
+import type { CreateShift, Shift } from '@/types/shift'
 
 const router = useRouter()
 const route = useRoute()
@@ -62,7 +63,11 @@ const toTimeMinutes = (t?: string | null) => {
 }
 
 const shiftQuery = useQuery({
-  queryKey: ['attendance-shift', shiftId],
+  queryKey: computed(() =>
+    shiftId.value != null
+      ? queryKeys.shifts.detail(shiftId.value)
+      : (['attendance-shift', '__none__'] as const),
+  ),
   enabled: computed(() => shiftId.value != null),
   queryFn: async () => {
     const id = shiftId.value!
@@ -72,7 +77,7 @@ const shiftQuery = useQuery({
 })
 
 watchEffect(() => {
-  const s = shiftQuery.data.value as any
+  const s = shiftQuery.data.value as Shift | undefined
   if (!s) return
   form.name = s.name ?? ''
   form.startTime = toTimeMinutes(s.startTime)

@@ -7,9 +7,10 @@ import FormCard from '@/components/ui/FormCard.vue'
 import { positionApi } from '@/services/position.service'
 import { usePositions } from '@/composables/usePositions'
 import { useDepartments } from '@/composables/useDepartments'
-import type { CreatePosition } from '@/types/position'
+import type { CreatePosition, Position } from '@/types/position'
 import type { Department } from '@/types/department'
 import { useQuery } from '@tanstack/vue-query'
+import { queryKeys } from '@/lib/queryKeys'
 
 const router = useRouter()
 const route = useRoute()
@@ -64,7 +65,11 @@ const validate = () => {
 }
 
 const positionQuery = useQuery({
-  queryKey: ['position', positionId],
+  queryKey: computed(() =>
+    positionId.value != null
+      ? queryKeys.positions.detail(positionId.value)
+      : (['position', '__none__'] as const),
+  ),
   enabled: computed(() => positionId.value != null),
   queryFn: async () => {
     const id = positionId.value!
@@ -74,7 +79,7 @@ const positionQuery = useQuery({
 })
 
 watchEffect(() => {
-  const p = positionQuery.data.value as any
+  const p = positionQuery.data.value as Position | undefined
   if (!p) return
 
   form.name = p.name ?? ''

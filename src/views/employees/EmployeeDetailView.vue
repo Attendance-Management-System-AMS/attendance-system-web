@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { ArrowLeft, Pencil, ScanFace } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { employeeApi } from '@/services/employee.service'
+import { queryKeys } from '@/lib/queryKeys'
 import type { Employee } from '@/types/employee'
 
 const route = useRoute()
@@ -13,7 +14,7 @@ const router = useRouter()
 const employeeId = computed(() => Number(route.params.id))
 
 const employeeQuery = useQuery<Employee>({
-  queryKey: ['employee', employeeId],
+  queryKey: computed(() => queryKeys.employees.detail(employeeId.value)),
   queryFn: async () => {
     const response = await employeeApi.getById(employeeId.value)
     return response.data.result

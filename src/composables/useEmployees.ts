@@ -1,5 +1,6 @@
 import { employeeApi } from '@/services/employee.service';
 import type { Employee, CreateEmployee, UpdateEmployee, FaceDescriptorRequest } from '@/types/employee';
+import { queryKeys } from '@/lib/queryKeys'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 
 export function useEmployees() {
@@ -7,7 +8,7 @@ export function useEmployees() {
 
   // Query danh sách
   const employeesQuery = useQuery<Employee[]>({
-    queryKey: ['employees'],
+    queryKey: queryKeys.employees.all(),
     queryFn: async () => {
       try {
         const response = await employeeApi.getAll()
@@ -31,7 +32,7 @@ export function useEmployees() {
       employeeApi.create(data).then(res => res.data.result),
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() })
     },
   })
 
@@ -41,7 +42,7 @@ export function useEmployees() {
       employeeApi.update(id, data).then(res => res.data.result),
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() })
     },
   })
 
@@ -50,7 +51,7 @@ export function useEmployees() {
     mutationFn: (id: number) => employeeApi.delete(id),
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() })
     },
   })
 
@@ -58,9 +59,9 @@ export function useEmployees() {
     mutationFn: ({ id, body }: { id: number; body: FaceDescriptorRequest }) =>
       employeeApi.registerFaceDescriptor(id, body).then((res) => res.data.result),
     onSettled: (_data, _err, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() })
       if (vars?.id != null) {
-        queryClient.invalidateQueries({ queryKey: ['employee', vars.id] })
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.detail(vars.id) })
       }
     },
   })

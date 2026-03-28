@@ -6,6 +6,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { employeeApi } from '@/services/employee.service'
+import { queryKeys } from '@/lib/queryKeys'
 import { useEmployees } from '@/composables/useEmployees'
 import type { Employee, UpdateEmployee } from '@/types/employee'
 
@@ -48,7 +49,7 @@ const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-
 const submitError = ref('')
 
 const employeeQuery = useQuery<Employee>({
-  queryKey: ['employee', employeeId],
+  queryKey: computed(() => queryKeys.employees.detail(employeeId.value)),
   enabled: computed(() => Number.isFinite(employeeId.value) && employeeId.value > 0),
   queryFn: async () => {
     const res = await employeeApi.getById(employeeId.value)

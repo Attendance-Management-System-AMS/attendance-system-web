@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import {
     DialogRoot,
-    DialogTrigger,
     DialogPortal,
     DialogOverlay,
     DialogContent,
@@ -11,7 +10,7 @@ import {
     DialogClose,
 } from 'reka-ui'
 
-const props = defineProps<{
+defineProps<{
     open: boolean
 }>()
 
@@ -42,8 +41,8 @@ const handleSubmit = async () => {
 
         resetForm()
         emit('close')
-    } catch (err: any) {
-        error.value = err.message || 'Lỗi khi tạo phòng ban'
+    } catch (err: unknown) {
+        error.value = err instanceof Error ? err.message : 'Lỗi khi tạo phòng ban'
     } finally {
         loading.value = false
     }

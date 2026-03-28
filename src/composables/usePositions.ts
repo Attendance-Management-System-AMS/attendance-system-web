@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { queryKeys } from '@/lib/queryKeys'
 import { positionApi } from '@/services/position.service'
 import type { CreatePosition, Position } from '@/types/position'
 
@@ -6,7 +7,7 @@ export function usePositions() {
   const queryClient = useQueryClient()
 
   const positionsQuery = useQuery<Position[]>({
-    queryKey: ['positions'],
+    queryKey: queryKeys.positions.all(),
     queryFn: async () => {
       const response = await positionApi.getAll()
       const result = response.data?.result as Position[] | { content?: Position[] } | undefined
@@ -20,18 +21,18 @@ export function usePositions() {
 
   const createPosition = useMutation({
     mutationFn: (data: CreatePosition) => positionApi.create(data).then((res) => res.data.result),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['positions'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.positions.all() }),
   })
 
   const deletePosition = useMutation({
     mutationFn: (id: string | number) => positionApi.delete(id),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['positions'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.positions.all() }),
   })
 
   const updatePosition = useMutation({
     mutationFn: ({ id, data }: { id: string | number; data: Partial<CreatePosition> }) =>
       positionApi.update(id, data).then((res) => res.data.result),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['positions'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.positions.all() }),
   })
 
   return {

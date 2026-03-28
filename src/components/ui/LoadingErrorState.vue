@@ -29,7 +29,8 @@ const emit = defineEmits<{
 
 const resolvedErrorText = computed(() => {
   if (props.error && typeof props.error === 'object' && 'message' in props.error) {
-    return String((props.error as any).message || props.errorText)
+    const msg = (props.error as { message?: unknown }).message
+    return String(msg ?? props.errorText)
   }
   return props.errorText
 })

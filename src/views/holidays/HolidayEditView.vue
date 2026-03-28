@@ -6,8 +6,9 @@ import { useQuery } from '@tanstack/vue-query'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import { holidayApi } from '@/services/holiday.service'
+import { queryKeys } from '@/lib/queryKeys'
 import { useHolidays } from '@/composables/useHolidays'
-import type { CreateHoliday } from '@/types/holiday'
+import type { CreateHoliday, Holiday } from '@/types/holiday'
 
 const router = useRouter()
 const route = useRoute()
@@ -49,7 +50,11 @@ const validate = () => {
 }
 
 const holidayQuery = useQuery({
-  queryKey: ['attendance-holiday', holidayId],
+  queryKey: computed(() =>
+    holidayId.value != null
+      ? queryKeys.holidays.detail(holidayId.value)
+      : (['attendance-holiday', '__none__'] as const),
+  ),
   enabled: computed(() => holidayId.value != null),
   queryFn: async () => {
     const id = holidayId.value!
@@ -59,7 +64,7 @@ const holidayQuery = useQuery({
 })
 
 watchEffect(() => {
-  const h = holidayQuery.data.value as any
+  const h = holidayQuery.data.value as Holiday | undefined
   if (!h) return
   form.holidayName = h.holidayName ?? ''
   form.fromDate = h.fromDate ?? ''
