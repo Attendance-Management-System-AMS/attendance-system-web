@@ -2,8 +2,6 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import { ArrowLeft, Pencil, ScanFace } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
 import { employeeApi } from '@/services/employee.service'
 import { queryKeys } from '@/lib/queryKeys'
 import type { Employee } from '@/types/employee'

@@ -2,8 +2,6 @@
 import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Briefcase, RefreshCw, Shield, User } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FormCard from '@/components/ui/FormCard.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { employeeApi } from '@/services/employee.service'
 import { queryKeys } from '@/lib/queryKeys'
