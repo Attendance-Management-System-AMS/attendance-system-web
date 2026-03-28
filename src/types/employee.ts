@@ -12,6 +12,8 @@ export interface Employee {
   managerName: string | null
   status: string
   biometricHash: string | null
+  /** true khi đã lưu face embedding (descriptor) trên server */
+  faceRegistered?: boolean
   joinDate: string
   createdAt: string
   // Cũ (giữ lại nếu UI cần nhưng nên ưu tiên dùng DTO trên)
@@ -32,3 +34,7 @@ export interface CreateEmployee {
 }
 
 export type UpdateEmployee = Partial<CreateEmployee>
+
+export interface FaceDescriptorRequest {
+  descriptor: number[]
+}

@@ -108,7 +108,8 @@ const handleDelete = () => {
 </script>
 
 <template>
-  <div class="relative">
+  <!-- Full-width wrapper to push trigger flush-right in table cells -->
+  <div class="relative flex w-full justify-end -mr-4">
     <button
       ref="triggerRef"
       @click.stop="toggleMenu"
@@ -131,7 +132,7 @@ const handleDelete = () => {
         ref="dropdownRef"
         v-if="isOpen"
         :style="menuStyle"
-        class="z-[1000] rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden dark:bg-slate-900 dark:border-slate-800"
+        class="z-1000 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden dark:bg-slate-900 dark:border-slate-800"
       >
         <div class="p-1">
           <button

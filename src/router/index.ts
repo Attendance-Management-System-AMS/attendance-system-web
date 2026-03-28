@@ -7,6 +7,8 @@ import attendance from './routes/attendance'
 import employees from './routes/employees'
 import departments from './routes/departments'
 import positions from './routes/positions'
+import shifts from './routes/shifts'
+import holidays from './routes/holidays'
 import leaves from './routes/leaves'
 import legacyRedirects from './routes/legacyRedirects'
 import reports from './routes/reports'
@@ -18,6 +20,8 @@ const adminChildren: RouteRecordRaw[] = [
   ...employees,
   ...departments,
   ...positions,
+  ...shifts,
+  ...holidays,
   ...leaves,
   ...reports,
   ...legacyRedirects,
@@ -44,7 +48,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('@/views/placeholder/PlaceholderView.vue'),
+    component: () => import('@/views/errors/NotFoundView.vue'),
     meta: { title: 'Không tìm thấy trang' },
   },
 ]

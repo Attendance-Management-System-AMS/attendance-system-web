@@ -8,16 +8,21 @@ export interface LeaveRequest {
   departmentName?: string
   reason: string
   leaveType?: string
-  startDate: string
-  endDate: string
+  /** Backend mới */
+  fromDate?: string
+  toDate?: string
+  /** Tương thích cũ */
+  startDate?: string
+  endDate?: string
   days?: number
   status: LeaveStatus
 }
 
+/** Khớp body POST /leaves từ backend */
 export interface CreateLeaveRequest {
   employeeId: string | number
+  leaveType: string
+  fromDate: string
+  toDate: string
   reason: string
-  leaveType?: string
-  startDate: string
-  endDate: string
 }

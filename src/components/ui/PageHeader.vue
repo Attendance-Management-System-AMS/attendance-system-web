@@ -6,7 +6,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between mb-6">
+  <div
+    class="mb-6 flex flex-col gap-1 border-b border-slate-200/70 pb-5 sm:flex-row sm:items-start sm:justify-between dark:border-slate-800/80"
+  >
     <div>
       <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
         {{ title }}

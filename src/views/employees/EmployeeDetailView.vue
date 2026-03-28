@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import { ArrowLeft, Pencil } from 'lucide-vue-next'
+import { ArrowLeft, Pencil, ScanFace } from 'lucide-vue-next'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { employeeApi } from '@/services/employee.service'
 import type { Employee } from '@/types/employee'
@@ -37,6 +37,10 @@ const infoRows = computed(() => {
     { label: 'Quản lý', value: data.managerName || '-' },
     { label: 'Ngày vào làm', value: data.joinDate || '-' },
     { label: 'Trạng thái', value: data.status || '-' },
+    {
+      label: 'Khuôn mặt (chấm công)',
+      value: data.faceRegistered ? 'Đã đăng ký' : 'Chưa đăng ký',
+    },
     { label: 'Ngày tạo', value: data.createdAt || '-' },
   ]
 })
@@ -55,6 +59,14 @@ const infoRows = computed(() => {
         >
           <ArrowLeft class="h-4 w-4" />
           Quay lại
+        </button>
+        <button
+          v-if="employee"
+          @click="router.push(`/employees/${employee.id}/register-face`)"
+          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+        >
+          <ScanFace class="h-4 w-4" />
+          Khuôn mặt
         </button>
         <button
           v-if="employee"

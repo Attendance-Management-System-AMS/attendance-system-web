@@ -139,18 +139,18 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
                                     <Avatar class="size-9">
-                                        <AvatarImage :src="record.employee.avatarUrl ?? ''"
-                                            :alt="record.employee.name" />
+                                        <AvatarImage :src="record.employee?.avatarUrl ?? ''"
+                                            :alt="record.employee?.fullName ?? ''" />
                                         <AvatarFallback>
-                                            {{ record.employee.name.slice(0, 2).toUpperCase() }}
+                                            {{ (record.employee?.fullName ?? '?').slice(0, 2).toUpperCase() }}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <p class="text-sm font-semibold text-slate-900 dark:text-white">
-                                            {{ record.employee.name }}
+                                            {{ record.employee?.fullName ?? '—' }}
                                         </p>
                                         <p class="text-xs text-slate-400">
-                                            {{ record.employee.department }} • {{ record.employee.role }}
+                                            {{ record.employee?.departmentName ?? '—' }} · {{ record.employee?.positionName ?? '—' }}
                                         </p>
                                     </div>
                                 </div>
@@ -177,6 +177,6 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
 
         <DeleteConfirmDialog :open="deleteDialog" title="Xóa bản ghi"
             description="Bạn có chắc chắn muốn xóa bản ghi chấm công này không?"
-            :item-name="deleteTarget?.employee.name" @confirm="confirmDelete" @cancel="deleteDialog = false" />
+            :item-name="deleteTarget?.employee?.fullName" @confirm="confirmDelete" @cancel="deleteDialog = false" />
     </div>
 </template>

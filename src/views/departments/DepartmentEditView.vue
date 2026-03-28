@@ -18,7 +18,7 @@ const departmentId = computed(() => route.params.id as string)
 const form = reactive({
   name: '',
   description: '',
-  status: 'active' as 'active' | 'inactive' | string,
+  status: 'active' as 'active' | 'inactive',
 })
 
 type FieldName = 'name' | 'status'
@@ -47,7 +47,7 @@ watchEffect(() => {
   if (!d) return
   form.name = d.name ?? ''
   form.description = d.description ?? ''
-  form.status = d.status ?? 'active'
+  form.status = d.status === 'inactive' ? 'inactive' : 'active'
 })
 
 const validate = () => {

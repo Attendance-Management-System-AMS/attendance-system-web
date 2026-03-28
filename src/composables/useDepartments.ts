@@ -65,7 +65,7 @@ export function useDepartments() {
             const previous = queryClient.getQueryData<Department[]>(['departments'])
 
             queryClient.setQueryData<Department[]>(['departments'], old =>
-                (old || []).filter(d => d.id !== id)
+                (old || []).filter(d => String(d.id) !== String(id))
             )
 
             return { previous }

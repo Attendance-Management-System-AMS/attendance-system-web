@@ -11,7 +11,9 @@ const toggleSidebar = () => {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-[#F8FAFC] dark:bg-slate-950">
+  <div
+    class="flex min-h-screen bg-linear-to-brm-slate-50 via-white to-indigo-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/30"
+  >
     <!-- Sidebar -->
     <AppSidebar :collapsed="sidebarCollapsed" @toggle="toggleSidebar" />
 
