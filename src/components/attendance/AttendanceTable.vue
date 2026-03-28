@@ -37,17 +37,17 @@ const badgeVariantByStatus: Record<Attendance['status'], 'success' | 'warning' |
         <TableCell>
           <div class="flex items-center gap-3">
             <Avatar class="size-9">
-              <AvatarImage :src="record.employee.avatarUrl ?? ''" :alt="record.employee.fullName" />
+              <AvatarImage :src="record.employee?.avatarUrl ?? ''" :alt="record.employee?.fullName ?? ''" />
               <AvatarFallback>
-                {{ record.employee.fullName.slice(0, 2).toUpperCase() }}
+                {{ (record.employee?.fullName ?? '?').slice(0, 2).toUpperCase() }}
               </AvatarFallback>
             </Avatar>
             <div>
               <p class="text-sm font-medium text-slate-900">
-                {{ record.employee.fullName }}
+                {{ record.employee?.fullName ?? '—' }}
               </p>
               <p class="text-xs text-slate-500">
-                {{ record.employee.departmentName ?? '—' }} · {{ record.employee.positionName ?? '—' }}
+                {{ record.employee?.departmentName ?? '—' }} · {{ record.employee?.positionName ?? '—' }}
               </p>
             </div>
           </div>

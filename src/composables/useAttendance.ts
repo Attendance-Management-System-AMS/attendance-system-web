@@ -1,19 +1,40 @@
-import { attendanceApi } from '@/services/attendance.service';
-import type { Attendance } from '@/types/attendance';
+import { attendanceApi } from '@/services/attendance.service'
+import { employeeApi } from '@/services/employee.service'
+import { mergeTodayAttendance } from '@/lib/attendanceMap'
+import type { Attendance } from '@/types/attendance'
+import type { Employee } from '@/types/employee'
+import type { Page } from '@/types/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+
+function parseEmployeesPage(result: unknown): Employee[] {
+    if (Array.isArray(result)) return result as Employee[]
+    if (
+        result &&
+        typeof result === 'object' &&
+        'content' in result &&
+        Array.isArray((result as Page<Employee>).content)
+    ) {
+        return (result as Page<Employee>).content
+    }
+    return []
+}
 
 export function useAttendance() {
     const queryClient = useQueryClient()
 
-    // Query danh sách chấm công hôm nay
+    // Query danh sách chấm công hôm nay (map DTO API + join nhân viên theo employeeId)
     const attendanceQuery = useQuery<Attendance[]>({
         queryKey: ['attendance', 'today'],
         queryFn: async () => {
-            const response = await attendanceApi.getToday()
-            if (response.data && response.data.success && response.data.result) {
-                return response.data.result || []
-            }
-            return []
+            const [attRes, empRes] = await Promise.all([
+                attendanceApi.getToday(),
+                employeeApi.getAll(),
+            ])
+            const rows =
+                attRes.data?.success && attRes.data.result ? attRes.data.result : []
+            const employees = parseEmployeesPage(empRes.data?.result)
+            const byEmployeeId = new Map(employees.map((e) => [e.id, e]))
+            return mergeTodayAttendance(rows, byEmployeeId)
         },
         staleTime: 1000 * 60 * 1, // 1 phút
     })

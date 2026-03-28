@@ -3,8 +3,7 @@ import { computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import axios from 'axios'
-import { ArrowLeft, CheckCircle2, ScanFace, XCircle } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
+import { ArrowLeft, CheckCircle2, Info, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
 import { employeeApi } from '@/services/employee.service'
 import { useEmployees } from '@/composables/useEmployees'
 import { useFaceDetection } from '@/composables/useFaceDetection'
@@ -17,7 +16,7 @@ const { registerFaceDescriptor } = useEmployees()
 const employeeId = computed(() => Number(route.params.id))
 
 const employeeQuery = useQuery<Employee>({
-  queryKey: ['employee', employeeId],
+  queryKey: computed(() => ['employee', employeeId.value]),
   queryFn: async () => {
     const res = await employeeApi.getById(employeeId.value)
     return res.data.result
@@ -31,7 +30,34 @@ const ui = reactive({
   locked: false,
   progress: 0,
   feedback: { status: 'idle' as 'idle' | 'success' | 'error', msg: '' },
+  /** Đặt true sau khi API lưu thành công — giữ UI “đã đăng ký” kể cả khi GET chưa kịp trả faceRegistered */
+  justSavedFace: false,
+  lastSuccessAt: null as number | null,
 })
+
+let successAutoHideTimer: number | undefined
+
+/** Hiển thị “đã có mẫu” khi server báo hoặc vừa lưu thành công trong phiên */
+const effectiveFaceRegistered = computed(
+  () => !!(employee.value?.faceRegistered || ui.justSavedFace),
+)
+
+const successTimeLabel = computed(() => {
+  if (!ui.lastSuccessAt) return ''
+  return new Date(ui.lastSuccessAt).toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+})
+
+function dismissFeedback() {
+  if (successAutoHideTimer) {
+    window.clearTimeout(successAutoHideTimer)
+    successAutoHideTimer = undefined
+  }
+  ui.feedback = { status: 'idle', msg: '' }
+}
 
 const { videoRef, isLoaded, loadModels, setupCamera, detectFace, stopCamera } = useFaceDetection()
 let scanTimer: number | undefined
@@ -61,7 +87,13 @@ const submitDescriptor = async (descriptor: Float32Array) => {
       body: { descriptor: descriptorArray },
     })
     ui.progress = 100
-    ui.feedback = { status: 'success', msg: 'Đã lưu khuôn mặt thành công.' }
+    ui.justSavedFace = true
+    ui.lastSuccessAt = Date.now()
+    ui.feedback = {
+      status: 'success',
+      msg: 'Đã lưu khuôn mặt thành công. Mẫu descriptor đã được gửi lên máy chủ.',
+    }
+    await employeeQuery.refetch()
   } catch (err) {
     ui.feedback = { status: 'error', msg: parseApiError(err) }
   } finally {
@@ -69,13 +101,15 @@ const submitDescriptor = async (descriptor: Float32Array) => {
   }
 
   window.setTimeout(() => {
-    Object.assign(ui, {
-      locked: false,
-      progress: 0,
-      feedback: { status: 'idle', msg: '' },
-    })
+    ui.locked = false
+    ui.progress = 0
     runScanner()
-  }, 3200)
+  }, 500)
+
+  if (successAutoHideTimer) window.clearTimeout(successAutoHideTimer)
+  successAutoHideTimer = window.setTimeout(() => {
+    if (ui.feedback.status === 'success') dismissFeedback()
+  }, 20000)
 }
 
 const runScanner = async () => {
@@ -115,36 +149,30 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (scanTimer) window.clearTimeout(scanTimer)
+  if (successAutoHideTimer) window.clearTimeout(successAutoHideTimer)
   stopCamera()
 })
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      title="Đăng ký khuôn mặt"
-      :description="
-        employee
-          ? `${employee.fullName} · ${employee.employeeCode}`
-          : 'Quét khuôn mặt để lưu descriptor (face-api.js, 128 chiều)'
-      "
-    >
-      <template #actions>
-        <button
-          type="button"
-          @click="router.push(employee ? `/employees/${employee.id}` : '/employees')"
-          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-        >
-          <ArrowLeft class="h-4 w-4" />
-          Quay lại
-        </button>
-      </template>
-    </PageHeader>
+  <div class="space-y-8">
+    <!-- Điều hướng -->
+    <div>
+      <button
+        type="button"
+        @click="router.push(employee ? `/employees/${employee.id}` : '/employees')"
+        class="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+      >
+        <ArrowLeft class="h-4 w-4" />
+        Quay lại
+      </button>
+    </div>
 
     <div
       v-if="employeeQuery.isLoading.value"
-      class="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900"
+      class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900"
     >
+      <div class="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
       Đang tải thông tin nhân viên...
     </div>
 
@@ -155,84 +183,202 @@ onUnmounted(() => {
       Không tìm thấy nhân viên.
     </div>
 
-    <div v-else class="grid gap-6 lg:grid-cols-3">
-      <div class="lg:col-span-2 overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 shadow-sm dark:border-slate-800">
-        <div class="relative aspect-4/3 w-full">
-          <video
-            ref="videoRef"
-            autoplay
-            muted
-            playsinline
-            class="absolute inset-0 h-full w-full object-cover scale-x-[-1] opacity-90"
-          />
-          <div
-            class="pointer-events-none absolute inset-0 flex items-center justify-center border-[3px] border-white/20"
-          >
-            <div
-              class="h-[68%] max-h-[min(420px,70vw)] w-[55%] max-w-[min(340px,85vw)] rounded-[50%] border-2 border-dashed border-white/50 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
-            />
-          </div>
-          <div
-            class="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2 rounded-xl bg-black/55 px-4 py-3 text-xs text-white backdrop-blur-md"
-          >
-            <ScanFace class="h-4 w-4 shrink-0 text-indigo-300" />
-            <span>
-              Đặt mặt trong khung, ánh sáng đều. Giữ yên khoảng <strong>2 giây</strong> để hệ thống chụp descriptor.
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div
-          class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    <template v-else>
+      <!-- Tiêu đề + nhân viên -->
+      <header class="space-y-2 border-b border-slate-200/80 pb-8 dark:border-slate-800/80">
+        <p
+          class="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400"
         >
-          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Trạng thái</p>
-          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            <span v-if="employee.faceRegistered" class="text-emerald-600 dark:text-emerald-400">
-              Đã có khuôn mặt đăng ký — lần lưu tiếp theo sẽ <strong>cập nhật</strong> mẫu.
+          Chấm công nhận diện
+        </p>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          Đăng ký khuôn mặt
+        </h1>
+        <div
+          class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+        >
+          <p
+            class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-lg text-slate-700 dark:text-slate-200"
+          >
+            <span class="font-semibold">{{ employee.fullName }}</span>
+            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+            <span
+              class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-sm font-medium text-indigo-700 dark:bg-slate-800 dark:text-indigo-300"
+            >
+              {{ employee.employeeCode }}
             </span>
-            <span v-else>Chưa đăng ký — lưu lần đầu để dùng chấm công nhận diện.</span>
           </p>
+          <p
+            v-if="effectiveFaceRegistered"
+            class="inline-flex items-center gap-2 self-start rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-950/60 dark:text-emerald-200"
+            role="status"
+            aria-live="polite"
+          >
+            <CheckCircle2 class="h-3.5 w-3.5 shrink-0" />
+            Đã có mẫu khuôn mặt trên hệ thống
+          </p>
+        </div>
+      </header>
 
-          <div v-if="!isLoaded" class="mt-3 text-xs text-amber-600 dark:text-amber-400">
-            Đang tải model nhận diện...
-          </div>
-
-          <div v-if="ui.progress > 0 && ui.progress < 100" class="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+      <div class="grid gap-8 lg:grid-cols-12 lg:items-start">
+        <!-- Camera -->
+        <div class="lg:col-span-7 xl:col-span-8">
+          <div
+            class="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-linear-to-b from-slate-900 to-slate-950 shadow-xl ring-1 ring-black/5 dark:border-slate-700/80"
+            :class="
+              ui.feedback.status === 'success'
+                ? 'ring-2 ring-emerald-500/60 shadow-emerald-500/10'
+                : ''
+            "
+          >
             <div
-              class="h-full rounded-full bg-indigo-500 transition-[width] duration-150"
-              :style="{ width: `${ui.progress}%` }"
-            />
-          </div>
-
-          <div
-            v-if="ui.feedback.status === 'success'"
-            class="mt-4 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-200"
-          >
-            <CheckCircle2 class="mt-0.5 h-5 w-5 shrink-0" />
-            <span>{{ ui.feedback.msg }}</span>
-          </div>
-          <div
-            v-if="ui.feedback.status === 'error'"
-            class="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-200"
-          >
-            <XCircle class="mt-0.5 h-5 w-5 shrink-0" />
-            <span>{{ ui.feedback.msg }}</span>
+              v-if="ui.feedback.status === 'success'"
+              class="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-4"
+            >
+              <span
+                class="pointer-events-none flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-600/95 px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-sm"
+              >
+                <CheckCircle2 class="h-5 w-5 shrink-0" />
+                Lưu thành công
+              </span>
+            </div>
+            <div class="relative aspect-4/3 w-full">
+              <video
+                ref="videoRef"
+                autoplay
+                muted
+                playsinline
+                class="absolute inset-0 h-full w-full object-cover opacity-95 transform-[scaleX(-1)]"
+              />
+              <div
+                class="pointer-events-none absolute inset-0 flex items-center justify-center border-[3px] border-white/15"
+              >
+                <div
+                  class="h-[68%] max-h-[min(420px,70vw)] w-[55%] max-w-[min(340px,85vw)] rounded-[50%] border-2 border-dashed border-white/45 shadow-[0_0_0_9999px_rgba(0,0,0,0.42)]"
+                />
+              </div>
+              <div
+                class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent px-4 pb-5 pt-16 sm:px-6"
+              >
+                <div
+                  class="flex gap-3 rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md"
+                >
+                  <ScanFace class="mt-0.5 h-5 w-5 shrink-0 text-indigo-300" />
+                  <p class="leading-relaxed">
+                    Đặt mặt trong khung, ánh sáng đều. Giữ yên khoảng
+                    <strong class="font-semibold text-white">2 giây</strong>
+                    để hệ thống chụp descriptor.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div
-          class="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-xs leading-relaxed text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400"
-        >
-          <p class="font-semibold text-slate-700 dark:text-slate-200">Lưu ý</p>
-          <ul class="mt-2 list-disc space-y-1 pl-4">
-            <li>Dùng cùng thư viện <code class="rounded bg-slate-200 px-1 dark:bg-slate-800">face-api.js</code> với máy chấm công.</li>
-            <li>Descriptor gồm đúng 128 số — backend lưu và dùng để so khớp khi check-in.</li>
-            <li>Nếu chấm công sai người, đăng ký lại tại đây (PUT cập nhật mẫu).</li>
-          </ul>
+        <!-- Cột phải -->
+        <div class="flex flex-col gap-5 lg:col-span-5 xl:col-span-4">
+          <div
+            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            :class="
+              effectiveFaceRegistered
+                ? 'border-emerald-200/80 ring-1 ring-emerald-100 dark:border-emerald-900/40 dark:ring-emerald-900/30'
+                : ''
+            "
+          >
+            <div class="flex items-start gap-3">
+              <div
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/50"
+              >
+                <ShieldCheck class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2
+                  class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                >
+                  Trạng thái
+                </h2>
+                <p class="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  <template v-if="effectiveFaceRegistered">
+                    Đã có khuôn mặt đăng ký — lần lưu tiếp theo sẽ
+                    <strong class="font-semibold text-emerald-700 dark:text-emerald-400"
+                      >cập nhật</strong
+                    >
+                    mẫu.
+                  </template>
+                  <template v-else>
+                    Chưa đăng ký — lưu lần đầu để dùng chấm công nhận diện.
+                  </template>
+                </p>
+              </div>
+            </div>
+
+            <div
+              v-if="!isLoaded"
+              class="mt-4 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+            >
+              <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+              Đang tải model nhận diện...
+            </div>
+
+            <div
+              v-if="ui.progress > 0 && ui.progress < 100"
+              class="mt-5 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+            >
+              <div
+                class="h-full rounded-full bg-indigo-500 transition-[width] duration-150"
+                :style="{ width: `${ui.progress}%` }"
+              />
+            </div>
+
+            <div
+              v-if="ui.feedback.status === 'success'"
+              class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-100"
+              role="status"
+              aria-live="assertive"
+            >
+              <div class="flex items-start gap-3">
+                <CheckCircle2
+                  class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                />
+                <div class="min-w-0 flex-1 space-y-1">
+                  <p>{{ ui.feedback.msg }}</p>
+                  <p
+                    v-if="successTimeLabel"
+                    class="text-xs text-emerald-800/80 dark:text-emerald-200/80"
+                  >
+                    Thời điểm lưu: {{ successTimeLabel }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-lg p-1 text-emerald-700 transition-colors hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+                  aria-label="Đóng thông báo"
+                  @click="dismissFeedback"
+                >
+                  <X class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div
+              v-if="ui.feedback.status === 'error'"
+              class="mt-5 rounded-xl border border-rose-200 bg-rose-50/90 p-4 text-sm text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100"
+            >
+              <div class="flex items-start gap-3">
+                <XCircle class="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                <span class="flex-1">{{ ui.feedback.msg }}</span>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-lg p-1 text-rose-700 transition-colors hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900/50"
+                  aria-label="Đóng thông báo lỗi"
+                  @click="dismissFeedback"
+                >
+                  <X class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
