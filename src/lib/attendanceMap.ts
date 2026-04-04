@@ -7,7 +7,7 @@ const API_STATUS_TO_UI: Record<string, AttendanceStatus> = {
   PRESENT: 'Có mặt',
   LATE: 'Đi muộn',
   LATE_ARRIVAL: 'Đi muộn',
-  ABSENT: 'Nghỉ phép',
+  ABSENT: 'Vắng mặt',
   LEAVE: 'Nghỉ phép',
   ON_LEAVE: 'Nghỉ phép',
   SICK_LEAVE: 'Nghỉ phép',

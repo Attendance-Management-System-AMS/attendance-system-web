@@ -19,7 +19,7 @@ export function useLeaves() {
   })
 
   const leaveTypesQuery = useQuery<LeaveType[]>({
-    queryKey: queryKeys.leaves.all().concat('types'),
+    queryKey: ['leaves', 'types'],
     queryFn: async () => {
       const response = await leaveApi.getTypes()
       return response.data?.result ?? []

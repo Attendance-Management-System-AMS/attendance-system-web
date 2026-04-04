@@ -14,6 +14,30 @@ function normalizeScheduleListResult(result: unknown): Schedule[] {
   ) {
     return (result as { content: Schedule[] }).content
   }
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    'items' in result &&
+    Array.isArray((result as { items: unknown }).items)
+  ) {
+    return (result as { items: Schedule[] }).items
+  }
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    'records' in result &&
+    Array.isArray((result as { records: unknown }).records)
+  ) {
+    return (result as { records: Schedule[] }).records
+  }
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    'data' in result &&
+    Array.isArray((result as { data: unknown }).data)
+  ) {
+    return (result as { data: Schedule[] }).data
+  }
   return []
 }
 

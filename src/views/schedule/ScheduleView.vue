@@ -1,12 +1,33 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import { useQuery } from '@tanstack/vue-query'
+import {
+  CalendarIcon,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Eye,
+  LayoutGrid,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-vue-next'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
+import FormCard from '@/components/ui/FormCard.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { useEmployees } from '@/composables/useEmployees'
 import { useSchedules } from '@/composables/useSchedules'
 import { useShifts } from '@/composables/useShifts'
 import { useDepartments } from '@/composables/useDepartments'
+import { getApiErrorMessage } from '@/lib/apiErrorMessage'
+import { scheduleApi } from '@/services/schedule.service'
 import type { Schedule } from '@/types/schedule'
 import type { Shift } from '@/types/shift'
 import type { Employee } from '@/types/employee'
+import type { Page } from '@/types/api'
 
 interface ScheduleWithShift extends Schedule {
   shift?: Shift
@@ -18,7 +39,11 @@ const { shiftsQuery } = useShifts()
 const { departmentsQuery } = useDepartments()
 
 // No employee filter - show all
-const { schedulesQuery } = useSchedules(null)
+const {
+  schedulesQuery,
+  createSchedule,
+  deleteSchedule,
+} = useSchedules(null)
 
 const employees = computed(() => employeesQuery.data.value ?? [])
 const shifts = computed(() => shiftsQuery.data.value ?? [])
@@ -37,6 +62,20 @@ const filterShift = ref('')
 // Detail panel
 const selectedEmployeeId = ref<number | null>(null)
 const isDetailPanelOpen = computed(() => selectedEmployeeId.value !== null)
+
+const assignmentSectionRef = ref<HTMLElement | null>(null)
+const assignmentError = ref('')
+const assignmentSuccess = ref('')
+const deleteDialogOpen = ref(false)
+const deleteTarget = ref<ScheduleWithShift | null>(null)
+
+const assignmentForm = reactive({
+  employeeId: '',
+  shiftId: '',
+  dayOfWeek: '2',
+  effectiveFrom: '',
+  isActive: true,
+})
 
 // Utilities for date operations
 const addDays = (date: Date, days: number): Date => {
@@ -83,9 +122,248 @@ const fmtTime = (time: string): string => {
   return time.substring(0, 5)
 }
 
+const fmtDateInput = (value?: string): string => {
+  const normalized = normalizeYmd(value)
+  return normalized ?? '—'
+}
+
+const getEmployeeName = (employeeId: number | string): string => {
+  const employee = employees.value.find((item) => String(item.id) === String(employeeId))
+  if (!employee) return `NV #${employeeId}`
+  return `${employee.fullName}${employee.employeeCode ? ` (${employee.employeeCode})` : ''}`
+}
+
+const getShiftName = (shiftId: number | string): string => {
+  const shift = shifts.value.find((item) => String(item.id) === String(shiftId))
+  return shift?.name || `Ca #${shiftId}`
+}
+
+const formatDayOfWeekLabel = (dayOfWeek?: number): string => {
+  switch (dayOfWeek) {
+    case 2:
+      return 'Thứ 2'
+    case 3:
+      return 'Thứ 3'
+    case 4:
+      return 'Thứ 4'
+    case 5:
+      return 'Thứ 5'
+    case 6:
+      return 'Thứ 6'
+    case 7:
+      return 'Thứ 7'
+    case 8:
+      return 'Chủ nhật'
+    default:
+      return '—'
+  }
+}
+
+const dayOfWeekOptions = [
+  { label: 'Thứ 2', value: '2' },
+  { label: 'Thứ 3', value: '3' },
+  { label: 'Thứ 4', value: '4' },
+  { label: 'Thứ 5', value: '5' },
+  { label: 'Thứ 6', value: '6' },
+  { label: 'Thứ 7', value: '7' },
+  { label: 'Chủ nhật', value: '8' },
+]
+
+const scheduleEmployeeFilter = ref('')
+const scheduleShiftFilter = ref('')
+const scheduleDayFilter = ref('')
+const scheduleSearch = ref('')
+
+const assignedPage = ref(1)
+const assignedPageSize = ref(10)
+
+interface ScheduleSearchData {
+  items: Schedule[]
+  totalPages: number
+  totalElements: number
+  page: number
+}
+
+const normalizeScheduleSearchData = (result: unknown): ScheduleSearchData => {
+  if (Array.isArray(result)) {
+    return {
+      items: result as Schedule[],
+      totalPages: 1,
+      totalElements: result.length,
+      page: 0,
+    }
+  }
+
+  if (result && typeof result === 'object') {
+    const pageResult = result as Partial<Page<Schedule>> & {
+      items?: Schedule[]
+      records?: Schedule[]
+      data?: Schedule[]
+      total?: number
+    }
+
+    const items = Array.isArray(pageResult.content)
+      ? pageResult.content
+      : Array.isArray(pageResult.items)
+        ? pageResult.items
+        : Array.isArray(pageResult.records)
+          ? pageResult.records
+          : Array.isArray(pageResult.data)
+            ? pageResult.data
+            : []
+
+    const totalElements = typeof pageResult.totalElements === 'number'
+      ? pageResult.totalElements
+      : typeof pageResult.total === 'number'
+        ? pageResult.total
+        : items.length
+
+    const totalPages = typeof pageResult.totalPages === 'number'
+      ? pageResult.totalPages
+      : Math.max(1, Math.ceil(totalElements / assignedPageSize.value))
+
+    const page = typeof pageResult.page === 'number' ? pageResult.page : 0
+
+    return {
+      items,
+      totalPages,
+      totalElements,
+      page,
+    }
+  }
+
+  return {
+    items: [],
+    totalPages: 1,
+    totalElements: 0,
+    page: 0,
+  }
+}
+
+const assignedSchedulesQuery = useQuery<ScheduleSearchData>({
+  queryKey: computed(() => [
+    'schedules',
+    'search',
+    {
+      employeeId: scheduleEmployeeFilter.value || null,
+      shiftId: scheduleShiftFilter.value || null,
+      dayOfWeek: scheduleDayFilter.value || null,
+      keyword: scheduleSearch.value.trim() || null,
+      page: assignedPage.value,
+      size: assignedPageSize.value,
+    },
+  ]),
+  queryFn: async () => {
+    const keyword = scheduleSearch.value.trim()
+    const params: Record<string, unknown> = {
+      page: assignedPage.value - 1,
+      size: assignedPageSize.value,
+    }
+
+    if (scheduleEmployeeFilter.value) params.employeeId = Number(scheduleEmployeeFilter.value)
+    if (scheduleShiftFilter.value) params.shiftId = Number(scheduleShiftFilter.value)
+    if (scheduleDayFilter.value) params.dayOfWeek = Number(scheduleDayFilter.value)
+    if (keyword) {
+      params.keyword = keyword
+      params.search = keyword
+      params.query = keyword
+    }
+
+    const response = await scheduleApi.search(params)
+    return normalizeScheduleSearchData(response.data?.result)
+  },
+  enabled: false,
+  staleTime: 1000 * 30,
+})
+
+const scheduleList = computed(() => assignedSchedulesQuery.data.value?.items ?? [])
+
+watch([scheduleEmployeeFilter, scheduleShiftFilter, scheduleDayFilter, scheduleSearch], () => {
+  assignedPage.value = 1
+})
+
+const assignedTotalPages = computed(() => Math.max(1, assignedSchedulesQuery.data.value?.totalPages ?? 1))
+const assignedTotalElements = computed(() => assignedSchedulesQuery.data.value?.totalElements ?? 0)
+const assignedPageLabel = computed(() => (assignedSchedulesQuery.data.value?.page ?? 0) + 1)
+
+const filteredSchedules = computed(() => {
+  return scheduleList.value.map((schedule) => ({
+    ...schedule,
+    shift: shifts.value.find((s) => String(s.id) === String(schedule.shiftId)),
+  }))
+})
+
+const resetAssignmentForm = () => {
+  assignmentForm.employeeId = ''
+  assignmentForm.shiftId = ''
+  assignmentForm.dayOfWeek = '2'
+  assignmentForm.effectiveFrom = ''
+  assignmentForm.isActive = true
+}
+
+const scrollToAssignmentForm = () => {
+  assignmentSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const submitAssignment = async () => {
+  assignmentError.value = ''
+  assignmentSuccess.value = ''
+
+  if (!assignmentForm.employeeId || !assignmentForm.shiftId || !assignmentForm.dayOfWeek || !assignmentForm.effectiveFrom) {
+    assignmentError.value = 'Vui lòng chọn đầy đủ nhân viên, ca, thứ và ngày hiệu lực.'
+    return
+  }
+
+  try {
+    await createSchedule.mutateAsync({
+      employeeId: Number(assignmentForm.employeeId),
+      shiftId: Number(assignmentForm.shiftId),
+      dayOfWeek: Number(assignmentForm.dayOfWeek),
+      effectiveFrom: assignmentForm.effectiveFrom,
+      isActive: assignmentForm.isActive,
+    })
+    await assignedSchedulesQuery.refetch()
+    assignmentSuccess.value = 'Đã gán lịch làm việc thành công.'
+    resetAssignmentForm()
+  } catch (err) {
+    assignmentError.value = getApiErrorMessage(err, 'Không thể gán lịch làm việc. Vui lòng thử lại.')
+  }
+}
+
+const requestDeleteSchedule = (schedule: ScheduleWithShift) => {
+  deleteTarget.value = schedule
+  deleteDialogOpen.value = true
+}
+
+const confirmDeleteSchedule = async () => {
+  if (!deleteTarget.value) return
+  assignmentError.value = ''
+  try {
+    await deleteSchedule.mutateAsync(deleteTarget.value.id)
+    await assignedSchedulesQuery.refetch()
+    deleteDialogOpen.value = false
+    deleteTarget.value = null
+    assignmentSuccess.value = 'Đã xóa lịch làm việc.'
+  } catch (err) {
+    assignmentError.value = getApiErrorMessage(err, 'Không thể xóa lịch làm việc.')
+  }
+}
+
+const normalizeYmd = (value?: string): string | null => {
+  if (!value) return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return trimmed.slice(0, 10)
+}
+
 const getIsoDayOfWeek = (ymd: string): number => {
-  const day = new Date(ymd).getDay()
-  return day === 0 ? 7 : day
+  const [yearText, monthText, dayText] = ymd.split('-')
+  const year = Number(yearText)
+  const month = Number(monthText)
+  const day = Number(dayText)
+  const parsedDate = new Date(year, month - 1, day)
+  const weekday = parsedDate.getDay()
+  return weekday === 0 ? 8 : weekday + 1
 }
 
 // Week view computation
@@ -237,14 +515,16 @@ const appliesToDate = (schedule: Schedule, ymd: string): boolean => {
   if (schedule.isActive === false) return false
 
   if (schedule.date) {
-    return schedule.date === ymd
+    return normalizeYmd(schedule.date) === ymd
   }
 
-  if (!schedule.dayOfWeek || !schedule.effectiveFrom) {
+  const effectiveFrom = normalizeYmd(schedule.effectiveFrom)
+
+  if (!schedule.dayOfWeek || !effectiveFrom) {
     return false
   }
 
-  if (ymd < schedule.effectiveFrom) {
+  if (ymd < effectiveFrom) {
     return false
   }
 
@@ -368,10 +648,10 @@ const getEmployeeAvatarInitials = (employee: Employee): string => {
               </div>
 
               <!-- Assign Shift Button -->
-              <button
+              <RouterLink to="/schedule/assignments"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30">
                 Phân công ca
-              </button>
+              </RouterLink>
             </div>
           </div>
 
@@ -398,6 +678,13 @@ const getEmployeeAvatarInitials = (employee: Employee): string => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="px-6 pt-6">
+      <div
+        class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+        Quản lý phân công đã được tách sang trang riêng. Chọn "Phân công ca" để thao tác.
       </div>
     </div>
 
@@ -492,29 +779,31 @@ const getEmployeeAvatarInitials = (employee: Employee): string => {
           </table>
         </div>
       </div>
+    </div>
 
-      <div v-show="viewMode === 'month'" class="px-6 py-6">
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Lịch tháng {{ fmtMonthYear(currentDate) }}
-                </h2>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Bấm vào ngày để xem số ca trong ngày đó</p>
-              </div>
-              <div
-                class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
-                {{ monthActiveDayCount }} ngày có lịch
-              </div>
+    <div v-show="viewMode === 'month'" class="px-6 py-6">
+      <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white">Lịch tháng {{ fmtMonthYear(currentDate) }}
+              </h2>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Bấm vào ngày để xem số ca trong ngày đó</p>
+            </div>
+            <div
+              class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+              {{ monthActiveDayCount }} ngày có lịch
             </div>
           </div>
+        </div>
 
-          <div class="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-800">
-            <div v-for="dayName in ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']" :key="dayName"
-              class="bg-slate-50 px-3 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950">
-              {{ dayName }}
-            </div>
+        <div class="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-800">
+          <div v-for="dayName in ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']" :key="dayName"
+            class="bg-slate-50 px-3 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-950">
+            {{ dayName }}
+          </div>
 
+          <template v-if="monthCalendarDays.some(day => day !== null)">
             <template v-for="(day, index) in monthCalendarDays">
               <button v-if="day" :key="day.ymd" type="button" @click="selectedEmployeeId = null" :class="[
                 'min-h-36 bg-white p-3 text-left transition-colors hover:bg-blue-50/60 dark:bg-slate-900 dark:hover:bg-slate-800',
@@ -545,78 +834,81 @@ const getEmployeeAvatarInitials = (employee: Employee): string => {
               </button>
               <div v-else :key="`empty-${index}`" class="min-h-36 bg-slate-50 dark:bg-slate-950" />
             </template>
+          </template>
+          <div v-else class="col-span-7 bg-white px-6 py-10 text-center text-sm text-slate-500 dark:bg-slate-900">
+            Không có dữ liệu lịch cho tháng này
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Detail Panel -->
-      <div v-if="isDetailPanelOpen" class="fixed inset-0 z-40 bg-slate-900/20" @click="selectedEmployeeId = null" />
-      <div v-if="isDetailPanelOpen && selectedEmployee"
-        class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl overflow-y-auto z-50">
-        <!-- Header -->
-        <div
-          class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex items-center justify-between">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Chi tiết</h2>
-          <button type="button" @click="selectedEmployeeId = null" aria-label="Đóng chi tiết" title="Đóng"
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
-            <X class="h-4 w-4" />
-            Đóng
-          </button>
+    <!-- Detail Panel -->
+    <div v-if="isDetailPanelOpen" class="fixed inset-0 z-40 bg-slate-900/20" @click="selectedEmployeeId = null" />
+    <div v-if="isDetailPanelOpen && selectedEmployee"
+      class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl overflow-y-auto z-50">
+      <!-- Header -->
+      <div
+        class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-6 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Chi tiết</h2>
+        <button type="button" @click="selectedEmployeeId = null" aria-label="Đóng chi tiết" title="Đóng"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+          <X class="h-4 w-4" />
+          Đóng
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <!-- Employee Info -->
+        <div class="text-center">
+          <Avatar class="h-20 w-20 mx-auto mb-4">
+            <AvatarImage :src="`/api/avatar/${selectedEmployee.id}`" />
+            <AvatarFallback class="bg-blue-600 text-white text-2xl font-bold">
+              {{ getEmployeeAvatarInitials(selectedEmployee) }}
+            </AvatarFallback>
+          </Avatar>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ selectedEmployee.fullName }}</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            {{ selectedEmployee.employeeCode }}
+          </p>
+          <p class="text-sm text-slate-500 dark:text-slate-500 mt-2">
+            {{ selectedEmployee.departmentName || 'N/A' }}
+          </p>
         </div>
 
-        <div class="p-6 space-y-6">
-          <!-- Employee Info -->
-          <div class="text-center">
-            <Avatar class="h-20 w-20 mx-auto mb-4">
-              <AvatarImage :src="`/api/avatar/${selectedEmployee.id}`" />
-              <AvatarFallback class="bg-blue-600 text-white text-2xl font-bold">
-                {{ getEmployeeAvatarInitials(selectedEmployee) }}
-              </AvatarFallback>
-            </Avatar>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ selectedEmployee.fullName }}</h3>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              {{ selectedEmployee.employeeCode }}
-            </p>
-            <p class="text-sm text-slate-500 dark:text-slate-500 mt-2">
-              {{ selectedEmployee.departmentName || 'N/A' }}
-            </p>
-          </div>
-
-          <!-- Mini Calendar -->
-          <div class="space-y-3">
-            <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Lịch tháng {{ fmtMonthYear(currentDate) }}
-            </h4>
-            <div class="grid grid-cols-7 gap-1">
-              <!-- Day headers -->
-              <div v-for="dayName in ['Cn', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']" :key="dayName"
-                class="text-xs font-bold text-center text-slate-500 py-2">
-                {{ dayName }}
-              </div>
-              <!-- Days -->
-              <div v-for="(day, idx) in miniCalendarDays" :key="idx" :class="[
-                'aspect-square flex items-center justify-center text-xs rounded-lg border',
-                day === null
-                  ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                  : 'border-slate-300 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900'
-              ]">
-                {{ day }}
-              </div>
+        <!-- Mini Calendar -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Lịch tháng {{ fmtMonthYear(currentDate) }}
+          </h4>
+          <div class="grid grid-cols-7 gap-1">
+            <!-- Day headers -->
+            <div v-for="dayName in ['Cn', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']" :key="dayName"
+              class="text-xs font-bold text-center text-slate-500 py-2">
+              {{ dayName }}
+            </div>
+            <!-- Days -->
+            <div v-for="(day, idx) in miniCalendarDays" :key="idx" :class="[
+              'aspect-square flex items-center justify-center text-xs rounded-lg border',
+              day === null
+                ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                : 'border-slate-300 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900'
+            ]">
+              {{ day }}
             </div>
           </div>
+        </div>
 
-          <!-- Actions -->
-          <div class="space-y-2">
-            <button
-              class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-              <Edit3 class="h-4 w-4" />
-              Chỉnh sửa lịch
-            </button>
-            <button
-              class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-              <Eye class="h-4 w-4" />
-              Xem lịch sử
-            </button>
-          </div>
+        <!-- Actions -->
+        <div class="space-y-2">
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+            <Edit3 class="h-4 w-4" />
+            Chỉnh sửa lịch
+          </button>
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <Eye class="h-4 w-4" />
+            Xem lịch sử
+          </button>
         </div>
       </div>
     </div>

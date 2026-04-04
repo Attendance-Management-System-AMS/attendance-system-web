@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { clearAuthToken, isAuthenticated, setAuthToken } from '@/lib/auth'
+import { authApi, resolveAuthToken } from '@/services/auth.service'
 
 // Import routes từ các module
 import dashboard from './routes/dashboard'
@@ -54,6 +56,34 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+})
+
+router.beforeEach((to) => {
+  const authed = isAuthenticated()
+  const isLoginRoute = to.name === 'login'
+
+  if (!authed && !isLoginRoute) {
+    return authApi.refresh()
+      .then((response) => {
+        const token = resolveAuthToken(response.result)
+        if (token) {
+          setAuthToken(token)
+          return true
+        }
+        clearAuthToken()
+        return { name: 'login', query: { redirect: to.fullPath } }
+      })
+      .catch(() => {
+        clearAuthToken()
+        return { name: 'login', query: { redirect: to.fullPath } }
+      })
+  }
+
+  if (authed && isLoginRoute) {
+    return { path: '/dashboard' }
+  }
+
+  return true
 })
 
 // Cập nhật tiêu đề trang

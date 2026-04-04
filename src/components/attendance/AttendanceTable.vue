@@ -15,10 +15,11 @@ defineProps<{
   items: Attendance[]
 }>()
 
-const badgeVariantByStatus: Record<Attendance['status'], 'success' | 'warning' | 'secondary'> = {
+const badgeVariantByStatus: Record<Attendance['status'], 'success' | 'warning' | 'secondary' | 'destructive'> = {
   'Có mặt': 'success',
   'Đi muộn': 'warning',
   'Nghỉ phép': 'secondary',
+  'Vắng mặt': 'destructive',
 }
 </script>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref } from 'vue'
 import { Download, FileSpreadsheet, FileText, Table2 } from 'lucide-vue-next'
 

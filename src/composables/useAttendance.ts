@@ -1,4 +1,5 @@
 import { attendanceApi } from '@/services/attendance.service'
+import type { AttendanceTodayFilters } from '@/services/attendance.service'
 import { employeeApi } from '@/services/employee.service'
 import { mergeTodayAttendance } from '@/lib/attendanceMap'
 import { queryKeys } from '@/lib/queryKeys'
@@ -6,6 +7,8 @@ import type { Attendance } from '@/types/attendance'
 import type { Employee } from '@/types/employee'
 import type { Page } from '@/types/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { computed, toValue } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 
 function parseEmployeesPage(result: unknown): Employee[] {
     if (Array.isArray(result)) return result as Employee[]
@@ -20,15 +23,26 @@ function parseEmployeesPage(result: unknown): Employee[] {
     return []
 }
 
-export function useAttendance() {
+export function useAttendance(filters?: MaybeRefOrGetter<AttendanceTodayFilters>) {
     const queryClient = useQueryClient()
+
+    const normalizedFilters = computed<AttendanceTodayFilters>(() => {
+        const raw = toValue(filters)
+        return {
+            date: raw?.date?.trim() || undefined,
+            search: raw?.search?.trim() || undefined,
+            department: raw?.department?.trim() || undefined,
+            shift: raw?.shift?.trim() || undefined,
+            status: raw?.status?.trim() || undefined,
+        }
+    })
 
     // Query danh sách chấm công hôm nay (map DTO API + join nhân viên theo employeeId)
     const attendanceQuery = useQuery<Attendance[]>({
-        queryKey: queryKeys.attendance.today(),
+        queryKey: computed(() => [...queryKeys.attendance.today(), normalizedFilters.value] as const),
         queryFn: async () => {
             const [attRes, empRes] = await Promise.all([
-                attendanceApi.getToday(),
+                attendanceApi.getToday(normalizedFilters.value),
                 employeeApi.getAll(),
             ])
             const rows =
@@ -48,8 +62,16 @@ export function useAttendance() {
         },
     })
 
+    const deleteAttendance = useMutation({
+        mutationFn: (id: string | number) => attendanceApi.delete(id),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() })
+        },
+    })
+
     return {
         attendanceQuery,
         checkIn,
+        deleteAttendance,
     }
 }

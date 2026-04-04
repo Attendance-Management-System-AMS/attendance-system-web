@@ -1,5 +1,7 @@
 import type { LeaveType } from "./leave-type"
 
+export type { LeaveType } from './leave-type'
+
 export type LeaveStatus = 'pending' | 'approved' | 'rejected' | string
 export interface LeaveRequest {
   id: string | number

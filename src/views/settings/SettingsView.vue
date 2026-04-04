@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FormCard from '@/components/ui/FormCard.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref } from 'vue'
 import { Globe, Moon, Monitor, Palette, Sparkles, Sun } from 'lucide-vue-next'
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
     CheckCircle2,

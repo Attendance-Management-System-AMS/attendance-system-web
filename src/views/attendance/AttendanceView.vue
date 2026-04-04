@@ -1,18 +1,29 @@
 <script setup lang="ts">
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref, computed } from 'vue'
 import { Timer } from 'lucide-vue-next'
 import { useAttendance } from '@/composables/useAttendance'
 import type { Attendance, AttendanceStatus } from '@/types/attendance'
-const { attendanceQuery } = useAttendance()
-const { data: recordsRaw, isLoading, isError, error } = attendanceQuery
-const records = computed(() => recordsRaw.value ?? [])
+import { getApiErrorMessage } from '@/lib/apiErrorMessage'
 
 const search = ref('')
 const filterDept = ref('')
 const filterShift = ref('')
 const filterStatus = ref('')
+
+const attendanceFilters = computed(() => ({
+    search: search.value,
+    department: filterDept.value,
+    shift: filterShift.value,
+    status: filterStatus.value,
+}))
+
+const { attendanceQuery, deleteAttendance } = useAttendance(attendanceFilters)
+const { data: recordsRaw, isLoading, isError, error } = attendanceQuery
+const records = computed(() => recordsRaw.value ?? [])
 const deleteDialog = ref(false)
 const deleteTarget = ref<Attendance | null>(null)
+const mutationError = ref('')
 
 const departments = [
     { label: 'Nhân sự', value: 'hr' },
@@ -32,6 +43,7 @@ const statuses = [
     { label: 'Có mặt', value: 'Có mặt' },
     { label: 'Đi muộn', value: 'Đi muộn' },
     { label: 'Nghỉ phép', value: 'Nghỉ phép' },
+    { label: 'Vắng mặt', value: 'Vắng mặt' },
 ]
 
 const handleDelete = (id: string | number) => {
@@ -42,15 +54,27 @@ const handleDelete = (id: string | number) => {
     }
 }
 
-const confirmDelete = () => {
-    deleteDialog.value = false
-    deleteTarget.value = null
+const confirmDelete = async () => {
+    if (!deleteTarget.value) {
+        deleteDialog.value = false
+        return
+    }
+
+    mutationError.value = ''
+    try {
+        await deleteAttendance.mutateAsync(deleteTarget.value.id)
+        deleteDialog.value = false
+        deleteTarget.value = null
+    } catch (err) {
+        mutationError.value = getApiErrorMessage(err, 'Xóa bản ghi chấm công thất bại.')
+    }
 }
 
-const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'secondary'> = {
+const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'secondary' | 'destructive'> = {
     'Có mặt': 'success',
     'Đi muộn': 'warning',
     'Nghỉ phép': 'secondary',
+    'Vắng mặt': 'destructive',
 }
 </script>
 
@@ -74,6 +98,11 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                 <FilterSelect v-model="filterStatus" label="Trạng thái" :options="statuses" />
             </template>
         </SearchToolbar>
+
+        <div v-if="mutationError"
+            class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
+            {{ mutationError }}
+        </div>
 
         <!-- Table -->
         <div
@@ -105,18 +134,10 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <LoadingErrorState
-                          v-if="isLoading || isError"
-                          mode="row"
-                          :colspan="5"
-                          :is-loading="isLoading"
-                          :is-error="isError"
-                          :error="error"
-                          loadingText="Đang tải dữ liệu chấm công..."
-                          errorText="Không thể tải dữ liệu chấm công"
-                          retryLabel="Thử lại"
-                          @retry="() => attendanceQuery.refetch()"
-                        />
+                        <LoadingErrorState v-if="isLoading || isError" mode="row" :colspan="5" :is-loading="isLoading"
+                            :is-error="isError" :error="error" loadingText="Đang tải dữ liệu chấm công..."
+                            errorText="Không thể tải dữ liệu chấm công" retryLabel="Thử lại"
+                            @retry="() => attendanceQuery.refetch()" />
 
                         <tr v-else-if="records.length === 0">
                             <td colspan="5" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
@@ -139,7 +160,9 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                                             {{ record.employee?.fullName ?? '—' }}
                                         </p>
                                         <p class="text-xs text-slate-400">
-                                            {{ record.employee?.departmentName ?? '—' }} · {{ record.employee?.positionName ?? '—' }}
+                                            {{ record.employee?.departmentName ?? '—' }} · {{
+                                            record.employee?.positionName ??
+                                            '—' }}
                                         </p>
                                     </div>
                                 </div>

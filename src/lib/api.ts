@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { clearAuthToken, getAuthToken, setAuthToken } from '@/lib/auth'
+import { authApi, resolveAuthToken } from '@/services/auth.service'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -11,7 +13,7 @@ const api = axios.create({
 // Request interceptor (e.g., for adding auth tokens)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const token = getAuthToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -25,7 +27,29 @@ api.interceptors.request.use(
 // Response interceptor (e.g., for handling global errors)
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined
+
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !String(originalRequest.url ?? '').includes('/auth/')) {
+      originalRequest._retry = true
+
+      try {
+        const refreshResponse = await authApi.refresh()
+        const nextToken = resolveAuthToken(refreshResponse.result)
+        if (nextToken) {
+          setAuthToken(nextToken)
+          originalRequest.headers = {
+            ...(originalRequest.headers ?? {}),
+            Authorization: `Bearer ${nextToken}`,
+          }
+          return api.request(originalRequest)
+        }
+      } catch (refreshError) {
+        clearAuthToken()
+        return Promise.reject(refreshError)
+      }
+    }
+
     // Xử lý lỗi Network Error (Backend down, CORS, etc.)
     if (!error.response) {
       console.error('Network Error: Không thể kết nối đến Backend API.', {

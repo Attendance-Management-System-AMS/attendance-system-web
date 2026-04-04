@@ -12,6 +12,14 @@ export interface AttendanceTodayApiRecord {
   createdAt: string
 }
 
+export interface AttendanceTodayFilters {
+  date?: string
+  search?: string
+  department?: string
+  shift?: string
+  status?: string
+}
+
 /** Snapshot nhân viên kèm response check-in (backend điền khi check-in bằng mặt). */
 export interface AttendanceEmployeeBrief {
   fullName: string
@@ -34,9 +42,9 @@ export interface AttendanceCheckInResult {
 
 export const attendanceApi = {
   getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
-  getToday: (date?: string) =>
+  getToday: (filters?: AttendanceTodayFilters) =>
     api.get<ApiResponse<AttendanceTodayApiRecord[]>>('/attendance/today', {
-      params: date ? { date } : undefined,
+      params: filters,
     }),
   checkInByFace: (descriptor: number[]) =>
     api
@@ -46,4 +54,5 @@ export const attendanceApi = {
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-in/${employeeId}`),
   checkOut: (employeeId: number) =>
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-out/${employeeId}`),
+  delete: (id: string | number) => api.delete<ApiResponse<void>>(`/attendance/${id}`),
 }

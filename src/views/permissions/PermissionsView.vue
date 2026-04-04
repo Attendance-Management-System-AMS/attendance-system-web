@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { Check, Minus } from 'lucide-vue-next'
 
 const moduleKeys = ['dashboard', 'attendance', 'employees', 'leaves', 'reports', 'settings'] as const

@@ -2,6 +2,15 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export default [
     {
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/auth/LoginView.vue'),
+        meta: {
+            hideLayout: true,
+            title: 'Đăng nhập',
+        },
+    },
+    {
         path: '/profile',
         name: 'profile',
         component: () => import('@/views/profile/ProfileView.vue'),
@@ -12,6 +21,12 @@ export default [
         name: 'schedule',
         component: () => import('@/views/schedule/ScheduleView.vue'),
         meta: { title: 'Lịch làm việc' },
+    },
+    {
+        path: '/schedule/assignments',
+        name: 'schedule-assignments',
+        component: () => import('@/views/schedule/ScheduleAssignmentsView.vue'),
+        meta: { title: 'Phân công lịch làm việc' },
     },
     {
         path: '/export',

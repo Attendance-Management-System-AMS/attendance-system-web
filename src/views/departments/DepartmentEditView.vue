@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FormCard from '@/components/ui/FormCard.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Building2, Save, Shield } from 'lucide-vue-next'

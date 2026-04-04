@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FormCard from '@/components/ui/FormCard.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref } from 'vue'
 import { Bell, Camera, Mail, Phone, Shield, User } from 'lucide-vue-next'
 

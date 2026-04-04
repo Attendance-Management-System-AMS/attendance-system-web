@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref } from 'vue'
+import { BarChart3, Download, TrendingUp, Users } from 'lucide-vue-next'
+import FilterSelect from '@/components/ui/FilterSelect.vue'
 const filterPeriod = ref('month')
 const filterDept = ref('')
 
@@ -154,7 +157,7 @@ const lateReasons = [
                 <div class="space-y-3.5">
                     <div v-for="d in deptPerformance" :key="d.dept" class="flex items-center gap-3">
                         <span class="w-24 text-xs font-medium text-slate-600 dark:text-slate-300 shrink-0">{{ d.dept
-                            }}</span>
+                        }}</span>
                         <div class="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                             <div :class="['h-full rounded-full transition-all duration-700', getRateColor(d.rate)]"
                                 :style="{ width: `${d.rate}%` }"></div>
@@ -189,9 +192,9 @@ const lateReasons = [
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-sm font-bold text-slate-900 dark:text-white">{{ s.count.toLocaleString()
-                                }}</span>
+                            }}</span>
                             <span class="text-xs font-bold text-slate-400 min-w-8 text-right">{{ s.percent
-                                }}%</span>
+                            }}%</span>
                         </div>
                     </div>
                 </div>
@@ -206,7 +209,7 @@ const lateReasons = [
                         <div class="flex items-center justify-between text-xs">
                             <span class="font-medium text-slate-600 dark:text-slate-300">{{ r.reason }}</span>
                             <span class="font-bold text-slate-900 dark:text-white">{{ r.count }} lần ({{ r.percent
-                                }}%)</span>
+                            }}%)</span>
                         </div>
                         <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                             <div class="h-full rounded-full bg-amber-400 transition-all duration-500"
