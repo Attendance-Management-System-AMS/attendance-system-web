@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { queryKeys } from '@/lib/queryKeys'
 import { leaveApi } from '@/services/leave.service'
-import type { CreateLeaveRequest, LeaveRequest } from '@/types/leave'
+import type { CreateLeaveRequest, LeaveRequest, LeaveType } from '@/types/leave'
 
 export function useLeaves() {
   const queryClient = useQueryClient()
@@ -16,6 +16,15 @@ export function useLeaves() {
       return []
     },
     staleTime: 1000 * 60 * 1,
+  })
+
+  const leaveTypesQuery = useQuery<LeaveType[]>({
+    queryKey: queryKeys.leaves.all().concat('types'),
+    queryFn: async () => {
+      const response = await leaveApi.getTypes()
+      return response.data?.result ?? []
+    },
+    staleTime: 1000 * 60 * 10,
   })
 
   const createLeave = useMutation({
@@ -40,6 +49,7 @@ export function useLeaves() {
 
   return {
     leavesQuery,
+    leaveTypesQuery,
     createLeave,
     deleteLeave,
     approveLeave,

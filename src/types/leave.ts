@@ -1,5 +1,6 @@
-export type LeaveStatus = 'pending' | 'approved' | 'rejected' | string
+import type { LeaveType } from "./leave-type"
 
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | string
 export interface LeaveRequest {
   id: string | number
   employeeId?: string | number
@@ -7,7 +8,7 @@ export interface LeaveRequest {
   employeeCode?: string
   departmentName?: string
   reason: string
-  leaveType?: string
+  leaveType?: LeaveType | string
   /** Backend mới */
   fromDate?: string
   toDate?: string
@@ -21,7 +22,7 @@ export interface LeaveRequest {
 /** Khớp body POST /leaves từ backend */
 export interface CreateLeaveRequest {
   employeeId: string | number
-  leaveType: string
+  leaveTypeCode: string
   fromDate: string
   toDate: string
   reason: string

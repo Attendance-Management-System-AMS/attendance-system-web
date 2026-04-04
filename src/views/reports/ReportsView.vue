@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { BarChart3, Download, TrendingUp, Users } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FilterSelect from '@/components/ui/FilterSelect.vue'
-
 const filterPeriod = ref('month')
 const filterDept = ref('')
 

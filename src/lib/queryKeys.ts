@@ -29,4 +29,8 @@ export const queryKeys = {
   attendance: {
     today: () => ['attendance', 'today'] as const,
   },
+  schedules: {
+    all: () => ['schedules'] as const,
+    byEmployee: (employeeId: string | number) => ['schedules', 'employee', employeeId] as const,
+  },
 } as const

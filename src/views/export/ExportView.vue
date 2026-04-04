@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Download, FileSpreadsheet, FileText, Table2 } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
 
 type Format = 'pdf' | 'excel' | 'csv'
 

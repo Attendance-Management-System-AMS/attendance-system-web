@@ -42,4 +42,8 @@ export const attendanceApi = {
     api
       .post<ApiResponse<AttendanceCheckInResult>>('/attendance/check-in-by-face', { descriptor })
       .then((res) => res.data),
+  checkIn: (employeeId: number) =>
+    api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-in/${employeeId}`),
+  checkOut: (employeeId: number) =>
+    api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-out/${employeeId}`),
 }

@@ -2,18 +2,7 @@
 import { ref, computed } from 'vue'
 import { Timer } from 'lucide-vue-next'
 import { useAttendance } from '@/composables/useAttendance'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import SearchToolbar from '@/components/ui/SearchToolbar.vue'
-import FilterSelect from '@/components/ui/FilterSelect.vue'
-import ActionDropdown from '@/components/ui/ActionDropdown.vue'
-import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
-import Badge from '@/components/ui/badge/Badge.vue'
-import Avatar from '@/components/ui/avatar/Avatar.vue'
-import AvatarImage from '@/components/ui/avatar/AvatarImage.vue'
-import AvatarFallback from '@/components/ui/avatar/AvatarFallback.vue'
-import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
 import type { Attendance, AttendanceStatus } from '@/types/attendance'
-
 const { attendanceQuery } = useAttendance()
 const { data: recordsRaw, isLoading, isError, error } = attendanceQuery
 const records = computed(() => recordsRaw.value ?? [])

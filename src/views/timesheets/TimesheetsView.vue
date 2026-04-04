@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Check, Filter, X } from 'lucide-vue-next'
-import PageHeader from '@/components/ui/PageHeader.vue'
-import FilterSelect from '@/components/ui/FilterSelect.vue'
 import { useLeaves } from '@/composables/useLeaves'
 import type { CreateLeaveRequest, LeaveRequest } from '@/types/leave'
-import LeaveCreateModal from '@/components/leaves/LeaveCreateModal.vue'
-import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
-import { isPendingLeave, normalizeLeaveStatus } from '@/lib/leaveStatus'
 import { getApiErrorMessage } from '@/lib/apiErrorMessage'
+import { isPendingLeave, normalizeLeaveStatus } from '@/lib/leaveStatus'
 
 const filterStatus = ref('')
 const filterDept = ref('')
@@ -23,9 +19,11 @@ const statuses = [
   { label: 'Từ chối', value: 'rejected' },
 ]
 
-const { leavesQuery, approveLeave, rejectLeave, createLeave, deleteLeave } = useLeaves()
+const { leavesQuery, leaveTypesQuery, approveLeave, rejectLeave, createLeave, deleteLeave } = useLeaves()
 const { data: leavesRaw, isLoading, isError, error } = leavesQuery
 const leaves = computed<LeaveRequest[]>(() => leavesRaw.value ?? [])
+const leaveTypes = computed(() => leaveTypesQuery.data.value ?? [])
+const isLoadingLeaveTypes = computed(() => leaveTypesQuery.isLoading.value)
 
 const filteredLeaves = computed(() => {
   return leaves.value.filter((item) => {
@@ -306,6 +304,8 @@ const handleCancel = (id: string | number) => {
       :open="isCreateModalOpen"
       :server-error="createLeaveError || undefined"
       :is-submitting="isCreatingLeave"
+      :leave-types="leaveTypes"
+      :is-loading-leave-types="isLoadingLeaveTypes"
       @close="onCreateModalClose"
       @created="handleCreated"
     />

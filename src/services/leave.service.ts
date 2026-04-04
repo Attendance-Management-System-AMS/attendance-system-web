@@ -1,12 +1,11 @@
 import api from '@/lib/api'
 import type { ApiResponse, Page } from '@/types/api'
-import type { CreateLeaveRequest, LeaveRequest } from '@/types/leave'
+import type { CreateLeaveRequest, LeaveRequest, LeaveType } from '@/types/leave'
 
 function buildCreateLeaveBody(data: CreateLeaveRequest): Record<string, unknown> {
-  const leaveType = (data.leaveType?.trim() || 'ANNUAL') as string
   return {
     employeeId: data.employeeId,
-    leaveType,
+    leaveTypeCode: data.leaveTypeCode.trim(),
     fromDate: data.fromDate,
     toDate: data.toDate,
     reason: data.reason,
@@ -15,6 +14,7 @@ function buildCreateLeaveBody(data: CreateLeaveRequest): Record<string, unknown>
 
 export const leaveApi = {
   getAll: () => api.get<ApiResponse<Page<LeaveRequest>>>('/leaves'),
+  getTypes: () => api.get<ApiResponse<LeaveType[]>>('/leaves/types'),
   getById: (id: string | number) => api.get<ApiResponse<LeaveRequest>>(`/leaves/${id}`),
   getByEmployee: (employeeId: string | number) =>
     api.get<ApiResponse<Page<LeaveRequest>>>(`/leaves/employee/${employeeId}`),
