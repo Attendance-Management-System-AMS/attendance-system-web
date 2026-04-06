@@ -29,6 +29,12 @@ export default [
         meta: { title: 'Phân công lịch làm việc' },
     },
     {
+        path: '/schedule/templates',
+        name: 'schedule-templates',
+        component: () => import('@/views/schedule/ScheduleTemplatesView.vue'),
+        meta: { title: 'Mẫu lịch làm việc' },
+    },
+    {
         path: '/export',
         name: 'export',
         component: () => import('@/views/export/ExportView.vue'),

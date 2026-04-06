@@ -33,4 +33,8 @@ export const queryKeys = {
     all: () => ['schedules'] as const,
     byEmployee: (employeeId: string | number) => ['schedules', 'employee', employeeId] as const,
   },
+  scheduleTemplates: {
+    all: () => ['schedule-templates'] as const,
+    detail: (id: number | string) => ['schedule-template', id] as const,
+  },
 } as const

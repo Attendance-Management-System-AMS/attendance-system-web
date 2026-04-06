@@ -54,5 +54,7 @@ export const attendanceApi = {
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-in/${employeeId}`),
   checkOut: (employeeId: number) =>
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-out/${employeeId}`),
+  search: (params: Record<string, unknown>) =>
+    api.get<ApiResponse<Page<Attendance>>>('/attendance/attendance/search', { params }),
   delete: (id: string | number) => api.delete<ApiResponse<void>>(`/attendance/${id}`),
 }

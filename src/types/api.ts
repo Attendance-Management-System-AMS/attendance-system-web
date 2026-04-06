@@ -12,6 +12,7 @@ export interface Page<T> {
   size: number
   totalElements: number
   totalPages: number
-  hasNext: boolean
-  hasPrevious: boolean
+  last: boolean
+  first?: boolean
+  numberOfElements?: number
 }

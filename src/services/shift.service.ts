@@ -7,6 +7,8 @@ export const shiftApi = {
   getById: (id: string | number) => api.get<ApiResponse<Shift>>(`/attendance/shifts/${id}`),
   create: (data: CreateShift) => api.post<ApiResponse<Shift>>('/attendance/shifts', data),
   update: (id: string | number, data: Partial<CreateShift>) => api.put<ApiResponse<Shift>>(`/attendance/shifts/${id}`, data),
+  search: (params: Record<string, unknown>) =>
+    api.get<ApiResponse<Page<Shift>>>('/attendance/shifts/search', { params }),
   delete: (id: string | number) => api.delete<ApiResponse<void>>(`/attendance/shifts/${id}`),
 }
 

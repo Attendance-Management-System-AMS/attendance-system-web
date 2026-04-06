@@ -2,7 +2,7 @@ import { computed, unref, type Ref } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { queryKeys } from '@/lib/queryKeys'
 import { scheduleApi } from '@/services/schedule.service'
-import type { CreateSchedule, Schedule } from '@/types/schedule'
+import type { CreateSchedule, Schedule, ApplyTemplateRequest, BulkAssignRequest } from '@/types/schedule'
 
 function normalizeScheduleListResult(result: unknown): Schedule[] {
   if (Array.isArray(result)) return result as Schedule[]
@@ -98,9 +98,27 @@ export function useSchedules(
     },
   })
 
+  // Mutation áp dụng template
+  const applyTemplate = useMutation({
+    mutationFn: (data: ApplyTemplateRequest) => scheduleApi.applyTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all() })
+    },
+  })
+
+  // Mutation gán hàng loạt
+  const bulkAssign = useMutation({
+    mutationFn: (data: BulkAssignRequest) => scheduleApi.bulkAssign(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all() })
+    },
+  })
+
   return {
     schedulesQuery,
     createSchedule,
     deleteSchedule,
+    applyTemplate,
+    bulkAssign,
   }
 }

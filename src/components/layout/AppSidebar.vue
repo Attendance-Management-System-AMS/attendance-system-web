@@ -50,6 +50,7 @@ const navGroups: NavGroup[] = [
         children: [
           { label: 'Bảng lịch', to: '/schedule' },
           { label: 'Phân công lịch', to: '/schedule/assignments' },
+          { label: 'Mẫu lịch làm việc', to: '/schedule/templates' },
         ],
       },
     ],
