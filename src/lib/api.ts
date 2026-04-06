@@ -38,9 +38,10 @@ api.interceptors.response.use(
         const nextToken = resolveAuthToken(refreshResponse.result)
         if (nextToken) {
           setAuthToken(nextToken)
-          originalRequest.headers = {
-            ...(originalRequest.headers ?? {}),
-            Authorization: `Bearer ${nextToken}`,
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${nextToken}`
+          } else {
+            originalRequest.headers = { Authorization: `Bearer ${nextToken}` }
           }
           return api.request(originalRequest)
         }

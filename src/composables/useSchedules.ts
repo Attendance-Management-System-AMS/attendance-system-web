@@ -43,24 +43,28 @@ function normalizeScheduleListResult(result: unknown): Schedule[] {
 
 export function useSchedules(
   employeeId: Ref<string | number | null> | string | number | null,
+  params?: Ref<Record<string, unknown> | null> | Record<string, unknown> | null,
 ) {
   const queryClient = useQueryClient()
 
   // Normalize input to computed value
   const resolvedEmployeeId = computed(() => unref(employeeId))
+  const resolvedParams = computed(() => unref(params))
 
   // Query lịch làm việc: có employeeId thì lấy theo nhân viên, không có thì lấy toàn bộ
   const schedulesQuery = useQuery<Schedule[]>({
     queryKey: computed(() =>
       resolvedEmployeeId.value
         ? queryKeys.schedules.byEmployee(resolvedEmployeeId.value)
-        : queryKeys.schedules.all(),
+        : [...queryKeys.schedules.all(), resolvedParams.value],
     ),
     queryFn: async () => {
       const id = resolvedEmployeeId.value
+      const queryParams = resolvedParams.value || {}
+
       const response = id
         ? await scheduleApi.getByEmployee(id)
-        : await scheduleApi.getAll()
+        : await scheduleApi.getAll(queryParams)
       return normalizeScheduleListResult(response.data?.result)
     },
     staleTime: 1000 * 60 * 3,

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
-import { useQuery } from '@tanstack/vue-query'
+import { computed, ref } from 'vue'
 import {
   CalendarIcon,
   CalendarRange,
@@ -9,25 +8,14 @@ import {
   Edit3,
   Eye,
   LayoutGrid,
-  Plus,
-  Search,
-  Trash2,
-  X,
 } from 'lucide-vue-next'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
-import FormCard from '@/components/ui/FormCard.vue'
-import PageHeader from '@/components/ui/PageHeader.vue'
 import { useEmployees } from '@/composables/useEmployees'
 import { useSchedules } from '@/composables/useSchedules'
 import { useShifts } from '@/composables/useShifts'
 import { useDepartments } from '@/composables/useDepartments'
-import { getApiErrorMessage } from '@/lib/apiErrorMessage'
-import { scheduleApi } from '@/services/schedule.service'
 import type { Schedule } from '@/types/schedule'
 import type { Shift } from '@/types/shift'
 import type { Employee } from '@/types/employee'
-import type { Page } from '@/types/api'
 
 interface ScheduleWithShift extends Schedule {
   shift?: Shift
@@ -41,9 +29,7 @@ const { departmentsQuery } = useDepartments()
 // No employee filter - show all
 const {
   schedulesQuery,
-  createSchedule,
-  deleteSchedule,
-} = useSchedules(null)
+} = useSchedules(null, { size: 1000 })
 
 const employees = computed(() => employeesQuery.data.value ?? [])
 const shifts = computed(() => shiftsQuery.data.value ?? [])
@@ -57,25 +43,10 @@ const itemsPerPage = 20
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterDepartment = ref('')
-const filterShift = ref('')
 
 // Detail panel
 const selectedEmployeeId = ref<number | null>(null)
 const isDetailPanelOpen = computed(() => selectedEmployeeId.value !== null)
-
-const assignmentSectionRef = ref<HTMLElement | null>(null)
-const assignmentError = ref('')
-const assignmentSuccess = ref('')
-const deleteDialogOpen = ref(false)
-const deleteTarget = ref<ScheduleWithShift | null>(null)
-
-const assignmentForm = reactive({
-  employeeId: '',
-  shiftId: '',
-  dayOfWeek: '2',
-  effectiveFrom: '',
-  isActive: true,
-})
 
 // Utilities for date operations
 const addDays = (date: Date, days: number): Date => {
@@ -111,242 +82,12 @@ const fmtYmd = (date: Date): string => {
 const fmtDayLabel = (date: Date): string =>
   new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(date).replace('.', '')
 
-const fmtLongDate = (date: Date): string =>
-  new Intl.DateTimeFormat('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
-
 const fmtMonthYear = (date: Date): string =>
   new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' }).format(date)
 
 const fmtTime = (time: string): string => {
   if (!time) return '-'
   return time.substring(0, 5)
-}
-
-const fmtDateInput = (value?: string): string => {
-  const normalized = normalizeYmd(value)
-  return normalized ?? '—'
-}
-
-const getEmployeeName = (employeeId: number | string): string => {
-  const employee = employees.value.find((item) => String(item.id) === String(employeeId))
-  if (!employee) return `NV #${employeeId}`
-  return `${employee.fullName}${employee.employeeCode ? ` (${employee.employeeCode})` : ''}`
-}
-
-const getShiftName = (shiftId: number | string): string => {
-  const shift = shifts.value.find((item) => String(item.id) === String(shiftId))
-  return shift?.name || `Ca #${shiftId}`
-}
-
-const formatDayOfWeekLabel = (dayOfWeek?: number): string => {
-  switch (dayOfWeek) {
-    case 2:
-      return 'Thứ 2'
-    case 3:
-      return 'Thứ 3'
-    case 4:
-      return 'Thứ 4'
-    case 5:
-      return 'Thứ 5'
-    case 6:
-      return 'Thứ 6'
-    case 7:
-      return 'Thứ 7'
-    case 8:
-      return 'Chủ nhật'
-    default:
-      return '—'
-  }
-}
-
-const dayOfWeekOptions = [
-  { label: 'Thứ 2', value: '2' },
-  { label: 'Thứ 3', value: '3' },
-  { label: 'Thứ 4', value: '4' },
-  { label: 'Thứ 5', value: '5' },
-  { label: 'Thứ 6', value: '6' },
-  { label: 'Thứ 7', value: '7' },
-  { label: 'Chủ nhật', value: '8' },
-]
-
-const scheduleEmployeeFilter = ref('')
-const scheduleShiftFilter = ref('')
-const scheduleDayFilter = ref('')
-const scheduleSearch = ref('')
-
-const assignedPage = ref(1)
-const assignedPageSize = ref(10)
-
-interface ScheduleSearchData {
-  items: Schedule[]
-  totalPages: number
-  totalElements: number
-  page: number
-}
-
-const normalizeScheduleSearchData = (result: unknown): ScheduleSearchData => {
-  if (Array.isArray(result)) {
-    return {
-      items: result as Schedule[],
-      totalPages: 1,
-      totalElements: result.length,
-      page: 0,
-    }
-  }
-
-  if (result && typeof result === 'object') {
-    const pageResult = result as Partial<Page<Schedule>> & {
-      items?: Schedule[]
-      records?: Schedule[]
-      data?: Schedule[]
-      total?: number
-    }
-
-    const items = Array.isArray(pageResult.content)
-      ? pageResult.content
-      : Array.isArray(pageResult.items)
-        ? pageResult.items
-        : Array.isArray(pageResult.records)
-          ? pageResult.records
-          : Array.isArray(pageResult.data)
-            ? pageResult.data
-            : []
-
-    const totalElements = typeof pageResult.totalElements === 'number'
-      ? pageResult.totalElements
-      : typeof pageResult.total === 'number'
-        ? pageResult.total
-        : items.length
-
-    const totalPages = typeof pageResult.totalPages === 'number'
-      ? pageResult.totalPages
-      : Math.max(1, Math.ceil(totalElements / assignedPageSize.value))
-
-    const page = typeof pageResult.page === 'number' ? pageResult.page : 0
-
-    return {
-      items,
-      totalPages,
-      totalElements,
-      page,
-    }
-  }
-
-  return {
-    items: [],
-    totalPages: 1,
-    totalElements: 0,
-    page: 0,
-  }
-}
-
-const assignedSchedulesQuery = useQuery<ScheduleSearchData>({
-  queryKey: computed(() => [
-    'schedules',
-    'search',
-    {
-      employeeId: scheduleEmployeeFilter.value || null,
-      shiftId: scheduleShiftFilter.value || null,
-      dayOfWeek: scheduleDayFilter.value || null,
-      keyword: scheduleSearch.value.trim() || null,
-      page: assignedPage.value,
-      size: assignedPageSize.value,
-    },
-  ]),
-  queryFn: async () => {
-    const keyword = scheduleSearch.value.trim()
-    const params: Record<string, unknown> = {
-      page: assignedPage.value - 1,
-      size: assignedPageSize.value,
-    }
-
-    if (scheduleEmployeeFilter.value) params.employeeId = Number(scheduleEmployeeFilter.value)
-    if (scheduleShiftFilter.value) params.shiftId = Number(scheduleShiftFilter.value)
-    if (scheduleDayFilter.value) params.dayOfWeek = Number(scheduleDayFilter.value)
-    if (keyword) {
-      params.keyword = keyword
-      params.search = keyword
-      params.query = keyword
-    }
-
-    const response = await scheduleApi.search(params)
-    return normalizeScheduleSearchData(response.data?.result)
-  },
-  enabled: false,
-  staleTime: 1000 * 30,
-})
-
-const scheduleList = computed(() => assignedSchedulesQuery.data.value?.items ?? [])
-
-watch([scheduleEmployeeFilter, scheduleShiftFilter, scheduleDayFilter, scheduleSearch], () => {
-  assignedPage.value = 1
-})
-
-const assignedTotalPages = computed(() => Math.max(1, assignedSchedulesQuery.data.value?.totalPages ?? 1))
-const assignedTotalElements = computed(() => assignedSchedulesQuery.data.value?.totalElements ?? 0)
-const assignedPageLabel = computed(() => (assignedSchedulesQuery.data.value?.page ?? 0) + 1)
-
-const filteredSchedules = computed(() => {
-  return scheduleList.value.map((schedule) => ({
-    ...schedule,
-    shift: shifts.value.find((s) => String(s.id) === String(schedule.shiftId)),
-  }))
-})
-
-const resetAssignmentForm = () => {
-  assignmentForm.employeeId = ''
-  assignmentForm.shiftId = ''
-  assignmentForm.dayOfWeek = '2'
-  assignmentForm.effectiveFrom = ''
-  assignmentForm.isActive = true
-}
-
-const scrollToAssignmentForm = () => {
-  assignmentSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-const submitAssignment = async () => {
-  assignmentError.value = ''
-  assignmentSuccess.value = ''
-
-  if (!assignmentForm.employeeId || !assignmentForm.shiftId || !assignmentForm.dayOfWeek || !assignmentForm.effectiveFrom) {
-    assignmentError.value = 'Vui lòng chọn đầy đủ nhân viên, ca, thứ và ngày hiệu lực.'
-    return
-  }
-
-  try {
-    await createSchedule.mutateAsync({
-      employeeId: Number(assignmentForm.employeeId),
-      shiftId: Number(assignmentForm.shiftId),
-      dayOfWeek: Number(assignmentForm.dayOfWeek),
-      effectiveFrom: assignmentForm.effectiveFrom,
-      isActive: assignmentForm.isActive,
-    })
-    await assignedSchedulesQuery.refetch()
-    assignmentSuccess.value = 'Đã gán lịch làm việc thành công.'
-    resetAssignmentForm()
-  } catch (err) {
-    assignmentError.value = getApiErrorMessage(err, 'Không thể gán lịch làm việc. Vui lòng thử lại.')
-  }
-}
-
-const requestDeleteSchedule = (schedule: ScheduleWithShift) => {
-  deleteTarget.value = schedule
-  deleteDialogOpen.value = true
-}
-
-const confirmDeleteSchedule = async () => {
-  if (!deleteTarget.value) return
-  assignmentError.value = ''
-  try {
-    await deleteSchedule.mutateAsync(deleteTarget.value.id)
-    await assignedSchedulesQuery.refetch()
-    deleteDialogOpen.value = false
-    deleteTarget.value = null
-    assignmentSuccess.value = 'Đã xóa lịch làm việc.'
-  } catch (err) {
-    assignmentError.value = getApiErrorMessage(err, 'Không thể xóa lịch làm việc.')
-  }
 }
 
 const normalizeYmd = (value?: string): string | null => {
@@ -368,9 +109,7 @@ const getIsoDayOfWeek = (ymd: string): number => {
 
 // Week view computation
 const weekStart = computed(() => {
-  const today = new Date()
-  const offset = Math.floor((currentDate.value.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 7))
-  return addDays(startOfWeekMonday(today), offset * 7)
+  return startOfWeekMonday(currentDate.value)
 })
 
 const weekDays = computed(() => {
@@ -496,17 +235,10 @@ const goToToday = () => {
   currentDate.value = new Date()
 }
 
-// Check if specific date has schedule for employee
-const hasScheduleForDate = (employee: Employee, date: string): boolean => {
-  return enrichedSchedules.value.some(s =>
-    s.employeeId === employee.id && appliesToDate(s, date)
-  )
-}
-
 // Get schedules for specific employee and date
 const getSchedulesForEmployeeDate = (employee: Employee, date: string): ScheduleWithShift[] => {
   return enrichedSchedules.value.filter(s =>
-    s.employeeId === employee.id && appliesToDate(s, date)
+    String(s.employeeId) === String(employee.id) && appliesToDate(s, date)
   )
 }
 
@@ -514,21 +246,29 @@ const getSchedulesForEmployeeDate = (employee: Employee, date: string): Schedule
 const appliesToDate = (schedule: Schedule, ymd: string): boolean => {
   if (schedule.isActive === false) return false
 
+  // Normalize inputs to YYYY-MM-DD
+  const currentDateStr = ymd.slice(0, 10)
+
   if (schedule.date) {
-    return normalizeYmd(schedule.date) === ymd
+    const scheduleDateStr = normalizeYmd(schedule.date)
+    return scheduleDateStr === currentDateStr
   }
 
-  const effectiveFrom = normalizeYmd(schedule.effectiveFrom)
+  const effectiveFromStr = normalizeYmd(schedule.effectiveFrom)
 
-  if (!schedule.dayOfWeek || !effectiveFrom) {
+  // Nếu không có thông tin cần thiết, không hiển thị
+  if (schedule.dayOfWeek === undefined || schedule.dayOfWeek === null || !effectiveFromStr) {
     return false
   }
 
-  if (ymd < effectiveFrom) {
+  // So sánh ngày (>= ngày hiệu lực)
+  if (currentDateStr < effectiveFromStr) {
     return false
   }
 
-  return schedule.dayOfWeek === getIsoDayOfWeek(ymd)
+  // Khớp thứ trong tuần
+  const currentDayOfWeek = getIsoDayOfWeek(currentDateStr)
+  return Number(schedule.dayOfWeek) === Number(currentDayOfWeek)
 }
 
 // Shift color mapping
@@ -554,12 +294,6 @@ const departmentOptions = computed(() => {
   return opts
 })
 
-// Shift options for filter in calendar view
-const shiftOptions = computed(() => {
-  const opts = shifts.value.map(s => ({ label: s.name || `Shift #${s.id}`, value: String(s.id) }))
-  return opts
-})
-
 // Selected employee full info
 const selectedEmployee = computed(() => {
   if (!selectedEmployeeId.value) return null
@@ -572,12 +306,13 @@ const miniCalendarDays = computed(() => {
   const daysCount = daysInMonth(monthStart)
   const startDay = monthStart.getDay()
 
-  const days: (number | null)[] = []
+  const days: { day: number | null; ymd: string | null }[] = []
   for (let i = 0; i < startDay; i++) {
-    days.push(null)
+    days.push({ day: null, ymd: null })
   }
   for (let i = 1; i <= daysCount; i++) {
-    days.push(i)
+    const date = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), i)
+    days.push({ day: i, ymd: fmtYmd(date) })
   }
   return days
 })
@@ -589,6 +324,25 @@ const getEmployeeAvatarInitials = (employee: Employee): string => {
     .slice(-2)
     .join('')
 }
+
+const selectedEmployeeSchedules = computed(() => {
+  if (!selectedEmployee.value) return []
+  const monthDays = miniCalendarDays.value.filter(d => d.ymd)
+  const result: { date: string; shiftName: string; color: 'blue' | 'orange' | 'purple' | 'gray' }[] = []
+
+  monthDays.forEach(day => {
+    if (!day.ymd) return
+    const dailySchedules = getSchedulesForEmployeeDate(selectedEmployee.value!, day.ymd)
+    dailySchedules.forEach(s => {
+      result.push({
+        date: day.ymd!,
+        shiftName: s.shift?.name || 'Ca chưa xác định',
+        color: getShiftColor(s.shift)
+      })
+    })
+  })
+  return result
+})
 </script>
 
 <template>
@@ -877,26 +631,33 @@ const getEmployeeAvatarInitials = (employee: Employee): string => {
 
         <!-- Mini Calendar -->
         <div class="space-y-3">
-          <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Lịch tháng {{ fmtMonthYear(currentDate) }}
-          </h4>
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-semibold text-slate-900 dark:text-white">Lịch tháng {{ fmtMonthYear(currentDate) }}</h4>
+            <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+              {{ selectedEmployeeSchedules.length }} ca làm
+            </span>
+          </div>
+
           <div class="grid grid-cols-7 gap-1">
-            <!-- Day headers -->
             <div v-for="dayName in ['Cn', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']" :key="dayName"
-              class="text-xs font-bold text-center text-slate-500 py-2">
+              class="text-[10px] font-bold text-center text-slate-400 uppercase tracking-wider py-1">
               {{ dayName }}
             </div>
-            <!-- Days -->
-            <div v-for="(day, idx) in miniCalendarDays" :key="idx" :class="[
-              'aspect-square flex items-center justify-center text-xs rounded-lg border',
-              day === null
-                ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                : 'border-slate-300 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900'
+            <div v-for="(dayObj, idx) in miniCalendarDays" :key="idx" :class="[
+              'relative aspect-square flex flex-col items-center justify-center text-xs rounded-lg border transition-all',
+              dayObj.day === null
+                ? 'bg-slate-50/50 dark:bg-slate-800/50 border-transparent'
+                : 'border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900',
+              dayObj.ymd === fmtYmd(new Date()) ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900' : ''
             ]">
-              {{ day }}
+              <span :class="{ 'font-semibold text-slate-700 dark:text-slate-300': dayObj.day !== null }">
+                {{ dayObj.day }}
+              </span>
+              <div v-if="dayObj.ymd && getSchedulesForEmployeeDate(selectedEmployee, dayObj.ymd).length > 0"
+                class="absolute bottom-1 h-1 w-1 rounded-full bg-blue-600 shadow-[0_0_4px_rgba(37,99,235,0.6)]"></div>
             </div>
           </div>
         </div>
-
         <!-- Actions -->
         <div class="space-y-2">
           <button

@@ -19,6 +19,7 @@ interface NavItem {
   label: string
   to: string
   icon: unknown
+  children?: Omit<NavItem, 'icon'>[]
 }
 
 interface NavGroup {
@@ -42,8 +43,15 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
       { label: 'Chấm công hôm nay', to: '/attendance', icon: Timer },
-      { label: 'Lịch làm việc', to: '/schedule', icon: CalendarDays },
-      { label: 'Phân công lịch', to: '/schedule/assignments', icon: ClipboardList },
+      {
+        label: 'Lịch làm việc',
+        to: '/schedule',
+        icon: CalendarDays,
+        children: [
+          { label: 'Bảng lịch', to: '/schedule' },
+          { label: 'Phân công lịch', to: '/schedule/assignments' },
+        ],
+      },
     ],
   },
   {
@@ -139,34 +147,51 @@ const isActive = (path: string) =>
         </div>
 
         <!-- Nav items -->
-        <RouterLink v-for="item in group.items" :key="item.label" :to="item.to"
-          :title="props.collapsed ? item.label : undefined" :class="[
-            'relative flex items-center rounded-xl transition-all duration-150 group',
+        <template v-for="item in group.items" :key="item.label">
+          <RouterLink :to="item.to" :title="props.collapsed ? item.label : undefined" :class="[
+            'relative flex items-center rounded-xl transition-all duration-150 group mb-1',
             props.collapsed ? 'h-10 w-10 mx-auto justify-center' : 'gap-3 px-3 py-2',
             isActive(item.to)
               ? 'bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-950 dark:text-indigo-400'
               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
           ]">
-          <!-- Active indicator -->
-          <span v-if="isActive(item.to) && !props.collapsed"
-            class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-indigo-600"></span>
+            <!-- Active indicator -->
+            <span v-if="isActive(item.to) && !props.collapsed"
+              class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-indigo-600"></span>
 
-          <component :is="item.icon" :class="[
-            'shrink-0 transition-colors',
-            props.collapsed ? 'h-5 w-5' : 'h-4 w-4',
-            isActive(item.to) ? 'text-indigo-600' : '',
-          ]" />
+            <component :is="item.icon" :class="[
+              'shrink-0 transition-colors',
+              props.collapsed ? 'h-5 w-5' : 'h-4 w-4',
+              isActive(item.to) ? 'text-indigo-600' : '',
+            ]" />
 
-          <Transition name="fade-slide">
-            <span v-if="!props.collapsed" class="text-sm truncate">{{ item.label }}</span>
-          </Transition>
+            <Transition name="fade-slide">
+              <span v-if="!props.collapsed" class="text-sm truncate">{{ item.label }}</span>
+            </Transition>
 
-          <!-- Tooltip for collapsed mode -->
-          <div v-if="props.collapsed"
-            class="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl">
-            {{ item.label }}
-          </div>
-        </RouterLink>
+            <!-- Tooltip for collapsed mode -->
+            <div v-if="props.collapsed"
+              class="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl">
+              {{ item.label }}
+            </div>
+          </RouterLink>
+
+          <!-- Nested items -->
+          <template v-if="item.children && !props.collapsed && isActive(item.to)">
+            <RouterLink v-for="child in item.children" :key="child.label" :to="child.to" :class="[
+              'flex items-center gap-3 pl-10 pr-3 py-1.5 text-xs rounded-lg transition-all duration-150 group mb-1',
+              route.path === child.to
+                ? 'text-indigo-600 font-bold bg-indigo-50/50 dark:bg-indigo-900/30'
+                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800',
+            ]">
+              <div :class="[
+                'h-1.5 w-1.5 rounded-full',
+                route.path === child.to ? 'bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.5)]' : 'bg-slate-300 dark:bg-slate-700'
+              ]"></div>
+              <span>{{ child.label }}</span>
+            </RouterLink>
+          </template>
+        </template>
       </template>
     </nav>
 

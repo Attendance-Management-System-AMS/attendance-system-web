@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { ArrowLeft, CalendarRange, LayoutGrid, Search, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, CalendarRange, LayoutGrid, Trash2 } from 'lucide-vue-next'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
@@ -29,12 +29,13 @@ const shifts = computed(() => shiftsQuery.data.value ?? [])
 const assignmentError = ref('')
 const assignmentSuccess = ref('')
 const deleteDialogOpen = ref(false)
+const isAssignDialogOpen = ref(false)
 const deleteTarget = ref<ScheduleWithShift | null>(null)
 
 const assignmentForm = reactive({
     employeeId: '',
     shiftId: '',
-    dayOfWeek: '2',
+    daysOfWeek: [] as string[],
     effectiveFrom: '',
     isActive: true,
 })
@@ -160,7 +161,6 @@ watch([scheduleEmployeeFilter, scheduleShiftFilter, scheduleDayFilter, scheduleS
 
 const scheduleList = computed(() => assignedSchedulesQuery.data.value?.items ?? [])
 const assignedTotalPages = computed(() => Math.max(1, assignedSchedulesQuery.data.value?.totalPages ?? 1))
-const assignedTotalElements = computed(() => assignedSchedulesQuery.data.value?.totalElements ?? 0)
 const assignedPageLabel = computed(() => (assignedSchedulesQuery.data.value?.page ?? 0) + 1)
 
 const filteredSchedules = computed<ScheduleWithShift[]>(() => {
@@ -217,7 +217,7 @@ const fmtDateInput = (value?: string): string => {
 const resetAssignmentForm = () => {
     assignmentForm.employeeId = ''
     assignmentForm.shiftId = ''
-    assignmentForm.dayOfWeek = '2'
+    assignmentForm.daysOfWeek = []
     assignmentForm.effectiveFrom = ''
     assignmentForm.isActive = true
 }
@@ -226,22 +226,32 @@ const submitAssignment = async () => {
     assignmentError.value = ''
     assignmentSuccess.value = ''
 
-    if (!assignmentForm.employeeId || !assignmentForm.shiftId || !assignmentForm.dayOfWeek || !assignmentForm.effectiveFrom) {
-        assignmentError.value = 'Vui lòng chọn đầy đủ nhân viên, ca, thứ và ngày hiệu lực.'
+    if (!assignmentForm.employeeId || !assignmentForm.shiftId || assignmentForm.daysOfWeek.length === 0 || !assignmentForm.effectiveFrom) {
+        assignmentError.value = 'Vui lòng chọn đầy đủ nhân viên, ca, ít nhất một thứ và ngày hiệu lực.'
         return
     }
 
     try {
-        await createSchedule.mutateAsync({
-            employeeId: Number(assignmentForm.employeeId),
-            shiftId: Number(assignmentForm.shiftId),
-            dayOfWeek: Number(assignmentForm.dayOfWeek),
-            effectiveFrom: assignmentForm.effectiveFrom,
-            isActive: assignmentForm.isActive,
-        })
+        const promises = assignmentForm.daysOfWeek.map(day =>
+            createSchedule.mutateAsync({
+                employeeId: Number(assignmentForm.employeeId),
+                shiftId: Number(assignmentForm.shiftId),
+                dayOfWeek: Number(day),
+                effectiveFrom: assignmentForm.effectiveFrom,
+                isActive: assignmentForm.isActive,
+            })
+        )
+
+        await Promise.all(promises)
         await assignedSchedulesQuery.refetch()
-        assignmentSuccess.value = 'Đã gán lịch làm việc thành công.'
-        resetAssignmentForm()
+        assignmentSuccess.value = `Đã gán lịch làm việc cho ${assignmentForm.daysOfWeek.length} ngày thành công.`
+
+        // Form stays open briefly to show success, then closes
+        setTimeout(() => {
+            isAssignDialogOpen.value = false
+            resetAssignmentForm()
+            assignmentSuccess.value = ''
+        }, 1200)
     } catch (err) {
         assignmentError.value = getApiErrorMessage(err, 'Không thể gán lịch làm việc. Vui lòng thử lại.')
     }
@@ -269,111 +279,22 @@ const confirmDeleteSchedule = async () => {
 
 <template>
     <div class="space-y-6 px-6 py-6">
-        <PageHeader title="Phân công lịch làm việc" description="Tạo, tìm kiếm, và xóa lịch làm việc của nhân viên.">
+        <PageHeader title="Phân công lịch làm việc" description="Tìm kiếm, quản lý và gán ca làm việc cho nhân viên.">
             <template #actions>
-                <RouterLink to="/schedule"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
-                    <ArrowLeft class="h-4 w-4" />
-                    Quay lại lịch
-                </RouterLink>
+                <div class="flex items-center gap-3">
+                    <button @click="isAssignDialogOpen = true"
+                        class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all dark:shadow-none">
+                        <CalendarRange class="h-4 w-4" />
+                        Gán lịch mới
+                    </button>
+                    <RouterLink to="/schedule"
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+                        <ArrowLeft class="h-4 w-4" />
+                        Quay lại lịch
+                    </RouterLink>
+                </div>
             </template>
         </PageHeader>
-
-        <div class="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-            <FormCard title="Tạo lịch làm việc" :icon="CalendarRange">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Nhân viên <span class="text-rose-500">*</span>
-                        </label>
-                        <select v-model="assignmentForm.employeeId"
-                            class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                            <option value="">Chọn nhân viên</option>
-                            <option v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
-                                {{ employee.fullName }}{{ employee.employeeCode ? ` (${employee.employeeCode})` : '' }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Ca làm <span class="text-rose-500">*</span>
-                        </label>
-                        <select v-model="assignmentForm.shiftId"
-                            class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                            <option value="">Chọn ca làm</option>
-                            <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
-                                {{ shift.name || `Ca #${shift.id}` }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Thứ trong tuần <span class="text-rose-500">*</span>
-                        </label>
-                        <select v-model="assignmentForm.dayOfWeek"
-                            class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
-                            <option v-for="option in dayOfWeekOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                            Ngày hiệu lực <span class="text-rose-500">*</span>
-                        </label>
-                        <input v-model="assignmentForm.effectiveFrom" type="date"
-                            class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
-                    </div>
-
-                    <label
-                        class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 md:col-span-2">
-                        <input v-model="assignmentForm.isActive" type="checkbox"
-                            class="h-4 w-4 rounded border-slate-300 text-indigo-600" />
-                        Kích hoạt lịch ngay sau khi gán
-                    </label>
-                </div>
-
-                <div v-if="assignmentError"
-                    class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                    {{ assignmentError }}
-                </div>
-                <div v-if="assignmentSuccess"
-                    class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    {{ assignmentSuccess }}
-                </div>
-
-                <div class="mt-5 flex flex-wrap gap-3">
-                    <button type="button" @click="submitAssignment" :disabled="createSchedule.isPending.value"
-                        class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-400">
-                        <CalendarRange class="h-4 w-4" />
-                        {{ createSchedule.isPending.value ? 'Đang gán...' : 'Gán lịch' }}
-                    </button>
-                    <button type="button" @click="resetAssignmentForm"
-                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                        Làm mới
-                    </button>
-                </div>
-            </FormCard>
-
-            <FormCard title="Tóm tắt" :icon="Search">
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
-                        <div class="text-slate-500 dark:text-slate-400">Số lịch đang có</div>
-                        <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ assignedTotalElements }}
-                        </div>
-                    </div>
-                    <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800">
-                        <div class="text-slate-500 dark:text-slate-400">Trang hiện tại</div>
-                        <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ assignedPageLabel }}
-                        </div>
-                    </div>
-                </div>
-            </FormCard>
-        </div>
-
         <FormCard title="Danh sách lịch đã gán" :icon="LayoutGrid">
             <div class="grid gap-3 md:grid-cols-4">
                 <input v-model="scheduleSearch" type="text" placeholder="Tìm theo nhân viên, ca, mã..."
@@ -490,5 +411,144 @@ const confirmDeleteSchedule = async () => {
             description="Bạn có chắc chắn muốn xóa lịch đã gán này không?"
             :item-name="deleteTarget ? `${getEmployeeName(deleteTarget.employeeId)} - ${getShiftName(deleteTarget.shiftId)}` : ''"
             @confirm="confirmDeleteSchedule" @cancel="deleteDialogOpen = false" />
+
+        <!-- Assignment Dialog -->
+        <Teleport to="body">
+            <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0"
+                enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                <div v-if="isAssignDialogOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    @click.self="isAssignDialogOpen = false">
+                    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+
+                    <Transition enter-active-class="transition duration-200 ease-out"
+                        enter-from-class="opacity-0 scale-95 translate-y-4"
+                        enter-to-class="opacity-100 scale-100 translate-y-0">
+                        <div v-if="isAssignDialogOpen"
+                            class="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+                            <!-- Header -->
+                            <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+                                        <CalendarRange class="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tạo lịch làm việc mới</h3>
+                                        <p class="text-xs text-slate-500">Phân công ca làm cho nhân viên theo các thứ trong tuần.</p>
+                                    </div>
+                                </div>
+                                <button @click="isAssignDialogOpen = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                    <ArrowLeft class="h-5 w-5 rotate-180" />
+                                </button>
+                            </div>
+
+                            <!-- Body -->
+                            <div class="max-h-[70vh] overflow-y-auto p-6 scrollbar-hide">
+                                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                    <div class="space-y-1.5">
+                                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                            Nhân viên <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select v-model="assignmentForm.employeeId"
+                                            class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                            <option value="">Chọn nhân viên</option>
+                                            <option v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
+                                                {{ employee.fullName }}{{ employee.employeeCode ? ` (${employee.employeeCode})` : '' }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                            Ca làm <span class="text-rose-500">*</span>
+                                        </label>
+                                        <select v-model="assignmentForm.shiftId"
+                                            class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                            <option value="">Chọn ca làm</option>
+                                            <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
+                                                {{ shift.name || `Ca #${shift.id}` }}
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="md:col-span-2 space-y-2">
+                                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                            Thứ trong tuần <span class="text-rose-500">*</span>
+                                        </label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="button" @click="assignmentForm.daysOfWeek = ['2', '3', '4', '5', '6']"
+                                                class="rounded-lg bg-indigo-50 px-3 py-1.5 text-[10px] font-bold uppercase text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30">
+                                                Thứ 2 - Thứ 6
+                                            </button>
+                                            <button type="button" @click="assignmentForm.daysOfWeek = ['2', '3', '4', '5', '6', '7', '8']"
+                                                class="rounded-lg bg-indigo-50 px-3 py-1.5 text-[10px] font-bold uppercase text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30">
+                                                Tất cả (T2 - CN)
+                                            </button>
+                                            <button type="button" @click="assignmentForm.daysOfWeek = []"
+                                                class="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800">
+                                                Bỏ chọn
+                                            </button>
+                                        </div>
+                                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            <label v-for="option in dayOfWeekOptions" :key="option.value"
+                                                class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-white hover:shadow-sm transition-all"
+                                                :class="{ 'border-indigo-500 bg-white ring-1 ring-indigo-500/20 shadow-md shadow-indigo-100': assignmentForm.daysOfWeek.includes(option.value) }">
+                                                <input type="checkbox" v-model="assignmentForm.daysOfWeek" :value="option.value" class="h-4 w-4 rounded border-slate-300 text-indigo-600" />
+                                                <span class="text-xs font-semibold">{{ option.label }}</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                            Ngày hiệu lực <span class="text-rose-500">*</span>
+                                        </label>
+                                        <input v-model="assignmentForm.effectiveFrom" type="date"
+                                            class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 cursor-pointer hover:bg-white transition-all dark:border-slate-800 dark:bg-slate-900/50">
+                                            <input v-model="assignmentForm.isActive" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Kích hoạt lịch ngay sau khi gán</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <Transition name="fade">
+                                    <div v-if="assignmentError" class="mt-4 flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                                        <div class="h-1 w-1 rounded-full bg-rose-600"></div>
+                                        {{ assignmentError }}
+                                    </div>
+                                </Transition>
+                                <Transition name="fade">
+                                    <div v-if="assignmentSuccess" class="mt-4 flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
+                                        <div class="h-1 w-1 rounded-full bg-emerald-600"></div>
+                                        {{ assignmentSuccess }}
+                                    </div>
+                                </Transition>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="flex items-center justify-end gap-3 border-t border-slate-100 p-6 dark:border-slate-800">
+                                <button type="button" @click="isAssignDialogOpen = false"
+                                    class="h-11 rounded-xl border border-slate-200 px-6 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">
+                                    Đóng
+                                </button>
+                                <button type="button" @click="resetAssignmentForm"
+                                    class="h-11 rounded-xl border border-dashed border-slate-300 px-6 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">
+                                    Làm mới
+                                </button>
+                                <button type="button" @click="submitAssignment" :disabled="createSchedule.isPending.value"
+                                    class="h-11 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 text-sm font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:shadow-none">
+                                    <CalendarRange v-if="!createSchedule.isPending.value" class="h-4 w-4" />
+                                    <span>{{ createSchedule.isPending.value ? 'Đang xử lý...' : 'Gán lịch' }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </Transition>
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
