@@ -1,17 +1,40 @@
-// src/composables/useDepartments.ts
 import { departmentApi } from '@/services/department.service';
 import type { Department } from '@/types/department';
 import { queryKeys } from '@/lib/queryKeys'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { type MaybeRefOrGetter, toValue, computed } from 'vue'
 
-export function useDepartments() {
+export interface UseDepartmentsParams {
+    page?: MaybeRefOrGetter<number>;
+    size?: MaybeRefOrGetter<number>;
+    sort?: MaybeRefOrGetter<string>;
+    sortDir?: MaybeRefOrGetter<string>;
+    keyword?: MaybeRefOrGetter<string>;
+}
+
+export function useDepartments(params?: UseDepartmentsParams) {
     const queryClient = useQueryClient()
 
     // Query danh sách
     const departmentsQuery = useQuery<Department[]>({
-        queryKey: queryKeys.departments.all(),
+        queryKey: computed(() => [
+            ...queryKeys.departments.all(),
+            {
+                keyword: toValue(params?.keyword),
+                page: toValue(params?.page),
+                size: toValue(params?.size),
+                sort: toValue(params?.sort),
+                sortDir: toValue(params?.sortDir),
+            }
+        ]),
         queryFn: async () => {
-            const response = await departmentApi.getAll()
+            const response = await departmentApi.getAll({
+                keyword: toValue(params?.keyword),
+                page: toValue(params?.page),
+                size: toValue(params?.size),
+                sort: toValue(params?.sort),
+                sortDir: toValue(params?.sortDir),
+            })
             const result = response.data?.result as Department[] | { content?: Department[] } | undefined
             if (Array.isArray(result)) return result
             if (result && Array.isArray(result.content)) return result.content
@@ -38,7 +61,7 @@ export function useDepartments() {
                     manager: 'Chưa chỉ định',
                     employeeCount: 0,
                     defaultShift: 'Chưa cấu hình',
-                    status: 'active' as const,
+                    status: 'ACTIVE' as const,
                     location: '—',
                 } as Department,
             ])

@@ -4,5 +4,5 @@ export interface Department {
     description: string
     employeeCount: number
     defaultShift?: string
-    status: 'active' | 'inactive'
+    status: 'ACTIVE' | 'INACTIVE'
 }

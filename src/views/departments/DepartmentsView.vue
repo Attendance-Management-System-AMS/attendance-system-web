@@ -7,37 +7,34 @@ import SearchToolbar from '@/components/ui/SearchToolbar.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 import DepartmentCreateModal from '@/components/departments/DepartmentCreateModal.vue'
+import DepartmentEditModal from '@/components/departments/DepartmentEditModal.vue'
 import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
 import TableSkeleton from '@/components/ui/TableSkeleton.vue'
 import { Plus } from 'lucide-vue-next'
 import type { Department } from '@/types/department'
 
-const { departmentsQuery, createDepartment, deleteDepartment } = useDepartments()
-
-const { data: departmentsRaw, isLoading, isError, error } = departmentsQuery
-const departments = computed<Department[]>(() => departmentsRaw.value ?? [])
-
-// Search với debounce
 const search = ref('')
 const debouncedSearch = ref('')
 const updateDebounced = useDebounceFn((val: string) => {
   debouncedSearch.value = val
-}, 350)
+}, 500)
 
 watch(search, updateDebounced)
 
-// Filtered list
-const filteredDepartments = computed<Department[]>(() => {
-  if (!debouncedSearch.value.trim()) return departments.value
-  const term = debouncedSearch.value.toLowerCase()
-  return departments.value.filter(
-    (d: Department) =>
-      d.name.toLowerCase().includes(term) || d.description.toLowerCase().includes(term),
-  )
+const { departmentsQuery, createDepartment, deleteDepartment, updateDepartment } = useDepartments({
+  keyword: debouncedSearch,
 })
+
+const { data: departmentsRaw, isLoading, isError, error } = departmentsQuery
+const departments = computed<Department[]>(() => departmentsRaw.value ?? [])
+
+// Filtered list
+const filteredDepartments = computed<Department[]>(() => departments.value)
 
 // UI state
 const isCreateModalOpen = ref(false)
+const isEditModalOpen = ref(false)
+const editTarget = ref<Department | null>(null)
 const deleteDialog = ref(false)
 const deleteTarget = ref<Department | null>(null)
 
@@ -45,6 +42,26 @@ const handleCreated = (data: { name: string; description: string }) => {
   createDepartment.mutate(data, {
     onSuccess: () => (isCreateModalOpen.value = false),
   })
+}
+
+const handleEdit = (id: string | number) => {
+  const dept = departments.value.find((d: Department) => String(d.id) === String(id))
+  if (dept) {
+    editTarget.value = dept
+    isEditModalOpen.value = true
+  }
+}
+
+const handleUpdated = (id: string | number, data: Partial<Department>) => {
+  updateDepartment.mutate(
+    { id: String(id), data },
+    {
+      onSuccess: () => {
+        isEditModalOpen.value = false
+        editTarget.value = null
+      },
+    },
+  )
 }
 
 const handleDelete = (id: string | number) => {
@@ -117,11 +134,6 @@ const confirmDelete = () => {
               <th
                 class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
               >
-                Ca mặc định
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
                 Trạng thái
               </th>
               <th
@@ -166,25 +178,22 @@ const confirmDelete = () => {
                   {{ dept.employeeCount }}
                 </span>
               </td>
-              <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
-                {{ dept.defaultShift || 'Chưa cấu hình' }}
-              </td>
               <td class="px-6 py-4">
                 <span
                   :class="[
                     'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold',
-                    dept.status === 'active'
+                    dept.status === 'ACTIVE'
                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-100'
                       : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
                   ]"
                 >
-                  {{ dept.status === 'active' ? 'Hoạt động' : 'Ngừng hoạt động' }}
+                  {{ dept.status === 'ACTIVE' ? 'Hoạt động' : 'Ngừng hoạt động' }}
                 </span>
               </td>
               <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                 <ActionDropdown
                   :item-id="dept.id"
-                  :edit-to="`/departments/${dept.id}/edit`"
+                  @edit="handleEdit"
                   @delete="handleDelete"
                 />
               </td>
@@ -199,6 +208,13 @@ const confirmDelete = () => {
       :open="isCreateModalOpen"
       @close="isCreateModalOpen = false"
       @created="handleCreated"
+    />
+
+    <DepartmentEditModal
+      :open="isEditModalOpen"
+      :department="editTarget"
+      @close="isEditModalOpen = false"
+      @updated="handleUpdated"
     />
 
     <DeleteConfirmDialog

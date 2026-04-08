@@ -2,8 +2,16 @@ import api from '@/lib/api';
 import type { Department } from '@/types/department';
 import type { ApiResponse, Page } from '@/types/api';
 
+export interface DeptQueryParams {
+  page?: number;
+  size?: number;
+  sort?: string;
+  sortDir?: string;
+  keyword?: string;
+}
+
 export const departmentApi = {
-  getAll: () => api.get<ApiResponse<Page<Department>>>('/departments'),
+  getAll: (params?: DeptQueryParams) => api.get<ApiResponse<Page<Department>>>('/departments', { params }),
   getById: (id: string | number) => api.get<ApiResponse<Department>>(`/departments/${id}`),
   create: (data: { name: string; description: string }) => api.post<ApiResponse<Department>>('/departments', data),
   update: (id: string | number, data: Partial<Department>) => api.put<ApiResponse<Department>>(`/departments/${id}`, data),

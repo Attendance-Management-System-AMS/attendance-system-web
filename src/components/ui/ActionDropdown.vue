@@ -10,6 +10,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  (e: 'edit', id: string | number): void
   (e: 'delete', id: string | number): void
 }>()
 
@@ -93,7 +94,11 @@ onBeforeUnmount(() => {
 
 const handleEdit = () => {
   isOpen.value = false
-  if (props.editTo) router.push(props.editTo)
+  if (props.editTo) {
+    router.push(props.editTo)
+  } else if (props.itemId !== undefined) {
+    emit('edit', props.itemId)
+  }
 }
 
 const handleView = () => {
@@ -144,7 +149,7 @@ const handleDelete = () => {
             Xem chi tiết
           </button>
           <button
-            v-if="editTo"
+            v-if="editTo || itemId"
             @click="handleEdit"
             class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
           >
