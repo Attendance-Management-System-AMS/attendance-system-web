@@ -16,7 +16,7 @@ const router = useRouter()
 const route = useRoute()
 const { updatePosition } = usePositions()
 const { departmentsQuery } = useDepartments()
-const departments = computed<Department[]>(() => departmentsQuery.data.value ?? [])
+const departments = computed<Department[]>(() => departmentsQuery.data.value?.content ?? [])
 
 function departmentIdForApi(v: string): string | number | undefined {
   if (v === '') return undefined

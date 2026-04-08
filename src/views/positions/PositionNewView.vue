@@ -12,7 +12,7 @@ import type { Department } from '@/types/department'
 const router = useRouter()
 const { createPosition } = usePositions()
 const { departmentsQuery } = useDepartments()
-const departments = computed<Department[]>(() => departmentsQuery.data.value ?? [])
+const departments = computed<Department[]>(() => departmentsQuery.data.value?.content ?? [])
 
 const form = reactive({
   name: '',

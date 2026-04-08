@@ -16,7 +16,7 @@ const { createEmployee } = useEmployees()
 const { departmentsQuery } = useDepartments()
 const { positionsQuery } = usePositions()
 
-const departments = computed<Department[]>(() => departmentsQuery.data.value ?? [])
+const departments = computed<Department[]>(() => departmentsQuery.data.value?.content ?? [])
 const positions = computed<Position[]>(() => positionsQuery.data.value ?? [])
 
 const filteredPositions = computed(() => {

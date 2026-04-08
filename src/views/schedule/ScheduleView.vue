@@ -237,7 +237,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           { label: 'Kế hoạch', value: 'đ 52M', icon: TrendingUp },
         ]"
         :key="s.label"
-        class="border-border shadow-none p-5 sm:p-6 hover:bg-secondary transition-all group rounded-2xl bg-card"
+        class="border-border shadow-none p-5 sm:p-6 hover:bg-secondary transition-all group rounded-lg bg-card"
       >
         <div class="flex flex-col gap-4">
           <div class="flex items-center justify-between">
@@ -260,7 +260,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
 
     <!-- Filter & Search Bar -->
     <div
-      class="flex flex-wrap items-center justify-between gap-4 p-5 bg-card rounded-2xl border border-border"
+      class="flex flex-wrap items-center justify-between gap-4 p-5 bg-card rounded-lg border border-border"
     >
       <div class="flex flex-wrap items-center gap-4">
         <div class="relative group w-full sm:w-64">
@@ -284,7 +284,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
     </div>
 
     <!-- Table Section -->
-    <Card class="overflow-hidden border-border shadow-none rounded-2xl bg-card">
+    <Card class="overflow-hidden border-border shadow-none rounded-lg bg-card">
       <div class="overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
@@ -384,7 +384,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
     <!-- Pagination Section -->
     <div
       v-if="totalPagesCount > 1"
-      class="flex justify-between items-center bg-card p-5 rounded-2xl border border-border shadow-none"
+      class="flex justify-between items-center bg-card p-5 rounded-lg border border-border shadow-none"
     >
       <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
         >Trang {{ currentPage }} / {{ totalPagesCount }}</span
@@ -425,7 +425,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           <div class="p-6 border-b border-border flex items-center justify-between bg-card">
             <div class="flex items-center gap-4">
               <div
-                class="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20"
+                class="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20"
               >
                 <CalendarIcon class="h-6 w-6" />
               </div>
@@ -452,7 +452,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-card">
             <!-- Profile Info -->
             <div
-              class="flex flex-col items-center text-center p-8 rounded-3xl border border-border bg-card shadow-none"
+              class="flex flex-col items-center text-center p-8 rounded-xl border border-border bg-card shadow-none"
             >
               <Avatar class="h-24 w-24 border-4 border-white shadow-2xl mb-6">
                 <AvatarFallback class="bg-primary text-primary-foreground text-2xl font-black">
@@ -490,7 +490,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 <div
                   v-for="day in weekDays"
                   :key="day.ymd"
-                  class="flex items-center gap-5 p-4 rounded-2xl border border-border bg-card hover:bg-muted/50 transition-all group"
+                  class="flex items-center gap-5 p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all group"
                 >
                   <div class="w-14 text-center border-r border-border pr-5 shrink-0">
                     <p
@@ -539,13 +539,13 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           <!-- Side Footer -->
           <div class="p-6 border-t border-slate-100 bg-white grid grid-cols-2 gap-4">
             <Button
-              class="h-12 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[11px] text-primary-foreground gap-2 rounded-2xl shadow-lg shadow-primary/20"
+              class="h-12 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[11px] text-primary-foreground gap-2 rounded-lg shadow-lg shadow-primary/20"
             >
               <Edit3 class="h-4 w-4" /> Chỉnh sửa
             </Button>
             <Button
               variant="outline"
-              class="h-12 font-black uppercase tracking-widest text-[11px] text-slate-500 gap-2 rounded-2xl border-slate-100 hover:bg-slate-50 transition-all"
+              class="h-12 font-black uppercase tracking-widest text-[11px] text-slate-500 gap-2 rounded-lg border-slate-100 hover:bg-slate-50 transition-all"
             >
               <Eye class="h-4 w-4" /> Lịch sử
             </Button>
