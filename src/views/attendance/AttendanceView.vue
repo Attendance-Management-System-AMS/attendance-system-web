@@ -2,16 +2,15 @@
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref, computed } from 'vue'
 import { useAttendance } from '@/composables/useAttendance'
-import type { Attendance, AttendanceStatus } from '@/types/attendance'
-import { getApiErrorMessage } from '@/lib/apiErrorMessage'
-import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
-import TableSkeleton from '@/components/ui/TableSkeleton.vue'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import type { Attendance } from '@/types/attendance'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import SearchToolbar from '@/components/ui/SearchToolbar.vue'
 import FilterSelect from '@/components/ui/FilterSelect.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
+import DataTable from '@/components/ui/DataTable.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
+import { toast } from 'vue-sonner'
 
 const search = ref('')
 const filterDept = ref('')
@@ -26,11 +25,15 @@ const attendanceFilters = computed(() => ({
 }))
 
 const { attendanceQuery, deleteAttendance } = useAttendance(attendanceFilters)
-const { data: recordsRaw, isLoading, isError, error } = attendanceQuery
-const records = computed(() => recordsRaw.value ?? [])
-const deleteDialog = ref(false)
-const deleteTarget = ref<Attendance | null>(null)
-const mutationError = ref('')
+const { data: records, isLoading } = attendanceQuery
+
+const columns = [
+    { key: 'employee', label: 'Nhân viên' },
+    { key: 'checkIn', label: 'Giờ vào' },
+    { key: 'checkOut', label: 'Giờ ra' },
+    { key: 'status', label: 'Trạng thái' },
+    { key: 'actions', label: 'Hành động', align: 'right' as const },
+]
 
 const departments = [
     { label: 'Nhân sự', value: 'hr' },
@@ -53,44 +56,48 @@ const statuses = [
     { label: 'Vắng mặt', value: 'Vắng mặt' },
 ]
 
+const deleteTarget = ref<Attendance | null>(null)
+const isAlertOpen = ref(false)
+
 const handleDelete = (id: string | number) => {
-    const record = records.value.find(r => r.id === String(id))
+    const record = records.value?.find(r => String(r.id) === String(id))
     if (record) {
         deleteTarget.value = record
-        deleteDialog.value = true
+        isAlertOpen.value = true
     }
 }
 
-const confirmDelete = async () => {
-    if (!deleteTarget.value) {
-        deleteDialog.value = false
-        return
-    }
-
-    mutationError.value = ''
-    try {
-        await deleteAttendance.mutateAsync(deleteTarget.value.id)
-        deleteDialog.value = false
-        deleteTarget.value = null
-    } catch (err) {
-        mutationError.value = getApiErrorMessage(err, 'Xóa bản ghi chấm công thất bại.')
+const confirmDelete = () => {
+    if (deleteTarget.value) {
+        deleteAttendance.mutate(deleteTarget.value.id, {
+            onSuccess: () => {
+                toast.success('Đã xóa hồ sơ chấm công thành công')
+                isAlertOpen.value = false
+                deleteTarget.value = null
+            },
+            onError: () => {
+                toast.error('Không thể xóa hồ sơ chấm công')
+            }
+        })
     }
 }
 
-const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'secondary' | 'destructive'> = {
-    'Có mặt': 'success',
-    'Đi muộn': 'warning',
-    'Nghỉ phép': 'secondary',
-    'Vắng mặt': 'destructive',
+const getInitials = (name?: string) => {
+  if (!name) return '??'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    const first = parts[0]?.charAt(0) || ''
+    const last = parts[parts.length - 1]?.charAt(0) || ''
+    return (first + last).toUpperCase() || '??'
+  }
+  return (parts[0]?.charAt(0) || '?').toUpperCase()
 }
 </script>
 
 <template>
     <div class="space-y-6">
-        <PageHeader title="Chấm công hôm nay" description="Theo dõi tình trạng điểm danh trong ngày">
-        </PageHeader>
+        <PageHeader title="Chấm công hôm nay" description="Theo dõi tình trạng điểm danh trong ngày" />
 
-        <!-- Toolbar -->
         <SearchToolbar v-model="search" placeholder="Tìm theo tên, mã nhân viên...">
             <template #filters>
                 <FilterSelect v-model="filterDept" label="Phòng ban" :options="departments" />
@@ -99,114 +106,71 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
             </template>
         </SearchToolbar>
 
-        <div v-if="mutationError"
-            class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
-            {{ mutationError }}
+        <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <DataTable 
+                :columns="columns" 
+                :rows="records || []" 
+                :loading="isLoading"
+            >
+                <template #cell-employee="{ row }">
+                    <div class="flex items-center gap-3">
+                        <Avatar class="size-9 h-9 w-9 border border-indigo-50 dark:border-indigo-950">
+                            <AvatarImage :src="`/api/avatar/${row.employee?.id}`" />
+                            <AvatarFallback class="bg-indigo-50 text-indigo-600 text-[10px] font-bold">
+                                {{ getInitials(row.employee?.fullName) }}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                {{ row.employee?.fullName ?? '—' }}
+                            </p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                                {{ row.employee?.departmentName ?? '—' }}
+                            </p>
+                        </div>
+                    </div>
+                </template>
+
+                <template #cell-checkIn="{ value }">
+                    <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                        {{ value || '—:—' }}
+                    </code>
+                </template>
+
+                <template #cell-checkOut="{ value }">
+                    <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                        {{ value || '—:—' }}
+                    </code>
+                </template>
+
+                <template #cell-status="{ value }">
+                    <Badge 
+                        :variant="value === 'Có mặt' ? 'default' : value === 'Đi muộn' ? 'outline' : 'secondary'"
+                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-none"
+                        :class="{
+                            'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30': value === 'Có mặt',
+                            'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn',
+                            'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt',
+                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800': value === 'Nghỉ phép'
+                        }"
+                    >
+                        {{ value }}
+                    </Badge>
+                </template>
+
+                <template #cell-actions="{ row }">
+                    <ActionDropdown :item-id="row.id" @delete="handleDelete" />
+                </template>
+            </DataTable>
         </div>
 
-        <!-- Table -->
-        <div
-            class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div class="overflow-x-auto">
-                <!-- Skeleton Loading -->
-                <TableSkeleton
-                    v-if="isLoading"
-                    :rows="8"
-                    :cols="3"
-                    has-avatar-column
-                    has-action-column
-                />
-
-                <!-- Error State -->
-                <div v-else-if="isError" class="p-8">
-                    <LoadingErrorState
-                        mode="block"
-                        :is-loading="false"
-                        :is-error="true"
-                        :error="error"
-                        errorText="Không thể tải dữ liệu chấm công"
-                        retryLabel="Thử lại"
-                        @retry="() => attendanceQuery.refetch()"
-                    />
-                </div>
-
-                <!-- Real Table -->
-                <table v-else class="w-full">
-                    <thead>
-                        <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
-                            <th
-                                class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Nhân viên
-                            </th>
-                            <th
-                                class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Giờ vào
-                            </th>
-                            <th
-                                class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Giờ ra
-                            </th>
-                            <th
-                                class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Trạng thái
-                            </th>
-                            <th
-                                class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Hành động
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr v-if="records.length === 0">
-                            <td colspan="5" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
-                                Chưa có dữ liệu chấm công
-                            </td>
-                        </tr>
-                        <tr v-else v-for="record in records" :key="record.id"
-                            class="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <Avatar class="size-9">
-                                        <AvatarImage :src="record.employee?.avatarUrl ?? ''"
-                                            :alt="record.employee?.fullName ?? ''" />
-                                        <AvatarFallback>
-                                            {{ (record.employee?.fullName ?? '?').slice(0, 2).toUpperCase() }}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-900 dark:text-white">
-                                            {{ record.employee?.fullName ?? '—' }}
-                                        </p>
-                                        <p class="text-xs text-slate-400">
-                                            {{ record.employee?.departmentName ?? '—' }} · {{
-                                            record.employee?.positionName ??
-                                            '—' }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                                {{ record.checkIn }}
-                            </td>
-                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-                                {{ record.checkOut }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <Badge :variant="badgeVariantByStatus[record.status]">
-                                    {{ record.status }}
-                                </Badge>
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <ActionDropdown :item-id="record.id" @delete="handleDelete" />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <DeleteConfirmDialog :open="deleteDialog" title="Xóa bản ghi"
-            description="Bạn có chắc chắn muốn xóa bản ghi chấm công này không?"
-            :item-name="deleteTarget?.employee?.fullName" @confirm="confirmDelete" @cancel="deleteDialog = false" />
+        <DeleteConfirmDialog 
+            :open="isAlertOpen" 
+            title="Xác nhận xóa bản ghi" 
+            description="Lịch sử chấm công của ngày này sẽ bị gỡ bỏ khỏi hệ thống."
+            :item-name="deleteTarget?.employee?.fullName"
+            @confirm="confirmDelete"
+            @cancel="isAlertOpen = false"
+        />
     </div>
 </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
+import { Input } from './input'
 
 defineProps<{
   placeholder?: string
@@ -16,14 +17,14 @@ defineEmits<{
     <!-- Search input -->
     <div class="relative flex-1 max-w-sm">
       <Search
-        class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        class="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400"
       />
-      <input
-        :value="modelValue"
+      <Input
+        :model-value="modelValue"
         type="text"
         :placeholder="placeholder ?? 'Tìm kiếm...'"
-        class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-500"
-        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+        class="pl-10 h-10 rounded-xl bg-slate-50 focus:bg-white dark:bg-slate-800 transition-all"
+        @update:model-value="(val) => $emit('update:modelValue', val as string)"
       />
     </div>
 

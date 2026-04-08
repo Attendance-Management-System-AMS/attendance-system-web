@@ -15,6 +15,7 @@ import { scheduleApi } from '@/services/schedule.service'
 import type { Page } from '@/types/api'
 import type { Schedule } from '@/types/schedule'
 import type { Shift } from '@/types/shift'
+import type { Employee } from '@/types/employee'
 
 interface ScheduleWithShift extends Schedule {
   shift?: Shift
@@ -25,7 +26,7 @@ const { shiftsQuery } = useShifts()
 const { templatesQuery } = useScheduleTemplates()
 const { bulkAssign, applyTemplate, deleteSchedule } = useSchedules(null)
 
-const employees = computed(() => employeesQuery.data.value ?? [])
+const employees = computed<Employee[]>(() => employeesQuery.data.value?.content ?? [])
 const shifts = computed(() => shiftsQuery.data.value ?? [])
 
 const assignmentError = ref('')

@@ -153,8 +153,8 @@ const handleLogout = () => {
       <!-- Avatar dropdown -->
       <div ref="profileRef" class="relative">
         <button @click="isProfileOpen = !isProfileOpen"
-          class="flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+          class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors">
+          <div class="flex h-8 w-8 items-center justify-center rounded-md bg-white/20 text-xs font-bold text-white">
             {{ userInitials }}
           </div>
           <span class="hidden md:block text-sm font-medium">{{ userDisplayName }}</span>
@@ -167,12 +167,12 @@ const handleLogout = () => {
           leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100 scale-100 translate-y-0"
           leave-to-class="opacity-0 scale-95 translate-y-1">
           <div v-if="isProfileOpen"
-            class="absolute right-0 top-full mt-2 w-64 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 z-50 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+            class="absolute right-0 top-full mt-2 w-64 rounded-md border border-slate-200 bg-white shadow-xl shadow-slate-200/60 z-50 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
             <!-- User info header -->
             <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
               <div class="flex items-center gap-3">
                 <div
-                  class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white text-sm font-bold">
+                  class="flex h-10 w-10 items-center justify-center rounded-md bg-indigo-600 text-white text-sm font-bold">
                   {{ userInitials }}
                 </div>
                 <div>
@@ -188,7 +188,7 @@ const handleLogout = () => {
             <!-- Menu items -->
             <div class="p-1.5">
               <RouterLink v-for="item in menuItems" :key="item.label" :to="item.to" @click="isProfileOpen = false"
-                class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
                 <component :is="item.icon" class="h-4 w-4 text-slate-400" />
                 {{ item.label }}
               </RouterLink>
@@ -197,7 +197,7 @@ const handleLogout = () => {
             <!-- Logout -->
             <div class="border-t border-slate-100 dark:border-slate-800 p-1.5">
               <button @click="handleLogout"
-                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors">
+                class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors">
                 <LogOut class="h-4 w-4" />
                 Đăng xuất
               </button>

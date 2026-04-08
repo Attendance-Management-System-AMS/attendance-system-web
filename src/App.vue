@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import LoadingOverlay from '@/components/ui/LoadingOverlay.vue'
+import { Toaster } from '@/components/ui/sonner'
 
 const { isLoadingProfile } = useAuth()
 </script>
@@ -16,5 +17,6 @@ const { isLoadingProfile } = useAuth()
     />
     
     <RouterView />
+    <Toaster position="top-right" rich-colors close-button />
   </div>
 </template>

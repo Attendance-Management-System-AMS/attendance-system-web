@@ -1,22 +1,52 @@
 import { employeeApi } from '@/services/employee.service';
 import type { Employee, CreateEmployee, UpdateEmployee, FaceDescriptorRequest } from '@/types/employee';
+import type { Page } from '@/types/api';
 import { queryKeys } from '@/lib/queryKeys'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { type MaybeRefOrGetter, toValue, computed } from 'vue'
 
-export function useEmployees() {
+export interface UseEmployeesParams {
+  page?: MaybeRefOrGetter<number>;
+  size?: MaybeRefOrGetter<number>;
+  sort?: MaybeRefOrGetter<string>;
+  sortDir?: MaybeRefOrGetter<string>;
+  keyword?: MaybeRefOrGetter<string>;
+  departmentId?: MaybeRefOrGetter<number | string | undefined>;
+  positionId?: MaybeRefOrGetter<number | string | undefined>;
+  status?: MaybeRefOrGetter<string | undefined>;
+}
+
+export function useEmployees(params?: UseEmployeesParams) {
   const queryClient = useQueryClient()
 
   // Query danh sách
-  const employeesQuery = useQuery<Employee[]>({
-    queryKey: queryKeys.employees.all(),
+  const employeesQuery = useQuery<Page<Employee>>({
+    queryKey: computed(() => [
+      ...queryKeys.employees.all(),
+      {
+        keyword: toValue(params?.keyword),
+        page: toValue(params?.page),
+        size: toValue(params?.size),
+        sort: toValue(params?.sort),
+        sortDir: toValue(params?.sortDir),
+        departmentId: toValue(params?.departmentId),
+        positionId: toValue(params?.positionId),
+        status: toValue(params?.status),
+      }
+    ]),
     queryFn: async () => {
       try {
-        const response = await employeeApi.getAll()
-        const result = response.data?.result as Employee[] | { content?: Employee[] } | undefined
-
-        if (Array.isArray(result)) return result
-        if (result && Array.isArray(result.content)) return result.content
-        return []
+        const response = await employeeApi.getAll({
+          keyword: toValue(params?.keyword),
+          page: toValue(params?.page),
+          size: toValue(params?.size),
+          sort: toValue(params?.sort),
+          sortDir: toValue(params?.sortDir),
+          departmentId: toValue(params?.departmentId),
+          positionId: toValue(params?.positionId),
+          status: toValue(params?.status),
+        })
+        return response.data?.result
       } catch (err) {
         console.error('Failed to fetch employees:', err)
         throw err

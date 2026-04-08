@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { Home, CalendarDays, Timer, User, ClipboardList, ScanFace } from 'lucide-vue-next'
+import { Home, Timer, ClipboardList } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 
 const route = useRoute()
 const { isEmployee } = useAuth()
 
-const navItems = computed(() => {
+interface NavItem {
+  label: string
+  to: string
+  icon: Component
+  isAction?: boolean
+}
+
+const navItems = computed<NavItem[]>(() => {
   if (isEmployee.value) {
     return [
       { label: 'Bảng tin', to: '/my/dashboard', icon: Home },
@@ -16,13 +23,10 @@ const navItems = computed(() => {
     ]
   }
 
-  // Mặc định cho Admin/HR trên Mobile nếu muốn dùng
   return [
-    { label: 'Dashboard', to: '/dashboard', icon: Home },
-    { label: 'Nhân sự', to: '/employees', icon: User },
-    { label: 'Kiosk', to: '/kiosk', icon: ScanFace, isAction: true },
-    { label: 'Lịch', to: '/schedule', icon: CalendarDays },
-    { label: 'Cài đặt', to: '/settings', icon: User },
+    { label: 'Dashboard', to: '/my/dashboard', icon: Home },
+    { label: 'Bảng công', to: '/my/attendance', icon: Timer },
+    { label: 'Đơn từ', to: '/my/requests', icon: ClipboardList },
   ]
 })
 
@@ -36,18 +40,8 @@ const isActive = (path: string) => route.path === path
       class="mx-auto flex h-16 max-w-md items-center justify-around rounded-xl border border-white/20 bg-white/80 px-2 shadow-2xl shadow-indigo-200/50 backdrop-blur-xl dark:border-slate-800/50 dark:bg-slate-900/80 dark:shadow-none"
     >
       <template v-for="item in navItems" :key="item.to">
-        <!-- Nút hành động chính (Ở giữa) -->
-        <RouterLink
-          v-if="item.isAction"
-          :to="item.to"
-          class="relative -top-6 flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xl shadow-indigo-600/40 transition-transform active:scale-90"
-        >
-          <component :is="item.icon" class="h-7 w-7" />
-        </RouterLink>
-
         <!-- Nút menu bình thường -->
         <RouterLink
-          v-else
           :to="item.to"
           :class="[
             'flex flex-col items-center justify-center gap-1 transition-colors',

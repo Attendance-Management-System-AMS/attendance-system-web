@@ -12,8 +12,6 @@ import {
   Lock,
   Settings,
   Timer,
-  Users,
-  Building2,
 } from 'lucide-vue-next'
 import { useAuth, type UserRole } from '@/composables/useAuth'
 
@@ -79,15 +77,6 @@ const navGroups: NavGroup[] = [
 
       { label: 'Bảng công của tôi', to: '/my/attendance', icon: Timer },
       { label: 'Đơn từ của tôi', to: '/my/requests', icon: ClipboardList },
-    ],
-  },
-  {
-    label: 'Nhân sự',
-    roles: ['ROLE_ADMIN', 'ROLE_HR'],
-    items: [
-      { label: 'Nhân viên', to: '/employees', icon: Users },
-      { label: 'Phòng ban', to: '/departments', icon: Building2 },
-      { label: 'Chức vụ', to: '/positions', icon: Clock },
     ],
   },
   {
@@ -165,7 +154,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
       ]"
     >
       <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200"
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-indigo-600 shadow-lg shadow-indigo-200"
       >
         <Clock class="h-5 w-5 text-white" />
       </div>
@@ -223,7 +212,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
             :to="item.to"
             :title="props.collapsed ? item.label : undefined"
             :class="[
-              'relative flex items-center rounded-xl transition-all duration-150 group mb-1',
+              'relative flex items-center rounded-md transition-all duration-150 group mb-1',
               props.collapsed ? 'h-10 w-10 mx-auto justify-center' : 'gap-3 px-3 py-2',
               isActive(item.to)
                 ? 'bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-950 dark:text-indigo-400'

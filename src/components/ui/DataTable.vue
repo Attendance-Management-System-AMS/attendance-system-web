@@ -1,67 +1,77 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends Record<string, any>">
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './table'
+
+import { Skeleton } from './skeleton'
+
 defineProps<{
-  columns: { key: string; label: string; align?: 'left' | 'center' | 'right' }[]
-  rows: Record<string, unknown>[]
+  columns: { key: string; label: string; align?: 'left' | 'center' | 'right'; class?: string }[]
+  rows: T[]
   loading?: boolean
 }>()
 </script>
 
 <template>
-  <div
-    class="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm dark:border-slate-800 dark:bg-slate-900"
-  >
-    <!-- Loading overlay -->
-    <div v-if="loading" class="flex h-64 items-center justify-center">
-      <div class="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+  <div class="overflow-hidden">
+    <!-- Loading skeleton -->
+    <div v-if="loading" class="p-4 space-y-4">
+      <div v-for="i in 6" :key="i" class="flex items-center gap-4">
+        <Skeleton class="h-10 w-full" />
+      </div>
     </div>
 
     <template v-else>
       <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-              <th
+        <Table>
+          <TableHeader>
+            <TableRow class="bg-slate-50/50 dark:bg-slate-900/50">
+              <TableHead
                 v-for="col in columns"
                 :key="col.key"
                 :class="[
-                  'px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400',
+                  'text-[11px] font-bold uppercase tracking-wider text-slate-500',
                   col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left',
                 ]"
               >
                 {{ col.label }}
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <tr
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow
               v-if="rows.length === 0"
             >
-              <td :colspan="columns.length" class="py-16 text-center text-sm text-slate-400">
+              <TableCell :colspan="columns.length" class="py-16 text-center text-sm text-slate-400">
                 Không có dữ liệu
-              </td>
-            </tr>
-            <tr
+              </TableCell>
+            </TableRow>
+            <TableRow
               v-for="(row, idx) in rows"
               :key="idx"
               class="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50"
             >
-              <td
+              <TableCell
                 v-for="col in columns"
                 :key="col.key"
                 :class="[
-                  'px-4 py-3',
                   col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left',
                 ]"
               >
-                <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
+                <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="idx">
                   <span class="text-sm text-slate-700 dark:text-slate-300">
-                    {{ row[col.key] as string }}
+                    {{ row[col.key] }}
                   </span>
                 </slot>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
     </template>
   </div>

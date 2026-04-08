@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import PageHeader from '@/components/ui/PageHeader.vue'
-import { Check, Minus } from 'lucide-vue-next'
+import { Check, Minus, ShieldCheck, Plus } from 'lucide-vue-next'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 const moduleKeys = [
   'dashboard',
@@ -30,44 +32,23 @@ const moduleLabels: Record<(typeof moduleKeys)[number], string> = {
 const rows: RoleRow[] = [
   {
     role: 'Quản trị viên',
-    desc: 'Toàn quyền cấu hình và dữ liệu',
-    modules: {
-      dashboard: true,
-      attendance: true,
-      employees: true,
-      leaves: true,
-      reports: true,
-      settings: true,
-    },
+    desc: 'Toàn quyền cấu hình và dữ liệu hệ thống',
+    modules: { dashboard: true, attendance: true, employees: true, leaves: true, reports: true, settings: true },
   },
   {
     role: 'Quản lý',
-    desc: 'Duyệt đơn, xem báo cáo phòng ban',
-    modules: {
-      dashboard: true,
-      attendance: true,
-      employees: true,
-      leaves: 'partial',
-      reports: true,
-      settings: false,
-    },
+    desc: 'Duyệt đơn, xem báo cáo phòng ban và nhân viên',
+    modules: { dashboard: true, attendance: true, employees: true, leaves: 'partial', reports: true, settings: false },
   },
   {
     role: 'Nhân viên',
-    desc: 'Chấm công và xem lịch cá nhân',
-    modules: {
-      dashboard: true,
-      attendance: true,
-      employees: false,
-      leaves: 'partial',
-      reports: false,
-      settings: false,
-    },
+    desc: 'Chấm công, gửi đơn từ và xem lịch cá nhân',
+    modules: { dashboard: true, attendance: true, employees: false, leaves: 'partial', reports: false, settings: false },
   },
 ]
 
-function cellIcon(v: boolean | 'partial') {
-  if (v === true) return 'check'
+function getPermissionState(v: boolean | 'partial') {
+  if (v === true) return 'full'
   if (v === 'partial') return 'partial'
   return 'none'
 }
@@ -75,29 +56,29 @@ function cellIcon(v: boolean | 'partial') {
 
 <template>
   <div class="space-y-6">
-    <PageHeader
-      title="Phân quyền"
-      description="Ma trận quyền theo vai trò (xem trước — cấu hình API thực tế sẽ gắn sau)"
-    />
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <PageHeader
+            title="Phân quyền"
+            description="Ma trận phân quyền hệ thống theo vai trò người dùng"
+        />
+        <Button class="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none">
+            <Plus class="h-4 w-4" />
+            Thêm vai trò
+        </Button>
+    </div>
 
-    <div
-      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-    >
+    <Card class="overflow-hidden border-border shadow-none">
       <div class="overflow-x-auto">
-        <table class="w-full min-w-160 text-sm">
+        <table class="w-full text-sm">
           <thead>
-            <tr
-              class="border-b border-slate-200 bg-linear-to-r from-slate-50 to-indigo-50/50 dark:border-slate-800 dark:from-slate-900 dark:to-indigo-950/30"
-            >
-              <th
-                class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500"
-              >
-                Vai trò
+            <tr class="border-b bg-slate-50/50 dark:bg-slate-900/50">
+              <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[200px]">
+                Vai trò & Mô tả
               </th>
               <th
                 v-for="key in moduleKeys"
                 :key="key"
-                class="px-2 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500"
+                class="px-3 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400"
               >
                 {{ moduleLabels[key] }}
               </th>
@@ -107,36 +88,52 @@ function cellIcon(v: boolean | 'partial') {
             <tr
               v-for="row in rows"
               :key="row.role"
-              class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+              class="hover:bg-indigo-50/10 dark:hover:bg-indigo-950/10 transition-colors"
             >
-              <td class="px-4 py-4">
-                <p class="font-semibold text-slate-900 dark:text-white">{{ row.role }}</p>
-                <p class="text-xs text-slate-500">{{ row.desc }}</p>
+              <td class="px-6 py-5">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600">
+                        <ShieldCheck class="h-4 w-4" />
+                    </div>
+                    <div>
+                        <p class="font-black text-slate-900 dark:text-white leading-tight">{{ row.role }}</p>
+                        <p class="text-[11px] font-medium text-slate-400 mt-0.5">{{ row.desc }}</p>
+                    </div>
+                </div>
               </td>
-              <td v-for="key in moduleKeys" :key="key" class="px-2 py-4 text-center">
-                <span
-                  v-if="cellIcon(row.modules[key]) === 'check'"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
-                >
-                  <Check class="h-4 w-4" />
-                </span>
-                <span
-                  v-else-if="cellIcon(row.modules[key]) === 'partial'"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                  title="Một phần"
-                >
-                  <Minus class="h-4 w-4" />
-                </span>
-                <span v-else class="text-slate-300 dark:text-slate-600">—</span>
+              <td v-for="key in moduleKeys" :key="key" class="px-3 py-5 text-center">
+                <div class="flex justify-center">
+                    <span
+                    v-if="getPermissionState(row.modules[key]) === 'full'"
+                    class="h-7 w-7 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/50"
+                    >
+                    <Check class="h-3.5 w-3.5" />
+                    </span>
+                    <span
+                    v-else-if="getPermissionState(row.modules[key]) === 'partial'"
+                    class="h-7 w-7 flex items-center justify-center rounded-full bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/50"
+                    title="Quyền hạn chế"
+                    >
+                    <Minus class="h-3.5 w-3.5" />
+                    </span>
+                    <span v-else class="h-7 w-7 flex items-center justify-center rounded-full bg-slate-50 text-slate-300 dark:bg-slate-900 dark:text-slate-700">
+                        <Check class="h-3.5 w-3.5 opacity-0" />
+                    </span>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
 
-    <p class="text-center text-xs text-slate-400">
-      Chỉnh sửa vai trò chi tiết sẽ kết nối tới API sau khi backend phân quyền xong.
-    </p>
+    <Card class="border-amber-100 bg-amber-50/30 dark:bg-amber-950/10 shadow-none">
+       <CardContent class="py-4 flex gap-3 items-center">
+          <Clock class="h-4 w-4 text-amber-500" />
+          <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400 italic">
+            Lưu ý: Bạn đang ở chế độ xem trước. Chỉnh sửa vai trò sẽ được kích hoạt sau khi hệ thống phân quyền Backend sẵn sàng.
+          </p>
+       </CardContent>
+    </Card>
   </div>
 </template>

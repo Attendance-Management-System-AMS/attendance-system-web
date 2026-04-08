@@ -1,101 +1,124 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { RouterLink } from 'vue-router'
-import { Plus, Users } from 'lucide-vue-next'
+import { ref, computed, watch } from 'vue'
+import { Plus } from 'lucide-vue-next'
+import { useDebounceFn } from '@vueuse/core'
 import { useEmployees } from '@/composables/useEmployees'
+import { useDepartments } from '@/composables/useDepartments'
+import { usePositions } from '@/composables/usePositions'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import SearchToolbar from '@/components/ui/SearchToolbar.vue'
 import FilterSelect from '@/components/ui/FilterSelect.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import Pagination from '@/components/ui/Pagination.vue'
+import DataTable from '@/components/ui/DataTable.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
-import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
-import TableSkeleton from '@/components/ui/TableSkeleton.vue'
+import { toast } from 'vue-sonner'
 import type { Employee } from '@/types/employee'
 
-const { employeesQuery, deleteEmployee } = useEmployees()
-const { data: employeesRaw, isLoading, isError, error } = employeesQuery
 const search = ref('')
-const filterDept = ref('')
-const filterShift = ref('')
-const deleteDialog = ref(false)
-const deleteTarget = ref<Employee | null>(null)
+const debouncedSearch = ref('')
+const filterDept = ref<string>('')
+const filterPos = ref<string>('')
+const filterStatus = ref<string>('')
 
-const departments = [
-  { label: 'Phòng Công nghệ', value: 'Phòng Công nghệ' },
-  { label: 'Phòng Nhân sự', value: 'Phòng Nhân sự' },
-  { label: 'Tài chính', value: 'Tài chính' },
-  { label: 'Kinh doanh', value: 'Kinh doanh' },
-  { label: 'Vận hành', value: 'Vận hành' },
+const currentPage = ref(0)
+const pageSize = ref(15)
+
+const updateDebounced = useDebounceFn((val: string) => {
+  debouncedSearch.value = val
+  currentPage.value = 0 
+}, 500)
+
+watch([filterDept, filterPos, filterStatus], () => {
+  currentPage.value = 0 
+})
+
+watch(search, updateDebounced)
+
+const { employeesQuery, deleteEmployee } = useEmployees({
+  keyword: debouncedSearch,
+  departmentId: filterDept,
+  positionId: filterPos,
+  status: filterStatus,
+  page: currentPage,
+  size: pageSize,
+})
+const { data: employeesRaw, isLoading } = employeesQuery
+
+const { departmentsQuery } = useDepartments()
+const { positionsQuery } = usePositions()
+
+const departmentsOptions = computed(() => {
+  return (departmentsQuery.data.value?.content ?? []).map(d => ({
+    label: d.name,
+    value: String(d.id),
+  }))
+})
+
+const positionsOptions = computed(() => {
+  const data = positionsQuery.data.value
+  if (!Array.isArray(data)) return []
+  return data.map(p => ({
+    label: p.name,
+    value: String(p.id),
+  }))
+})
+
+const statusOptions = [
+  { label: 'Đang làm việc', value: 'ACTIVE' },
+  { label: 'Nghỉ việc', value: 'INACTIVE' },
 ]
-
-const shifts = [
-  { label: 'Ca sáng', value: 'Ca sáng' },
-  { label: 'Ca chiều', value: 'Ca chiều' },
-  { label: 'Ca đêm', value: 'Ca đêm' },
-  { label: 'Hành chính', value: 'Hành chính' },
-]
-
-const avatarColors = [
-  'bg-indigo-100 text-indigo-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-700',
-  'bg-rose-100 text-rose-700',
-  'bg-slate-200 text-slate-700',
-]
-
-const getAvatarColor = (idx: number) => avatarColors[idx % avatarColors.length]
 
 const getInitials = (fullName: string | null | undefined) => {
   if (!fullName) return '??'
   const names = fullName.trim().split(/\s+/)
-  const first = names[0]
-  if (!first) return '??'
-
-  if (names.length === 1) return first.charAt(0).toUpperCase()
-
-  const last = names[names.length - 1]
-  if (!last) return first.charAt(0).toUpperCase()
-
-  return (first.charAt(0) + last.charAt(0)).toUpperCase()
+  if (names.length === 0 || (names.length === 1 && names[0] === '')) return '??'
+  
+  return names.length >= 2 
+    ? ((names[0]?.charAt(0) || '') + (names[names.length - 1]?.charAt(0) || '')).toUpperCase()
+    : (names[0]?.charAt(0) || '').toUpperCase()
 }
 
-const filteredEmployees = computed(() => {
-  const data = employeesRaw.value
-  let result = Array.isArray(data) ? data : []
+const columns = [
+  { key: 'employee', label: 'Nhân viên' },
+  { key: 'employeeCode', label: 'Mã NV' },
+  { key: 'department', label: 'Phòng ban / Chức vụ' },
+  { key: 'shift', label: 'Ca làm việc' },
+  { key: 'status', label: 'Trạng thái' },
+  { key: 'actions', label: 'Hành động', align: 'right' as const },
+]
 
-  if (search.value) {
-    const s = search.value.toLowerCase()
-    result = result.filter(e =>
-      e.fullName?.toLowerCase().includes(s) ||
-      e.employeeCode?.toLowerCase().includes(s) ||
-      e.email?.toLowerCase().includes(s)
-    )
-  }
+const filteredEmployees = computed(() => employeesRaw.value?.content ?? [])
+const totalElements = computed(() => employeesRaw.value?.totalElements ?? 0)
+const totalPages = computed(() => employeesRaw.value?.totalPages ?? 0)
 
-  if (filterDept.value) {
-    result = result.filter(e => e.departmentName === filterDept.value)
-  }
-
-  if (filterShift.value) {
-    result = result.filter(e => e.shift === filterShift.value)
-  }
-
-  return result
-})
+const deleteTarget = ref<Employee | null>(null)
+const isAlertOpen = ref(false)
 
 const handleDelete = (id: string | number) => {
-  const emp = (employeesRaw.value ?? []).find(e => e.id === Number(id))
+  const emp = filteredEmployees.value.find(e => e.id === Number(id))
   if (emp) {
     deleteTarget.value = emp
-    deleteDialog.value = true
+    isAlertOpen.value = true
   }
 }
 
 const confirmDelete = () => {
   if (deleteTarget.value) {
-    deleteEmployee.mutate(deleteTarget.value.id)
+    deleteEmployee.mutate(deleteTarget.value.id, {
+      onSuccess: () => {
+        toast.success(`Đã xóa nhân viên ${deleteTarget.value?.fullName} thành công`)
+        isAlertOpen.value = false
+        deleteTarget.value = null
+      },
+      onError: () => {
+        toast.error('Có lỗi xảy ra khi xóa nhân viên')
+      }
+    })
   }
-  deleteDialog.value = false
 }
 </script>
 
@@ -103,132 +126,96 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Danh sách nhân viên" description="Quản lý toàn bộ nhân viên trong hệ thống">
       <template #actions>
-        <RouterLink to="/employees/new"
-          class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none">
-          <Plus class="h-4 w-4" />
-          Thêm nhân viên
-        </RouterLink>
+        <Button as-child class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+          <RouterLink to="/employees/new">
+            <Plus class="h-4 w-4" />
+            Thêm nhân viên
+          </RouterLink>
+        </Button>
       </template>
     </PageHeader>
 
-    <!-- Summary chips -->
-    <div class="flex items-center gap-3">
-      <div
-        class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <Users class="h-4 w-4 text-slate-400" />
-        <span class="text-sm font-semibold text-slate-900 dark:text-white">{{ filteredEmployees.length }} nhân
-          viên</span>
-      </div>
-      <div class="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2.5">
-        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-        <span class="text-sm font-semibold text-emerald-700">
-          {{filteredEmployees.filter(e => e.status?.toLowerCase() === 'active').length}} đang hoạt động
-        </span>
-      </div>
-    </div>
-
-    <!-- Toolbar -->
     <SearchToolbar v-model="search" placeholder="Tìm theo tên, mã NV, email...">
       <template #filters>
-        <FilterSelect v-model="filterDept" label="Phòng ban" :options="departments" />
-        <FilterSelect v-model="filterShift" label="Ca" :options="shifts" />
+        <FilterSelect v-model="filterDept" label="Phòng ban" :options="departmentsOptions" />
+        <FilterSelect v-model="filterPos" label="Chức vụ" :options="positionsOptions" />
+        <FilterSelect v-model="filterStatus" label="Trạng thái" :options="statusOptions" />
       </template>
     </SearchToolbar>
 
-    <!-- Table -->
-    <div
-      class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-      <div class="overflow-x-auto">
-        <!-- Skeleton Loading -->
-        <TableSkeleton 
-          v-if="isLoading" 
-          :rows="8" 
-          :cols="5" 
-          has-avatar-column 
-          has-action-column 
-        />
+    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <DataTable 
+        :columns="columns" 
+        :rows="filteredEmployees" 
+        :loading="isLoading"
+      >
+        <!-- Employee Column -->
+        <template #cell-employee="{ row }">
+          <div class="flex items-center gap-3">
+            <Avatar class="size-9 h-9 w-9 border border-indigo-50 dark:border-indigo-900/50">
+              <AvatarImage :src="`/api/avatar/${row.id}`" />
+              <AvatarFallback class="bg-indigo-50 text-indigo-600 text-[10px] font-bold">
+                {{ getInitials(row.fullName) }}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ row.fullName }}</p>
+              <p class="text-[10px] text-slate-400 font-medium">{{ row.email }}</p>
+            </div>
+          </div>
+        </template>
 
-        <!-- Error State -->
-        <div v-else-if="isError" class="p-8">
-          <LoadingErrorState
-            mode="block"
-            :is-loading="false"
-            :is-error="true"
-            :error="error"
-            errorText="Không thể tải danh sách nhân viên"
-            retryLabel="Thử lại"
-            @retry="() => employeesQuery.refetch()"
+        <!-- Code Column -->
+        <template #cell-employeeCode="{ value }">
+          <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+            {{ value }}
+          </code>
+        </template>
+
+        <!-- Department/Position Column -->
+        <template #cell-department="{ row }">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ row.departmentName || '—' }}</p>
+          <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{{ row.positionName || '—' }}</p>
+        </template>
+
+        <!-- Status Column -->
+        <template #cell-status="{ value }">
+          <Badge
+            :variant="String(value).toLowerCase() === 'active' ? 'default' : 'secondary'"
+            class="px-2.5 py-0.5 text-[10px] font-bold border-none"
+            :class="String(value).toLowerCase() === 'active' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30' : ''"
+          >
+            {{ String(value).toLowerCase() === 'active' ? 'Đang làm' : 'Nghỉ việc' }}
+          </Badge>
+        </template>
+
+        <!-- Actions Column -->
+        <template #cell-actions="{ row }">
+          <ActionDropdown 
+            :item-id="row.id" 
+            :view-to="`/employees/${row.id}`"
+            :edit-to="`/employees/${row.id}/edit`" 
+            @delete="handleDelete" 
           />
-        </div>
+        </template>
+      </DataTable>
 
-        <!-- Real Table -->
-        <table v-else class="w-full">
-          <thead>
-            <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
-              <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Nhân viên
-              </th>
-              <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Mã NV</th>
-              <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Phòng ban
-              </th>
-              <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Ca làm việc
-              </th>
-              <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Ngày vào làm
-              </th>
-              <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Trạng thái
-              </th>
-              <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">Hành động
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <tr v-if="filteredEmployees.length === 0">
-              <td colspan="7" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
-                Không có nhân viên nào
-              </td>
-            </tr>
-            <tr v-else v-for="(emp, idx) in filteredEmployees" :key="emp.id"
-              class="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50">
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <div
-                    :class="['flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold', getAvatarColor(idx)]">
-                    {{ getInitials(emp.fullName) }}
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ emp.fullName }}</p>
-                    <p class="text-xs text-slate-400">{{ emp.email }}</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-4 py-3 font-mono text-sm text-slate-600 dark:text-slate-300">{{ emp.employeeCode }}</td>
-              <td class="px-4 py-3">
-                <p class="text-sm text-slate-600 dark:text-slate-300">{{ emp.departmentName || '-' }}</p>
-                <p class="text-[10px] text-slate-400 uppercase tracking-tight">{{ emp.positionName }}</p>
-              </td>
-              <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">{{ emp.shift || 'Hành chính' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ emp.joinDate }}</td>
-              <td class="px-4 py-3">
-                <span :class="[
-                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold',
-                  emp.status?.toLowerCase() === 'active'
-                    ? 'bg-emerald-50 text-emerald-600'
-                    : 'bg-slate-100 text-slate-500',
-                ]">
-                  {{ emp.status?.toLowerCase() === 'active' ? 'Đang làm' : 'Nghỉ việc' }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-right">
-                <ActionDropdown :item-id="emp.id" :edit-to="`/employees/${emp.id}/edit`"
-                  :view-to="`/employees/${emp.id}`" @delete="handleDelete" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <Pagination
+        v-model="currentPage"
+        :total-pages="totalPages"
+        :total-elements="totalElements"
+        :page-size="pageSize"
+        label="nhân viên"
+      />
     </div>
 
-    <DeleteConfirmDialog :open="deleteDialog" title="Xóa nhân viên"
-      description="Bạn có chắc chắn muốn xóa nhân viên này khỏi hệ thống không?" :item-name="deleteTarget?.fullName"
-      @confirm="confirmDelete" @cancel="deleteDialog = false" />
+    <DeleteConfirmDialog 
+      :open="isAlertOpen" 
+      title="Xác nhận xóa nhân viên" 
+      description="Dữ liệu hồ sơ và thông tin liên quan của nhân viên này sẽ bị gỡ bỏ."
+      :item-name="deleteTarget?.fullName"
+      @confirm="confirmDelete"
+      @cancel="isAlertOpen = false"
+    />
   </div>
 </template>

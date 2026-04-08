@@ -1,5 +1,6 @@
 import { departmentApi } from '@/services/department.service';
 import type { Department } from '@/types/department';
+import type { Page } from '@/types/api';
 import { queryKeys } from '@/lib/queryKeys'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { type MaybeRefOrGetter, toValue, computed } from 'vue'
@@ -16,7 +17,7 @@ export function useDepartments(params?: UseDepartmentsParams) {
     const queryClient = useQueryClient()
 
     // Query danh sách
-    const departmentsQuery = useQuery<Department[]>({
+    const departmentsQuery = useQuery<Page<Department>>({
         queryKey: computed(() => [
             ...queryKeys.departments.all(),
             {
@@ -35,10 +36,7 @@ export function useDepartments(params?: UseDepartmentsParams) {
                 sort: toValue(params?.sort),
                 sortDir: toValue(params?.sortDir),
             })
-            const result = response.data?.result as Department[] | { content?: Department[] } | undefined
-            if (Array.isArray(result)) return result
-            if (result && Array.isArray(result.content)) return result.content
-            return []
+            return response.data?.result
         },
         staleTime: 1000 * 60 * 3, // 3 phút
         gcTime: 1000 * 60 * 10,   // giữ cache 10 phút
@@ -59,10 +57,8 @@ export function useDepartments(params?: UseDepartmentsParams) {
                     ...newDept,
                     id: `optimistic-${Date.now()}`,
                     manager: 'Chưa chỉ định',
-                    employeeCount: 0,
-                    defaultShift: 'Chưa cấu hình',
+                    totalEmployees: 0,
                     status: 'ACTIVE' as const,
-                    location: '—',
                 } as Department,
             ])
 
