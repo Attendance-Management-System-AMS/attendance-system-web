@@ -41,10 +41,7 @@ const { schedulesQuery } = useSchedules(null, { size: 1000 })
 
 const employees = computed<Employee[]>(() => employeesQuery.data.value?.content ?? [])
 const shifts = computed<Shift[]>(() => (shiftsQuery.data.value ?? []) as Shift[])
-const schedules = computed<Schedule[]>(() => {
-  const data = schedulesQuery.data.value as Page<Schedule> | undefined
-  return data?.content ?? []
-})
+const schedules = computed<Schedule[]>(() => schedulesQuery.data.value ?? [])
 const departments = computed<Department[]>(() => {
   const data = departmentsQuery.data.value as Page<Department> | undefined
   return data?.content ?? []
