@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref, computed } from 'vue'
-import { Timer } from 'lucide-vue-next'
 import { useAttendance } from '@/composables/useAttendance'
 import type { Attendance, AttendanceStatus } from '@/types/attendance'
 import { getApiErrorMessage } from '@/lib/apiErrorMessage'
+import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
+import TableSkeleton from '@/components/ui/TableSkeleton.vue'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import SearchToolbar from '@/components/ui/SearchToolbar.vue'
+import FilterSelect from '@/components/ui/FilterSelect.vue'
+import ActionDropdown from '@/components/ui/ActionDropdown.vue'
+import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 
 const search = ref('')
 const filterDept = ref('')
@@ -81,13 +88,6 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
 <template>
     <div class="space-y-6">
         <PageHeader title="Chấm công hôm nay" description="Theo dõi tình trạng điểm danh trong ngày">
-            <template #actions>
-                <button
-                    class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none">
-                    <Timer class="h-4 w-4" />
-                    Chấm công nhanh
-                </button>
-            </template>
         </PageHeader>
 
         <!-- Toolbar -->
@@ -108,7 +108,30 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
         <div
             class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <!-- Skeleton Loading -->
+                <TableSkeleton
+                    v-if="isLoading"
+                    :rows="8"
+                    :cols="3"
+                    has-avatar-column
+                    has-action-column
+                />
+
+                <!-- Error State -->
+                <div v-else-if="isError" class="p-8">
+                    <LoadingErrorState
+                        mode="block"
+                        :is-loading="false"
+                        :is-error="true"
+                        :error="error"
+                        errorText="Không thể tải dữ liệu chấm công"
+                        retryLabel="Thử lại"
+                        @retry="() => attendanceQuery.refetch()"
+                    />
+                </div>
+
+                <!-- Real Table -->
+                <table v-else class="w-full">
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
                             <th
@@ -134,12 +157,7 @@ const badgeVariantByStatus: Record<AttendanceStatus, 'success' | 'warning' | 'se
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <LoadingErrorState v-if="isLoading || isError" mode="row" :colspan="5" :is-loading="isLoading"
-                            :is-error="isError" :error="error" loadingText="Đang tải dữ liệu chấm công..."
-                            errorText="Không thể tải dữ liệu chấm công" retryLabel="Thử lại"
-                            @retry="() => attendanceQuery.refetch()" />
-
-                        <tr v-else-if="records.length === 0">
+                        <tr v-if="records.length === 0">
                             <td colspan="5" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                                 Chưa có dữ liệu chấm công
                             </td>

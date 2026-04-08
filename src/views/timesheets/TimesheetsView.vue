@@ -6,6 +6,10 @@ import { useLeaves } from '@/composables/useLeaves'
 import type { CreateLeaveRequest, LeaveRequest } from '@/types/leave'
 import { getApiErrorMessage } from '@/lib/apiErrorMessage'
 import { isPendingLeave, normalizeLeaveStatus } from '@/lib/leaveStatus'
+import FilterSelect from '@/components/ui/FilterSelect.vue'
+import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
+import LeaveCreateModal from '@/components/leaves/LeaveCreateModal.vue'
+import TableSkeleton from '@/components/ui/TableSkeleton.vue'
 
 const filterStatus = ref('')
 const filterDept = ref('')
@@ -182,7 +186,29 @@ const handleCancel = (id: string | number) => {
       class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden"
     >
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <!-- Skeleton Loading -->
+        <TableSkeleton 
+          v-if="isLoading" 
+          :rows="8" 
+          :cols="5" 
+          has-action-column 
+        />
+
+        <!-- Error State -->
+        <div v-else-if="isError" class="p-8">
+          <LoadingErrorState
+            mode="block"
+            :is-loading="false"
+            :is-error="true"
+            :error="error"
+            errorText="Không thể tải danh sách đơn nghỉ phép"
+            retryLabel="Thử lại"
+            @retry="() => leavesQuery.refetch()"
+          />
+        </div>
+
+        <!-- Real Table -->
+        <table v-else class="w-full">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
               <th
@@ -218,20 +244,7 @@ const handleCancel = (id: string | number) => {
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <LoadingErrorState
-              v-if="isLoading || isError"
-              mode="row"
-              :colspan="6"
-              :is-loading="isLoading"
-              :is-error="isError"
-              :error="error"
-              loadingText="Đang tải đơn nghỉ phép..."
-              errorText="Không thể tải đơn nghỉ phép"
-              retryLabel="Thử lại"
-              @retry="() => leavesQuery.refetch()"
-            />
-
-            <tr v-else-if="filteredLeaves.length === 0">
+            <tr v-if="filteredLeaves.length === 0">
               <td colspan="6" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                 Không có đơn nghỉ phép phù hợp
               </td>

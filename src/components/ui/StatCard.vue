@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { TrendingUp, TrendingDown } from 'lucide-vue-next'
+import SkeletonLoader from './SkeletonLoader.vue'
 
 const props = defineProps<{
   label: string
@@ -9,6 +10,7 @@ const props = defineProps<{
   changeType?: 'positive' | 'negative' | 'neutral'
   icon: Component
   color?: 'indigo' | 'emerald' | 'amber' | 'rose' | 'slate'
+  loading?: boolean
 }>()
 
 const colorConfig = computed(() => {
@@ -34,11 +36,14 @@ const changeColorClass = computed(() => {
     class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow dark:border-slate-800 dark:bg-slate-900"
   >
     <div class="mb-3 flex items-center justify-between">
-      <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+      <SkeletonLoader v-if="loading" width="60%" height="10px" rounded="full" />
+      <span v-else class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
         {{ label }}
       </span>
+
+      <SkeletonLoader v-if="loading" width="25%" height="10px" rounded="full" />
       <span
-        v-if="change"
+        v-else-if="change"
         :class="['flex items-center gap-0.5 text-[10px] font-bold', changeColorClass]"
       >
         <TrendingUp v-if="changeType === 'positive'" class="h-3 w-3" />
@@ -46,9 +51,16 @@ const changeColorClass = computed(() => {
         {{ change }}
       </span>
     </div>
+
     <div class="flex items-end justify-between">
-      <div class="text-2xl font-black text-slate-900 dark:text-white">{{ value }}</div>
+      <div v-if="loading" class="w-full">
+        <SkeletonLoader width="40%" height="24px" rounded="lg" />
+      </div>
+      <div v-else class="text-2xl font-black text-slate-900 dark:text-white">{{ value }}</div>
+
+      <SkeletonLoader v-if="loading" width="40px" height="40px" rounded="xl" className="shrink-0" />
       <div
+        v-else
         :class="[
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
           colorConfig.bg,

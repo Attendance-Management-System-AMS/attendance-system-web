@@ -6,6 +6,7 @@ import { getApiErrorMessage } from '@/lib/apiErrorMessage'
 import { setAuthToken } from '@/lib/auth'
 import { authApi } from '@/services/auth.service'
 import { useAuth, type UserProfile, type UserRole } from '@/composables/useAuth'
+import LoadingOverlay from '@/components/ui/LoadingOverlay.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -90,8 +91,11 @@ const handleSubmit = async () => {
     >
       <div class="w-full max-w-md">
         <section
-          class="rounded-xl border border-slate-200 bg-white p-6 shadow-2xl shadow-indigo-200/30 dark:border-slate-800 dark:bg-slate-900 sm:p-8"
+          class="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-2xl shadow-indigo-200/30 dark:border-slate-800 dark:bg-slate-900 sm:p-8"
         >
+          <!-- Loading Overlay -->
+          <LoadingOverlay :show="isSubmitting" />
+
           <div class="mb-6">
             <p
               class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400"

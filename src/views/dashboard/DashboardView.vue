@@ -12,6 +12,15 @@ import {
 import { RouterLink } from 'vue-router'
 import StatCard from '@/components/ui/StatCard.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
+import TableSkeleton from '@/components/ui/TableSkeleton.vue'
+
+// Mock loading state
+const isLoading = ref(true)
+onMounted(() => {
+    setTimeout(() => {
+        isLoading.value = false
+    }, 2000)
+})
 
 // Live clock
 const now = ref(new Date())
@@ -87,7 +96,8 @@ const weeklyData = [
         <!-- Stat cards -->
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard v-for="card in statCards" :key="card.label" :label="card.label" :value="card.value"
-                :change="card.change" :change-type="card.changeType" :icon="card.icon" :color="card.color" />
+                :change="card.change" :change-type="card.changeType" :icon="card.icon" :color="card.color"
+                :loading="isLoading" />
         </div>
 
         <!-- Main content: table + side widgets -->
@@ -112,7 +122,8 @@ const weeklyData = [
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full">
+                        <TableSkeleton v-if="isLoading" :rows="6" :cols="4" has-avatar-column />
+                        <table v-else class="w-full">
                             <thead>
                                 <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
                                     <th

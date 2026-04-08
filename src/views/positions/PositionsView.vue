@@ -8,6 +8,7 @@ import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 import { usePositions } from '@/composables/usePositions'
 import type { Position } from '@/types/position'
 import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
+import TableSkeleton from '@/components/ui/TableSkeleton.vue'
 
 const { positionsQuery, deletePosition } = usePositions()
 const { data: positionsRaw, isLoading, isError, error } = positionsQuery
@@ -49,7 +50,29 @@ const confirmDelete = () => {
       class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
     >
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+        <!-- Skeleton Loading -->
+        <TableSkeleton 
+          v-if="isLoading" 
+          :rows="6" 
+          :cols="5" 
+          has-action-column 
+        />
+
+        <!-- Error State -->
+        <div v-else-if="isError" class="p-8">
+          <LoadingErrorState
+            mode="block"
+            :is-loading="false"
+            :is-error="true"
+            :error="error"
+            errorText="Không thể tải danh sách chức vụ"
+            retryLabel="Thử lại"
+            @retry="() => positionsQuery.refetch()"
+          />
+        </div>
+
+        <!-- Real Table -->
+        <table v-else class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
           <thead class="bg-slate-50 dark:bg-slate-900">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -73,20 +96,7 @@ const confirmDelete = () => {
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
-            <LoadingErrorState
-              v-if="isLoading || isError"
-              mode="row"
-              :colspan="6"
-              :is-loading="isLoading"
-              :is-error="isError"
-              :error="error"
-              loadingText="Đang tải danh sách chức vụ..."
-              errorText="Không thể tải danh sách chức vụ"
-              retryLabel="Thử lại"
-              @retry="() => positionsQuery.refetch()"
-            />
-
-            <tr v-else-if="positions.length === 0">
+            <tr v-if="positions.length === 0">
               <td colspan="6" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                 Chưa có chức vụ nào
               </td>

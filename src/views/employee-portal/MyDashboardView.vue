@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { AlertCircle, CheckCircle2, Clock } from 'lucide-vue-next'
+import { AlertCircle, CheckCircle2, Clock, TrendingUp, Star } from 'lucide-vue-next'
 
 const now = ref(new Date())
 let timer: number | undefined

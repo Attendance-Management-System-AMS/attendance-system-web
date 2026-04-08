@@ -9,6 +9,7 @@ import FilterSelect from '@/components/ui/FilterSelect.vue'
 import ActionDropdown from '@/components/ui/ActionDropdown.vue'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 import LoadingErrorState from '@/components/ui/LoadingErrorState.vue'
+import TableSkeleton from '@/components/ui/TableSkeleton.vue'
 import type { Employee } from '@/types/employee'
 
 const { employeesQuery, deleteEmployee } = useEmployees()
@@ -138,7 +139,30 @@ const confirmDelete = () => {
     <div
       class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <!-- Skeleton Loading -->
+        <TableSkeleton 
+          v-if="isLoading" 
+          :rows="8" 
+          :cols="5" 
+          has-avatar-column 
+          has-action-column 
+        />
+
+        <!-- Error State -->
+        <div v-else-if="isError" class="p-8">
+          <LoadingErrorState
+            mode="block"
+            :is-loading="false"
+            :is-error="true"
+            :error="error"
+            errorText="Không thể tải danh sách nhân viên"
+            retryLabel="Thử lại"
+            @retry="() => employeesQuery.refetch()"
+          />
+        </div>
+
+        <!-- Real Table -->
+        <table v-else class="w-full">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800">
               <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">Nhân viên
@@ -157,20 +181,7 @@ const confirmDelete = () => {
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            <LoadingErrorState
-              v-if="isLoading || isError"
-              mode="row"
-              :colspan="7"
-              :is-loading="isLoading"
-              :is-error="isError"
-              :error="error"
-              loadingText="Đang tải danh sách nhân viên..."
-              errorText="Không thể tải danh sách nhân viên"
-              retryLabel="Thử lại"
-              @retry="() => employeesQuery.refetch()"
-            />
-
-            <tr v-else-if="filteredEmployees.length === 0">
+            <tr v-if="filteredEmployees.length === 0">
               <td colspan="7" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
                 Không có nhân viên nào
               </td>
