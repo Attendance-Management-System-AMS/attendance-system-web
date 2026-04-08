@@ -44,9 +44,9 @@ const filteredLeaves = computed(() => {
 })
 
 const stats = computed(() => [
-    { label: 'Chờ duyệt', value: leaves.value.filter(i => isPendingLeave(i.status)).length, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-100 dark:border-amber-900/50' },
-    { label: 'Đã duyệt', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'approved').length, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-100 dark:border-emerald-900/50' },
-    { label: 'Từ chối', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'rejected').length, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-100 dark:border-rose-900/50' },
+    { label: 'Chờ duyệt', value: leaves.value.filter(i => isPendingLeave(i.status)).length },
+    { label: 'Đã duyệt', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'approved').length },
+    { label: 'Từ chối', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'rejected').length },
 ])
 
 const columns = [
@@ -96,10 +96,10 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div v-for="s in stats" :key="s.label" :class="['p-4 rounded-2xl border transition-all shadow-sm', s.bg, s.border]">
-             <p class="text-[10px] font-black uppercase tracking-widest opacity-60" :class="s.color">{{ s.label }}</p>
-             <p class="text-3xl font-black mt-2 tabular-nums" :class="s.color">{{ s.value }}</p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div v-for="s in stats" :key="s.label" class="p-3 sm:p-5 rounded border border-indigo-100 bg-indigo-50/20 transition-all shadow-none">
+             <p class="text-[9px] font-black uppercase tracking-widest text-indigo-400 opacity-80">{{ s.label }}</p>
+             <p class="text-2xl sm:text-3xl font-black mt-2 tabular-nums text-indigo-900 leading-none">{{ s.value }}</p>
         </div>
     </div>
 
@@ -110,50 +110,46 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
         </template>
     </SearchToolbar>
 
-    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-      <DataTable :columns="columns" :rows="filteredLeaves" :loading="isLoading">
+    <div class="rounded border border-border bg-card shadow-none overflow-hidden">
+      <DataTable :columns="columns" :rows="filteredLeaves" :loading="isLoading" class="text-[11px] sm:text-sm">
         <template #cell-employee="{ row }">
-           <div>
-              <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ row.employeeName }}</p>
-              <p class="text-[10px] font-mono text-slate-400 font-bold uppercase">{{ row.employeeCode || '—' }}</p>
+           <div class="py-1">
+              <p class="font-black text-indigo-950 leading-tight uppercase">{{ row.employeeName }}</p>
+              <p class="text-[9px] font-mono text-indigo-300 font-bold tracking-tight">{{ row.employeeCode || '—' }}</p>
            </div>
         </template>
 
         <template #cell-type="{ row }">
-            <Badge variant="secondary" class="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px]">
+            <Badge variant="outline" class="bg-indigo-50/50 text-indigo-600 border-indigo-100 font-bold text-[9px] px-1.5 uppercase">
                 {{ (row.leaveType && typeof row.leaveType === 'object') ? row.leaveType.name : (row.leaveType || 'Nghỉ phép') }}
             </Badge>
         </template>
 
         <template #cell-dateRange="{ row }">
-            <div class="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                <span class="font-bold text-slate-400">Từ:</span> {{ row.fromDate || row.startDate }}<br/>
-                <span class="font-bold text-slate-400">Đến:</span> {{ row.toDate || row.endDate }}
+            <div class="text-[10px] sm:text-[11px] font-medium text-indigo-900/60 flex flex-col gap-0.5">
+                <span>{{ row.fromDate || row.startDate }}</span>
+                <span class="text-[8px] font-bold text-indigo-200">đến</span>
+                <span>{{ row.toDate || row.endDate }}</span>
             </div>
         </template>
 
         <template #cell-status="{ value }">
-           <Badge :variant="normalizeLeaveStatus(value) === 'approved' ? 'default' : 'secondary'"
-                class="px-2.5 py-0.5 text-[10px] font-bold border-none"
-                :class="{
-                    'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30': normalizeLeaveStatus(value) === 'approved',
-                    'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': normalizeLeaveStatus(value) === 'pending',
-                    'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': normalizeLeaveStatus(value) === 'rejected',
-                }">
+           <Badge variant="outline"
+                class="px-2 py-0.5 text-[9px] font-bold border-indigo-100 bg-indigo-50/30 text-indigo-500 uppercase">
                 {{ normalizeLeaveStatus(value) === 'approved' ? 'Đã duyệt' : normalizeLeaveStatus(value) === 'rejected' ? 'Từ chối' : 'Chờ duyệt' }}
            </Badge>
         </template>
 
         <template #cell-actions="{ row }">
-            <div v-if="isPendingLeave(row.status)" class="flex justify-end gap-2">
-                <Button size="icon" variant="outline" class="h-8 w-8 text-emerald-600 border-emerald-100 hover:bg-emerald-50" @click="handleApprove(row.id)">
+            <div v-if="isPendingLeave(row.status)" class="flex justify-end gap-1.5">
+                <Button size="icon" variant="outline" class="h-8 w-8 text-indigo-600 border-indigo-100 hover:bg-indigo-50" @click="handleApprove(row.id)">
                     <Check class="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="outline" class="h-8 w-8 text-rose-600 border-rose-100 hover:bg-rose-50" @click="handleReject(row.id)">
+                <Button size="icon" variant="outline" class="h-8 w-8 text-indigo-400 border-indigo-50 hover:bg-indigo-50" @click="handleReject(row.id)">
                     <X class="h-4 w-4" />
                 </Button>
             </div>
-            <span v-else class="text-[10px] font-black uppercase tracking-widest text-slate-300 mr-2">Đã xử lý</span>
+            <span v-else class="text-[10px] font-black uppercase tracking-tighter text-indigo-200 mr-2">Hoàn thành</span>
         </template>
       </DataTable>
     </div>

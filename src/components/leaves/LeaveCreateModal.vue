@@ -37,8 +37,8 @@ const toDate = ref('')
 
 const error = ref<string | null>(null)
 const availableTypes = computed(() => props.leaveTypes ?? [])
-const employees = computed(() => employeesQuery.data.value ?? [])
-const isLoadingEmployees = computed(() => employeesQuery.isPending.value)
+const employees = computed(() => employeesQuery.data.value?.content ?? [])
+const isLoadingEmployees = computed(() => employeesQuery.isLoading.value)
 
 watch(
   () => availableTypes.value,
@@ -105,100 +105,93 @@ const handleSubmit = () => {
   <DialogRoot :open="open" @update:open="(v) => !v && handleClose()">
     <DialogPortal>
       <DialogOverlay
-        class="fixed inset-0 bg-black/40 backdrop-blur-sm data-[state=open]:animate-overlayShow data-[state=closed]:animate-overlayHide" />
+        class="fixed inset-0 bg-indigo-900/10 backdrop-blur-sm data-[state=open]:animate-overlayShow data-[state=closed]:animate-overlayHide z-50" />
       <DialogContent
-        class="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-112.5 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl focus:outline-none data-[state=open]:animate-contentShow data-[state=closed]:animate-contentHide dark:bg-slate-900">
-        <DialogTitle class="m-0 text-lg font-medium text-slate-900 dark:text-white">
-          Tạo đơn nghỉ phép
-        </DialogTitle>
+        class="fixed left-1/2 top-1/2 max-h-[85vh] w-[95vw] max-w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white shadow-2xl focus:outline-none data-[state=open]:animate-contentShow data-[state=closed]:animate-contentHide overflow-hidden border-none z-50">
+        
+        <div class="p-4 sm:p-6 bg-indigo-50/50 border-b border-indigo-100/50">
+          <DialogTitle class="m-0 text-lg sm:text-xl font-black text-indigo-900 uppercase tracking-tight">
+            Tạo đơn nghỉ phép
+          </DialogTitle>
+          <DialogDescription class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">
+            Vui lòng điền thông tin chi tiết bên dưới
+          </DialogDescription>
+        </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-5">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Chọn nhân viên <span class="text-red-500">*</span>
+        <form @submit.prevent="handleSubmit" class="p-4 sm:p-6 space-y-4">
+          <div class="space-y-1.5">
+            <label class="px-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+              Nhân viên nhận đơn
             </label>
             <select v-model.number="employeeId"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              class="w-full h-10 rounded-lg border border-indigo-50 bg-indigo-50/30 px-3 text-xs font-bold text-indigo-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none appearance-none transition-all"
               :disabled="isLoadingEmployees || employees.length === 0">
-              <option value="" disabled>
-                {{ isLoadingEmployees ? 'Đang tải danh sách nhân viên...' : 'Chọn nhân viên' }}
-              </option>
+              <option value="" disabled>Chọn nhân viên</option>
               <option v-for="employee in employees" :key="employee.id" :value="employee.id">
-                {{ employee.employeeCode }} — {{ employee.fullName }}{{ employee.departmentName ? `
-                (${employee.departmentName})` : '' }}
+                {{ employee.employeeCode }} — {{ employee.fullName }}
               </option>
             </select>
-            <p v-if="!isLoadingEmployees && employees.length === 0" class="mt-1 text-xs text-rose-600">
-              Chưa có nhân viên nào trong hệ thống.
-            </p>
           </div>
 
-          <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Lý do <span class="text-red-500">*</span>
+          <div class="space-y-1.5">
+            <label class="px-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+              Lý do chi tiết
             </label>
             <textarea v-model="reason" rows="3"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              class="w-full rounded-lg border border-indigo-50 bg-indigo-50/30 px-3 py-2 text-xs font-medium text-indigo-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-none transition-all"
               placeholder="Nhập lý do nghỉ phép..."></textarea>
           </div>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Loại nghỉ <span class="text-red-500">*</span>
+            <div class="space-y-1.5">
+              <label class="px-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+                Loại nghỉ
               </label>
               <select v-model="leaveTypeCode"
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                class="w-full h-10 rounded-lg border border-indigo-50 bg-indigo-50/30 px-3 text-xs font-bold text-indigo-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
                 :disabled="isLoadingLeaveTypes || availableTypes.length === 0">
-                <option value="" disabled>
-                  {{ isLoadingLeaveTypes ? 'Đang tải loại nghỉ...' : 'Chọn loại nghỉ' }}
-                </option>
+                <option value="" disabled>Chọn loại</option>
                 <option v-for="type in availableTypes" :key="type.id" :value="type.code">
-                  {{ type.code }} — {{ type.name }}
+                  {{ type.name }}
                 </option>
               </select>
-              <p v-if="!isLoadingLeaveTypes && availableTypes.length === 0" class="mt-1 text-xs text-rose-600">
-                Chưa có loại nghỉ khả dụng. Vui lòng liên hệ quản trị để cấu hình loại nghỉ.
-              </p>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Từ ngày <span class="text-red-500">*</span>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <label class="px-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+                Từ ngày
               </label>
               <input v-model="fromDate" type="date"
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+                class="w-full h-10 rounded-lg border border-indigo-50 bg-indigo-50/30 px-3 text-xs font-bold text-indigo-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
             </div>
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Đến ngày <span class="text-red-500">*</span>
+            <div class="space-y-1.5">
+              <label class="px-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+                Đến ngày
               </label>
               <input v-model="toDate" type="date"
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+                class="w-full h-10 rounded-lg border border-indigo-50 bg-indigo-50/30 px-3 text-xs font-bold text-indigo-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
             </div>
           </div>
 
-          <p v-if="error" class="text-sm text-rose-600">{{ error }}</p>
-          <p v-if="serverError"
-            class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
-            {{ serverError }}
-          </p>
+          <div v-if="error || serverError" class="p-2 rounded bg-rose-50 border border-rose-100 text-[10px] font-bold text-rose-600 uppercase">
+            {{ error || serverError }}
+          </div>
 
-          <div class="mt-6 flex justify-end gap-3">
+          <div class="mt-2 flex justify-end gap-2 pt-4 border-t border-indigo-50">
             <DialogClose as-child>
               <button type="button"
-                class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                class="flex-1 h-11 rounded-lg border border-indigo-50 px-4 text-[11px] font-black uppercase tracking-widest text-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 transition-all"
                 :disabled="isSubmitting">
-                Hủy
+                Hủy bỏ
               </button>
             </DialogClose>
 
             <button type="submit"
-              class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              class="flex-1 h-11 rounded-lg bg-indigo-600 px-4 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all"
               :disabled="isSubmitting || isLoadingLeaveTypes || isLoadingEmployees || availableTypes.length === 0 || employees.length === 0">
-              {{ isSubmitting ? 'Đang gửi lên server...' : 'Tạo đơn' }}
+              {{ isSubmitting ? 'Đang gửi...' : 'Tạo đơn ngay' }}
             </button>
           </div>
         </form>
