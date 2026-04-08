@@ -102,7 +102,7 @@ const confirmDelete = () => {
     >
       <div class="overflow-x-auto">
         <!-- Skeleton Loading -->
-        <TableSkeleton v-if="isLoading" :rows="6" :cols="5" has-avatar-column has-action-column />
+        <TableSkeleton v-if="isLoading" :rows="6" :cols="6" has-avatar-column has-action-column />
 
         <!-- Error State -->
         <div v-else-if="isError" class="p-8">
@@ -125,6 +125,11 @@ const confirmDelete = () => {
                 class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
               >
                 Tên phòng ban
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
+              >
+                Mô tả
               </th>
               <th
                 class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
@@ -171,11 +176,16 @@ const confirmDelete = () => {
                   <span class="font-medium text-slate-900 dark:text-white">{{ dept.name }}</span>
                 </div>
               </td>
+              <td class="px-6 py-4">
+                <p class="max-w-[200px] truncate text-sm text-slate-500 dark:text-slate-400" :title="dept.description">
+                  {{ dept.description || '—' }}
+                </p>
+              </td>
               <td class="px-6 py-4 text-center">
                 <span
                   class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-100 px-2 text-xs font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-300"
                 >
-                  {{ dept.employeeCount }}
+                  {{ dept.totalEmployees }}
                 </span>
               </td>
               <td class="px-6 py-4">

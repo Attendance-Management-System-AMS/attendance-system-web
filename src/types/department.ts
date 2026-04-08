@@ -2,7 +2,6 @@ export interface Department {
     id: string
     name: string
     description: string
-    employeeCount: number
-    defaultShift?: string
+    totalEmployees: number
     status: 'ACTIVE' | 'INACTIVE'
 }
