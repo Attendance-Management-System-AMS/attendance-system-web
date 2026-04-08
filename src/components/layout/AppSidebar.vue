@@ -154,7 +154,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
       ]"
     >
       <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-indigo-600 shadow-lg shadow-indigo-200"
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary shadow-lg shadow-primary/20"
       >
         <Clock class="h-5 w-5 text-white" />
       </div>
@@ -215,14 +215,14 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
               'relative flex items-center rounded-md transition-all duration-150 group mb-1',
               props.collapsed ? 'h-10 w-10 mx-auto justify-center' : 'gap-3 px-3 py-2',
               isActive(item.to)
-                ? 'bg-indigo-50 text-indigo-700 font-semibold dark:bg-indigo-950 dark:text-indigo-400'
+                ? 'bg-primary/10 text-primary font-black dark:bg-primary/20'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
             ]"
           >
             <!-- Active indicator -->
             <span
               v-if="isActive(item.to) && !props.collapsed"
-              class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-indigo-600"
+              class="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-primary"
             ></span>
 
             <component
@@ -230,7 +230,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
               :class="[
                 'shrink-0 transition-colors',
                 props.collapsed ? 'h-5 w-5' : 'h-4 w-4',
-                isActive(item.to) ? 'text-indigo-600' : '',
+                isActive(item.to) ? 'text-primary' : '',
               ]"
             />
 
@@ -256,7 +256,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
               :class="[
                 'flex items-center gap-3 pl-10 pr-3 py-1.5 text-xs rounded-lg transition-all duration-150 group mb-1',
                 route.path === child.to
-                  ? 'text-indigo-600 font-bold bg-indigo-50/50 dark:bg-indigo-900/30'
+                  ? 'text-primary font-black bg-primary/5 dark:bg-primary/10'
                   : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800',
               ]"
             >
@@ -264,7 +264,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
                 :class="[
                   'h-1.5 w-1.5 rounded-full',
                   route.path === child.to
-                    ? 'bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.5)]'
+                    ? 'bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]'
                     : 'bg-slate-300 dark:bg-slate-700',
                 ]"
               ></div>

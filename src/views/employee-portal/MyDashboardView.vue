@@ -1,159 +1,187 @@
 <script setup lang="ts">
-import { CheckCircle2, Clock, Star, TrendingUp, Bell } from 'lucide-vue-next'
+import { CheckCircle2, Clock, Star, TrendingUp, ChevronRight, Download, Timer } from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
-const monthSummary = {
-  workedDays: 18,
-  totalDays: 22,
-  lateCount: 2,
-  leaveBalance: 12,
-  totalHours: 156.5,
-}
+const userProfile = { fullName: 'Nguyễn Văn A' }
+
+const stats = [
+  { label: 'Công', value: '18/22', icon: CheckCircle2, status: 'Đạt' },
+  { label: 'Muộn', value: '2', icon: Clock, status: 'Cảnh báo' },
+  { label: 'Phép', value: '12', icon: Star, status: 'Còn lại' },
+  { label: 'Tổng giờ', value: '156.5', icon: TrendingUp, status: 'Giờ làm' },
+]
+
+const recentActivities = [
+  { id: 1, title: 'Cập nhật lịch trực tuần sau', time: '2 giờ trước', category: 'Hành chính' },
+  { id: 2, title: 'Thông báo nghỉ lễ Giỗ Tổ Hùng Vương', time: '4 giờ trước', category: 'Nhân sự' },
+  { id: 3, title: 'Chương trình đào tạo kỹ năng mềm', time: '1 ngày trước', category: 'Đào tạo' },
+]
 </script>
 
 <template>
-  <div class="space-y-4">
-    <!-- Header - Compact -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
-          Bảng tin
-        </h1>
-        <p class="text-[9px] uppercase font-bold tracking-widest text-slate-400 mt-1">
-          Tổng quan hoạt động
-        </p>
-      </div>
-    </div>
+  <div class=" space-y-6">
+    <PageHeader
+      :title="`Xin chào, ${userProfile.fullName.split(' ').pop()}!`"
+      :description="new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })"
+    >
+      <template #actions>
+        <div class="flex items-center gap-2">
+          <Button variant="outline" size="sm" class="h-8 text-[10px] font-bold uppercase tracking-widest gap-2">
+            <Download class="h-3 w-3" />
+            Xuất báo cáo
+          </Button>
+          <Button size="sm" class="h-8 bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-widest gap-2">
+            <Timer class="h-3 w-3" />
+            Check-in
+          </Button>
+        </div>
+      </template>
+    </PageHeader>
 
-    <!-- Quick Stats - Compact Indigo Theme -->
-    <div class="grid grid-cols-4 gap-2 lg:gap-4">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
       <Card
-        v-for="stat in [
-          {
-            label: 'Công',
-            value: monthSummary.workedDays,
-            total: monthSummary.totalDays,
-            icon: CheckCircle2,
-          },
-          { label: 'Muộn', value: monthSummary.lateCount, icon: Clock },
-          { label: 'Phép', value: monthSummary.leaveBalance, icon: Star },
-          { label: 'Tổng h', value: monthSummary.totalHours, icon: TrendingUp },
-        ]"
+        v-for="stat in stats"
         :key="stat.label"
-        class="border-none bg-indigo-50/40 dark:bg-indigo-950/20 shadow-none rounded-md"
+        class="border-slate-100 shadow-none p-4 sm:p-6 hover:bg-slate-50 transition-all group rounded-xl"
       >
-        <CardContent class="p-1.5 sm:p-5 flex flex-col items-center justify-center text-center">
-          <div class="mb-1 sm:mb-2 text-indigo-600">
-            <component :is="stat.icon" class="h-4 w-4 sm:h-6 sm:w-6" />
-          </div>
-          <p
-            class="text-[7px] sm:text-[10px] font-bold text-indigo-600/60 uppercase tracking-tighter leading-none mb-0.5"
-          >
-            {{ stat.label }}
-          </p>
-          <div class="flex items-baseline gap-0.5">
-            <span class="text-xs sm:text-2xl font-black text-slate-800 dark:text-white">{{
-              stat.value
-            }}</span>
-            <span v-if="stat.total" class="text-[7px] sm:text-sm font-bold text-slate-400"
-              >/{{ stat.total }}</span
+        <div class="flex flex-col">
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{
+            stat.label
+          }}</span>
+          <div class="mt-3 flex items-end justify-between">
+            <span
+              class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums leading-none group-hover:text-primary transition-colors"
+              >{{ stat.value }}</span
             >
+            <div
+              class="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
+            >
+              <component :is="stat.icon" class="h-4 w-4" />
+            </div>
           </div>
-        </CardContent>
+          <p class="mt-4 text-[9px] font-bold text-slate-300 uppercase leading-none">{{ stat.status }}</p>
+        </div>
       </Card>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-      <!-- Notifications - Occupies 8/12 on LG -->
-      <Card class="lg:col-span-8 shadow-none border-border h-full flex flex-col">
-        <CardHeader class="py-3 px-4 sm:py-4 sm:px-6 bg-slate-50/50 dark:bg-slate-900/50 border-b">
-          <CardTitle
-            class="text-[11px] sm:text-sm font-black uppercase tracking-widest flex items-center gap-2"
-          >
-            <Bell class="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
-            Bảng tin & Thông báo nội bộ
-          </CardTitle>
-        </CardHeader>
-        <CardContent class="p-0 flex-1">
-          <div class="divide-y divide-slate-100 dark:divide-slate-800">
-            <div
-              v-for="i in 5"
-              :key="i"
-              class="p-3 sm:p-6 hover:bg-slate-50 transition-colors cursor-pointer group"
-            >
-              <div class="flex gap-3 sm:gap-5">
-                <div class="h-1 w-1 sm:h-2 sm:w-2 mt-2 rounded-full bg-indigo-600 shrink-0"></div>
-                <div class="min-w-0 flex-1">
-                  <div
-                    class="flex items-center justify-between gap-2 mb-1 sm:mb-2 text-[8px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-400"
-                  >
-                    <span>Phòng Nhân sự</span>
-                    <span>2 giờ trước</span>
-                  </div>
-                  <h4
-                    class="text-xs sm:text-base font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-indigo-600 transition-colors"
-                  >
-                    Thông báo quan trọng về lịch nghỉ lễ và các hoạt động nội bộ {{ 2024 + i }}
-                  </h4>
-                  <p
-                    class="text-[10px] sm:text-sm text-slate-500 line-clamp-2 mt-1 leading-relaxed"
-                  >
-                    Đây là nội dung tóm tắt chi tiết của thông báo. Toàn thể cán bộ nhân viên lưu ý
-                    thực hiện đúng theo quy định đề ra...
-                  </p>
-                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content: Attendance Chart Simulation -->
+      <Card class="lg:col-span-2 border-slate-100 shadow-none overflow-hidden rounded-xl">
+        <CardHeader class="p-4 sm:p-6 border-b border-slate-100 bg-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle
+                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none"
+                >Hiệu suất chuyên cần</CardTitle
+              >
+              <p class="mt-2 text-xs font-black text-slate-900 uppercase">
+                Thống kê 7 ngày qua
+              </p>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1.5 shrink-0">
+                <div class="h-2 w-2 rounded-full bg-primary"></div>
+                <span class="text-[9px] font-bold text-slate-400 uppercase">Hoàn thành</span>
               </div>
             </div>
           </div>
-          <div class="p-3 sm:p-5 border-t border-slate-100 dark:border-slate-800">
-            <Button
-              variant="ghost"
-              class="w-full text-[10px] sm:text-xs font-black uppercase h-8 sm:h-11 text-slate-400 hover:text-indigo-600"
-              >Xem tất cả bảng tin</Button
+        </CardHeader>
+        <CardContent class="p-4 sm:p-8">
+          <div class="h-[200px] flex items-end justify-between gap-2 sm:gap-4 px-2">
+            <div
+              v-for="(val, i) in [65, 85, 45, 95, 75, 40, 80]"
+              :key="i"
+              class="flex-1 flex flex-col items-center gap-4 group"
             >
+              <div
+                class="w-full bg-slate-50 rounded-xl relative overflow-hidden h-full flex flex-col justify-end"
+              >
+                <div
+                  class="bg-primary group-hover:bg-primary/80 transition-all rounded-t-xl"
+                  :style="{ height: `${val}%` }"
+                >
+                  <div class="absolute top-0 inset-x-0 h-1 bg-white/30"></div>
+                </div>
+              </div>
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{{
+                ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i]
+              }}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <!-- Side Column - Occupies 4/12 on LG -->
-      <div class="lg:col-span-4 space-y-4 lg:space-y-6">
+      <!-- Side Content -->
+      <div class="space-y-6">
         <!-- Birthday Compact -->
-        <Card class="border-border shadow-none p-3 sm:p-6 rounded-md sm:rounded-xl">
+        <Card class="border-slate-100 shadow-none p-5 rounded-xl bg-white">
           <div class="flex items-center gap-4">
             <div
-              class="h-9 w-9 sm:h-14 sm:w-14 shrink-0 rounded sm:rounded-xl bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center text-amber-500 border border-amber-100 dark:border-amber-900/50 shadow-sm"
+              class="h-14 w-14 shrink-0 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10 shadow-sm"
             >
-              <Star class="h-4 w-4 sm:h-7 sm:w-7" />
+              <Star class="h-7 w-7" />
             </div>
             <div>
               <p
-                class="text-xs sm:text-base font-black text-slate-800 dark:text-white leading-none"
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none"
               >
-                Tuần có 2 sinh nhật !
+                Sự kiện tuần này
               </p>
+              <h4 class="text-xl font-black text-slate-900 mt-2 leading-none">2 Sinh nhật mới</h4>
               <p
-                class="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-1.5 sm:mt-2"
+                class="text-[9px] font-bold text-primary mt-1.5 uppercase cursor-pointer hover:underline"
               >
-                Tháng 04 vui vẻ
+                Xem danh sách
               </p>
             </div>
           </div>
         </Card>
 
-        <!-- Quick Tips card -->
-        <Card
-          class="border-indigo-600/10 bg-indigo-50/10 dark:bg-indigo-950/5 shadow-none p-3 sm:p-6 rounded-md sm:rounded-xl"
-        >
-          <p
-            class="text-[9px] sm:text-[11px] font-bold text-indigo-600 uppercase tracking-widest leading-none mb-3"
-          >
-            Mẹo hôm nay
-          </p>
-          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Đừng quên check-in đúng giờ để nhận đầy đủ điểm chuyên cần tháng này nhé!
-          </p>
+        <!-- Activities -->
+        <Card class="border-slate-100 shadow-none overflow-hidden rounded-xl">
+          <CardHeader class="p-5 border-b border-slate-100 bg-white">
+            <CardTitle
+              class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none"
+              >Thông báo & Sự kiện</CardTitle
+            >
+          </CardHeader>
+          <CardContent class="p-0">
+            <div class="divide-y divide-slate-50">
+              <div
+                v-for="act in recentActivities"
+                :key="act.id"
+                class="p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+              >
+                <div class="flex gap-4">
+                  <div class="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                  <div class="flex-1 min-w-0">
+                    <p
+                      class="text-xs font-black text-slate-800 leading-snug uppercase truncate group-hover:text-primary transition-colors"
+                    >
+                      {{ act.title }}
+                    </p>
+                    <div class="flex items-center justify-between mt-1.5">
+                      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                        {{ act.category }}
+                      </p>
+                      <p class="text-[9px] font-black text-slate-300 uppercase leading-none">
+                        {{ act.time }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              class="w-full rounded-none border-t border-slate-50 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors"
+            >
+              Xem toàn bộ <ChevronRight class="ml-2 h-3 w-3" />
+            </Button>
+          </CardContent>
         </Card>
       </div>
     </div>

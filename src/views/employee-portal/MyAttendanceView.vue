@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import DataTable from '@/components/ui/DataTable.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
 const today = new Date()
 const currentMonth = ref(today.getMonth())
@@ -121,35 +122,28 @@ const getStatusBadge = (status: string, lateMinutes?: number) => {
 
 <template>
   <div class="space-y-4 lg:space-y-6">
-    <!-- Header - Responsive -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
-      <div>
-        <h1
-          class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none"
-        >
-          Bảng công
-        </h1>
-        <p class="text-[9px] sm:text-xs uppercase font-bold tracking-widest text-slate-400 mt-1">
-          Lịch sử & Thống kê chi tiết
-        </p>
-      </div>
-
-      <div
-        class="flex items-center gap-1 rounded-md border border-border bg-card p-0.5 sm:p-1 shadow-sm self-start sm:self-auto"
-      >
-        <Button variant="ghost" size="icon" @click="prevMonth" class="h-7 w-7 sm:h-9 sm:w-9">
-          <ChevronLeft class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        </Button>
+    <PageHeader
+      title="Bảng công"
+      description="Lịch sử & Thống kê chi tiết"
+    >
+      <template #actions>
         <div
-          class="px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-700 min-w-[100px] sm:min-w-[140px] text-center"
+          class="flex items-center gap-1 rounded-md border border-border bg-card  sm:p-1 shadow-sm self-start sm:self-auto p-4"
         >
-          {{ monthLabel }}
+          <Button variant="ghost" size="icon" @click="prevMonth" class="h-7 w-7 sm:h-9 sm:w-9">
+            <ChevronLeft class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
+          <div
+            class="px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-700 min-w-[100px] sm:min-w-[140px] text-center"
+          >
+            {{ monthLabel }}
+          </div>
+          <Button variant="ghost" size="icon" @click="nextMonth" class="h-7 w-7 sm:h-9 sm:w-9">
+            <ChevronRight class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" @click="nextMonth" class="h-7 w-7 sm:h-9 sm:w-9">
-          <ChevronRight class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        </Button>
-      </div>
-    </div>
+      </template>
+    </PageHeader>
 
     <!-- Summary Cards - Compact Indigo Theme -->
     <div class="grid grid-cols-4 gap-2 lg:gap-4">

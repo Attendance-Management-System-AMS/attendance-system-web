@@ -165,7 +165,7 @@ const selectDay = (day: CalendarDay) => {
             </div>
             <div v-else class="text-center py-8">
                <CalendarIcon class="h-8 w-8 text-slate-200 mx-auto mb-2" />
-               <p class="text-sm font-bold text-slate-400 italic">Ngày này chưa có lịch làm việc</p>
+               <p class="text-sm font-bold text-slate-400">Ngày này chưa có lịch làm việc</p>
             </div>
           </CardContent>
         </Card>

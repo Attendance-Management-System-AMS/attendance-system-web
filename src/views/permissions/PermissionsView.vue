@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from '@/components/ui/PageHeader.vue'
-import { Check, Minus, ShieldCheck, Plus } from 'lucide-vue-next'
+import { Check, Minus, ShieldCheck, Plus, Clock } from 'lucide-vue-next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -130,7 +130,7 @@ function getPermissionState(v: boolean | 'partial') {
     <Card class="border-amber-100 bg-amber-50/30 dark:bg-amber-950/10 shadow-none">
        <CardContent class="py-4 flex gap-3 items-center">
           <Clock class="h-4 w-4 text-amber-500" />
-          <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400 italic">
+          <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">
             Lưu ý: Bạn đang ở chế độ xem trước. Chỉnh sửa vai trò sẽ được kích hoạt sau khi hệ thống phân quyền Backend sẵn sàng.
           </p>
        </CardContent>

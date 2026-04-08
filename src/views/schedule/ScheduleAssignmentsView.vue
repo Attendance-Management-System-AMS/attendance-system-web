@@ -343,7 +343,7 @@ const confirmDeleteSchedule = async () => {
           </button>
           <RouterLink
             to="/schedule"
-            class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-muted dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <ArrowLeft class="h-4 w-4" />
             Quay lại lịch
@@ -357,11 +357,11 @@ const confirmDeleteSchedule = async () => {
           v-model="scheduleSearch"
           type="text"
           placeholder="Tìm theo nhân viên, ca, mã..."
-          class="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         />
         <select
           v-model="scheduleEmployeeFilter"
-          class="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         >
           <option value="">Tất cả nhân viên</option>
           <option v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
@@ -370,7 +370,7 @@ const confirmDeleteSchedule = async () => {
         </select>
         <select
           v-model="scheduleShiftFilter"
-          class="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         >
           <option value="">Tất cả ca</option>
           <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
@@ -379,7 +379,7 @@ const confirmDeleteSchedule = async () => {
         </select>
         <select
           v-model="scheduleDayFilter"
-          class="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
         >
           <option value="">Tất cả thứ</option>
           <option v-for="option in dayOfWeekOptions" :key="option.value" :value="option.value">
@@ -388,9 +388,9 @@ const confirmDeleteSchedule = async () => {
         </select>
       </div>
 
-      <div class="mt-5 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-          <thead class="bg-slate-50 dark:bg-slate-900">
+      <div class="mt-5 overflow-x-auto rounded-xl border border-border dark:border-slate-700">
+        <table class="min-w-full divide-y divide-border dark:divide-slate-700">
+          <thead class="bg-muted/50 dark:bg-slate-900">
             <tr>
               <th
                 class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
@@ -424,7 +424,7 @@ const confirmDeleteSchedule = async () => {
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
+          <tbody class="divide-y divide-border bg-card dark:divide-slate-700 dark:bg-slate-900">
             <tr v-if="assignedSchedulesQuery.isLoading.value">
               <td
                 colspan="6"
@@ -501,7 +501,7 @@ const confirmDeleteSchedule = async () => {
             type="button"
             :disabled="assignedPage <= 1 || assignedSchedulesQuery.isFetching.value"
             @click="assignedPage--"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-slate-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             Trước
           </button>
@@ -511,7 +511,7 @@ const confirmDeleteSchedule = async () => {
               assignedPage >= assignedTotalPages || assignedSchedulesQuery.isFetching.value
             "
             @click="assignedPage++"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-slate-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             Sau
           </button>
@@ -632,7 +632,7 @@ const confirmDeleteSchedule = async () => {
                       >
                         <div
                           v-if="filteredEmployees.length === 0"
-                          class="w-full text-center py-4 text-xs text-slate-400 italic"
+                          class="w-full text-center py-4 text-xs text-slate-400"
                         >
                           Không tìm thấy nhân viên phù hợp
                         </div>
@@ -662,7 +662,7 @@ const confirmDeleteSchedule = async () => {
                       </label>
                       <select
                         v-model="assignmentForm.shiftId"
-                        class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        class="h-11 w-full rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       >
                         <option value="">Chọn ca làm</option>
                         <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
@@ -676,7 +676,7 @@ const confirmDeleteSchedule = async () => {
                         Loại gán
                       </label>
                       <div
-                        class="h-11 flex items-center px-4 rounded-xl border border-slate-200 bg-slate-100 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"
+                        class="h-11 flex items-center px-4 rounded-xl border border-border bg-muted/50 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"
                       >
                         Cố định hàng tuần
                       </div>
@@ -704,7 +704,7 @@ const confirmDeleteSchedule = async () => {
                         <button
                           type="button"
                           @click="assignmentForm.daysOfWeek = []"
-                          class="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
+                          class="rounded-lg bg-muted px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:bg-emphasis dark:bg-slate-800"
                         >
                           Bỏ chọn
                         </button>
@@ -713,9 +713,9 @@ const confirmDeleteSchedule = async () => {
                         <label
                           v-for="option in dayOfWeekOptions"
                           :key="option.value"
-                          class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-white hover:shadow-sm transition-all"
+                          class="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-muted/30 cursor-pointer hover:bg-card hover:shadow-sm transition-all"
                           :class="{
-                            'border-indigo-500 bg-white ring-1 ring-indigo-500/20 shadow-md shadow-indigo-100':
+                            'border-primary bg-card ring-1 ring-primary/20 shadow-none':
                               assignmentForm.daysOfWeek.includes(Number(option.value)),
                           }"
                         >
@@ -739,7 +739,7 @@ const confirmDeleteSchedule = async () => {
                       </label>
                       <select
                         v-model="assignmentForm.templateId"
-                        class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        class="h-11 w-full rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       >
                         <option value="">Chọn mẫu lịch</option>
                         <option
@@ -752,7 +752,7 @@ const confirmDeleteSchedule = async () => {
                       </select>
                       <p
                         v-if="assignmentForm.templateId"
-                        class="mt-2 text-[10px] text-slate-400 italic"
+                        class="mt-2 text-[10px] text-slate-400"
                       >
                         Mẫu này sẽ áp dung khung giờ làm việc đã định nghĩa sẵn cho từng thứ trong
                         tuần.

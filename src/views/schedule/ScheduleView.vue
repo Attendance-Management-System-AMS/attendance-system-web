@@ -9,11 +9,16 @@ import {
   Search,
   Plus,
   Calendar as CalendarIcon,
+  CalendarDays,
+  Users,
+  Clock,
+  TrendingUp,
 } from 'lucide-vue-next'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
 import { useEmployees } from '@/composables/useEmployees'
 import { useSchedules } from '@/composables/useSchedules'
@@ -174,111 +179,123 @@ const getShiftBadgeStyle = (shiftName?: string) => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-      <div class="space-y-1">
-        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-          Lịch làm việc
-        </h1>
-        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-0.5">
-          Quản lý phân công ca hàng tuần
-        </p>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-4">
-        <!-- Navigation & Date Range Group -->
-        <div
-          class="flex items-center bg-white dark:bg-slate-900 rounded-xl border border-border p-1 shadow-sm"
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            @click="movePeriod(-1)"
-            class="h-8 w-8 hover:bg-slate-50"
-          >
-            <ChevronLeft class="h-4 w-4" />
-          </Button>
-
-          <div
-            class="px-4 flex flex-col items-center min-w-[160px] border-x border-slate-100 dark:border-slate-800"
-          >
-            <span class="text-[13px] font-black text-indigo-600 tabular-nums tracking-tight">{{
-              weekRangeLabel
-            }}</span>
-            <button
-              @click="currentDate = new Date()"
-              class="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-500 transition-colors"
+  <div class="space-y-6 p-4 sm:p-6">
+    <PageHeader
+      title="Lịch làm việc"
+      description="Quản lý phân công ca hàng tuần • Hệ thống thời gian thực"
+    >
+      <template #actions>
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Date Navigator -->
+          <div class="flex items-center bg-card rounded-xl border border-border p-1 shadow-none dark:bg-slate-900 dark:border-slate-800">
+            <Button
+              variant="ghost"
+              size="icon"
+              @click="movePeriod(-1)"
+              class="h-9 w-9 hover:bg-muted dark:hover:bg-slate-800"
             >
-              Hôm nay
-            </button>
+              <ChevronLeft class="h-4 w-4" />
+            </Button>
+
+            <div class="px-6 flex flex-col items-center min-w-[180px] border-x border-border dark:border-slate-800">
+              <span class="text-sm font-black text-primary tabular-nums tracking-tight">{{
+                weekRangeLabel
+              }}</span>
+              <button
+                @click="currentDate = new Date()"
+                class="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+              >
+                Tuần hiện tại
+              </button>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              @click="movePeriod(1)"
+              class="h-9 w-9 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              <ChevronRight class="h-4 w-4" />
+            </Button>
           </div>
 
           <Button
-            variant="ghost"
-            size="icon"
-            @click="movePeriod(1)"
-            class="h-8 w-8 hover:bg-slate-50"
-          >
-            <ChevronRight class="h-4 w-4" />
-          </Button>
-        </div>
-
-        <!-- Global Actions -->
-        <div class="flex items-center gap-2">
-          <Button
             as-child
-            class="h-10 px-6 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none font-bold rounded-xl gap-2"
+            class="h-11 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[11px] rounded-xl gap-2 text-primary-foreground"
           >
             <RouterLink to="/schedule/assignments">
-              <Plus class="h-4 w-4" />
-              Phân công ca
+              <Plus class="h-4 w-4" /> Phân công ca
             </RouterLink>
           </Button>
         </div>
-      </div>
+      </template>
+    </PageHeader>
+    <!-- Stats Section -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <Card
+        v-for="s in [
+          { label: 'Tổng số ca', value: 124, icon: CalendarDays },
+          { label: 'Nhân viên', value: 48, icon: Users },
+          { label: 'Giờ công', value: '1,024h', icon: Clock },
+          { label: 'Kế hoạch', value: 'đ 52M', icon: TrendingUp },
+        ]"
+        :key="s.label"
+        class="border-border shadow-none p-5 sm:p-6 hover:bg-secondary transition-all group rounded-2xl bg-card"
+      >
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{
+              s.label
+            }}</span>
+            <div
+              class="h-9 w-9 rounded-xl bg-muted flex items-center justify-center text-slate-400 border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
+            >
+              <component :is="s.icon" class="h-5 w-5" />
+            </div>
+          </div>
+          <span
+            class="text-2xl font-black text-slate-900 tabular-nums group-hover:text-primary transition-colors"
+            >{{ s.value }}</span
+          >
+        </div>
+      </Card>
     </div>
 
-    <!-- Filter Bar -->
+    <!-- Filter & Search Bar -->
     <div
-      class="flex flex-wrap items-center justify-between gap-4 p-4 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border border-border/50"
+      class="flex flex-wrap items-center justify-between gap-4 p-5 bg-card rounded-2xl border border-border"
     >
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="relative group">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="relative group w-full sm:w-64">
           <Search
-            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors"
+            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
           />
           <input
             v-model="searchQuery"
-            placeholder="Tìm nhân viên..."
-            class="h-9 pl-9 pr-4 rounded-xl border border-border bg-white dark:bg-slate-950 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-full sm:w-48"
+            placeholder="Tìm tên hoặc mã nhân viên..."
+            class="h-10 pl-10 pr-4 rounded-xl border border-slate-100 bg-white text-xs font-bold text-slate-700 outline-none focus:ring-1 focus:ring-primary transition-all w-full"
           />
         </div>
         <select
           v-model="filterDepartment"
-          class="h-9 rounded-xl border border-border bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+          class="h-10 rounded-xl border border-slate-100 bg-white px-4 text-xs font-bold text-slate-700 outline-none focus:ring-1 focus:ring-primary transition-all"
         >
           <option value="">Tất cả phòng ban</option>
           <option v-for="d in departments" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
         </select>
       </div>
-
-      <div
-        class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-      >
-        <span class="size-2 rounded-full bg-indigo-500 animate-pulse"></span>
-        Dữ liệu thời gian thực
-      </div>
     </div>
 
-    <Card class="overflow-hidden border-border shadow-none">
+    <!-- Table Section -->
+    <Card class="overflow-hidden border-border shadow-none rounded-2xl bg-card">
       <div class="overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
-            <tr class="border-b bg-slate-50/50 dark:bg-slate-900/50">
+            <tr class="border-b border-border">
               <th
-                class="sticky left-0 z-20 w-60 bg-slate-50 dark:bg-slate-900 border-r border-border px-6 py-4 text-left"
+                class="sticky left-0 z-20 w-64 bg-card border-r border-border px-6 py-5 text-left"
               >
-                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"
                   >Nhân viên</span
                 >
               </th>
@@ -286,39 +303,37 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 v-for="day in weekDays"
                 :key="day.ymd"
                 :class="[
-                  'px-4 py-3 text-center border-r border-border min-w-[140px]',
-                  day.isToday ? 'bg-indigo-50/50 dark:bg-indigo-950/30' : '',
+                  'px-4 py-4 text-center border-r border-border min-w-[150px]',
+                  day.isToday ? 'bg-muted/50' : '',
                 ]"
               >
                 <div class="flex flex-col items-center">
                   <span
-                    class="text-[9px] font-black uppercase tracking-widest"
-                    :class="day.isToday ? 'text-indigo-600' : 'text-slate-400'"
+                    class="text-[10px] font-black uppercase tracking-widest"
+                    :class="day.isToday ? 'text-primary' : 'text-slate-400'"
                     >{{ day.dayLabel }}</span
                   >
                   <span
-                    class="text-lg font-black mt-0.5"
-                    :class="day.isToday ? 'text-indigo-600' : 'text-slate-800 dark:text-slate-200'"
+                    class="text-xl font-black mt-1"
+                    :class="day.isToday ? 'text-primary' : 'text-slate-800'"
                     >{{ day.dayNumber }}</span
                   >
                 </div>
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody class="divide-y divide-border">
             <tr
               v-for="employee in paginatedEmployees"
               :key="employee.id"
-              class="group hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors cursor-pointer"
+              class="group hover:bg-slate-50/50 transition-colors cursor-pointer"
               @click="selectedEmployeeId = employee.id"
             >
-              <td
-                class="sticky left-0 z-10 bg-white dark:bg-slate-950 border-r border-border px-6 py-4"
-              >
-                <div class="flex items-center gap-3">
-                  <Avatar class="h-9 w-9 border border-indigo-50">
+              <td class="sticky left-0 z-10 bg-card border-r border-border px-6 py-5">
+                <div class="flex items-center gap-4">
+                  <Avatar class="h-10 w-10 border border-slate-100 shadow-sm">
                     <AvatarImage :src="`/api/avatar/${employee.id}`" />
-                    <AvatarFallback class="bg-indigo-50 text-indigo-600 text-[10px] font-black">
+                    <AvatarFallback class="bg-slate-50 text-slate-400 text-[11px] font-black">
                       {{
                         employee.fullName
                           .split(' ')
@@ -331,12 +346,12 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                   </Avatar>
                   <div class="min-w-0">
                     <p
-                      class="text-sm font-black text-slate-800 dark:text-white truncate group-hover:text-indigo-600 transition-colors"
+                      class="text-sm font-black text-slate-800 truncate group-hover:text-primary transition-colors uppercase leading-none"
                     >
                       {{ employee.fullName }}
                     </p>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                      {{ employee.departmentName || '—' }}
+                    <p class="text-[10px] text-slate-400 font-medium leading-relaxed">
+                      {{ employee.departmentName || 'Phòng ban tự do' }}
                     </p>
                   </div>
                 </div>
@@ -345,20 +360,20 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 v-for="day in weekDays"
                 :key="day.ymd"
                 :class="[
-                  'px-3 py-4 align-top border-r border-border text-center',
-                  day.isToday ? 'bg-indigo-50/20 dark:bg-indigo-950/10' : '',
+                  'px-3 py-5 align-top border-r border-border text-center',
+                  day.isToday ? 'bg-muted/50' : '',
                 ]"
               >
-                <div class="space-y-1.5 flex flex-col items-center">
+                <div class="space-y-2 flex flex-col items-center">
                   <div
                     v-for="s in getSchedulesForEmployeeDate(employee, day.ymd)"
                     :key="s.id"
-                    class="w-full text-[10px] font-black p-2 rounded-lg border text-center transition-all shadow-sm hover:shadow-md"
+                    class="w-full text-[10px] font-black p-2.5 rounded-xl border text-center transition-all shadow-sm group-hover:shadow-md"
                     :class="getShiftBadgeStyle(s.shift?.name)"
                   >
-                    <p class="uppercase tracking-tight leading-none mb-1">{{ s.shift?.name }}</p>
+                    <p class="uppercase tracking-tight leading-none mb-1.5">{{ s.shift?.name }}</p>
                     <p class="font-mono text-[9px] opacity-70">
-                      {{ s.shift?.startTime?.slice(0, 5) }}-{{ s.shift?.endTime?.slice(0, 5) }}
+                      {{ s.shift?.startTime?.slice(0, 5) }} - {{ s.shift?.endTime?.slice(0, 5) }}
                     </p>
                   </div>
                 </div>
@@ -369,15 +384,21 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       </div>
     </Card>
 
+    <!-- Pagination Section -->
     <div
       v-if="totalPagesCount > 1"
-      class="flex justify-between items-center bg-card p-4 rounded-xl border border-border"
+      class="flex justify-between items-center bg-card p-5 rounded-2xl border border-border shadow-none"
     >
-      <span class="text-xs font-bold text-slate-400 uppercase"
+      <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
         >Trang {{ currentPage }} / {{ totalPagesCount }}</span
       >
-      <div class="flex gap-2">
-        <Button variant="outline" size="sm" :disabled="currentPage === 1" @click="currentPage--"
+      <div class="flex gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="currentPage === 1"
+          @click="currentPage--"
+          class="h-10 px-6 rounded-xl font-black uppercase text-[10px]"
           >Trước</Button
         >
         <Button
@@ -385,12 +406,13 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           size="sm"
           :disabled="currentPage === totalPagesCount"
           @click="currentPage++"
+          class="h-10 px-6 rounded-xl font-black uppercase text-[10px]"
           >Sau</Button
         >
       </div>
     </div>
 
-    <!-- Side Panel -->
+    <!-- Detail Side Panel -->
     <Teleport to="body">
       <Transition
         enter-active-class="transition duration-300 ease-out"
@@ -400,31 +422,43 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       >
         <div
           v-if="selectedEmployee"
-          class="fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] bg-white dark:bg-slate-950 shadow-2xl border-l border-border flex flex-col"
+          class="fixed inset-y-0 right-0 z-50 w-full sm:w-[450px] bg-card shadow-2xl border-l border-border flex flex-col"
         >
-          <div class="p-6 border-b flex items-center justify-between">
-            <div class="flex items-center gap-3">
+          <!-- Side Header -->
+          <div class="p-6 border-b border-border flex items-center justify-between bg-card">
+            <div class="flex items-center gap-4">
               <div
-                class="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600"
+                class="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20"
               >
-                <CalendarIcon class="h-5 w-5" />
+                <CalendarIcon class="h-6 w-6" />
               </div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                Chi tiết lịch biểu
-              </h3>
+              <div>
+                <h3 class="text-lg font-black text-slate-900 tracking-tight uppercase">
+                  Chi tiết lịch biểu
+                </h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                  Thời gian thực • {{ weekRangeLabel }}
+                </p>
+              </div>
             </div>
-            <Button variant="ghost" size="icon" @click="selectedEmployeeId = null" class="h-8 w-8"
-              ><X class="h-5 w-5"
-            /></Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              @click="selectedEmployeeId = null"
+              class="h-9 w-9 rounded-full bg-muted hover:bg-emphasis transition-colors"
+            >
+              <X class="h-5 w-5 text-slate-500" />
+            </Button>
           </div>
 
-          <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <!-- Profile Mini -->
+          <!-- Side Content -->
+          <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-card">
+            <!-- Profile Info -->
             <div
-              class="flex flex-col items-center text-center p-6 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 border border-border"
+              class="flex flex-col items-center text-center p-8 rounded-3xl border border-border bg-card shadow-none"
             >
-              <Avatar class="h-20 w-20 border-4 border-white dark:border-slate-800 shadow-xl mb-4">
-                <AvatarFallback class="bg-indigo-600 text-white text-2xl font-black">
+              <Avatar class="h-24 w-24 border-4 border-white shadow-2xl mb-6">
+                <AvatarFallback class="bg-primary text-primary-foreground text-2xl font-black">
                   {{
                     selectedEmployee.fullName
                       .split(' ')
@@ -435,54 +469,69 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                   }}
                 </AvatarFallback>
               </Avatar>
-              <h4 class="text-xl font-black text-slate-800 dark:text-white">
+              <h4
+                class="text-2xl font-black text-slate-900 uppercase tracking-tight leading-none"
+              >
                 {{ selectedEmployee.fullName }}
               </h4>
               <Badge
                 variant="secondary"
-                class="mt-2 bg-indigo-100 text-indigo-600 border-none font-bold tabular-nums dark:bg-indigo-950"
+                class="mt-3 bg-primary/10 text-primary border-none font-black tabular-nums h-7 px-4 rounded-full uppercase text-[10px] tracking-widest"
                 >{{ selectedEmployee.employeeCode }}</Badge
               >
+              <p class="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                {{ selectedEmployee.departmentName || 'Công ty CP TimeMaster' }}
+              </p>
             </div>
 
-            <div class="space-y-4">
-              <h5 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Ca làm việc trong tuần
+            <!-- Week Schedule Detail -->
+            <div class="space-y-5">
+              <h5 class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 pl-2">
+                Lịch làm việc trong tuần
               </h5>
               <div class="space-y-3">
                 <div
                   v-for="day in weekDays"
                   :key="day.ymd"
-                  class="flex items-center gap-4 p-3 rounded-xl border border-border bg-white dark:bg-slate-900 hover:border-indigo-200 transition-colors"
+                  class="flex items-center gap-5 p-4 rounded-2xl border border-border bg-card hover:bg-muted/50 transition-all group"
                 >
-                  <div
-                    class="w-12 text-center text-[10px] font-black uppercase tracking-tight text-slate-400 border-r pr-3"
-                  >
-                    {{ day.dayLabel }}<br /><span class="text-slate-800 dark:text-slate-200">{{
-                      day.dayNumber
-                    }}</span>
+                  <div class="w-14 text-center border-r border-border pr-5 shrink-0">
+                    <p
+                      class="text-[10px] font-black uppercase tracking-widest"
+                      :class="day.isToday ? 'text-primary' : 'text-slate-400'"
+                    >
+                      {{ day.dayLabel }}
+                    </p>
+                    <p
+                      class="text-xl font-black mt-1 leading-none"
+                      :class="day.isToday ? 'text-primary' : 'text-slate-800'"
+                    >
+                      {{ day.dayNumber }}
+                    </p>
                   </div>
                   <div class="flex-1">
                     <div
                       v-if="getSchedulesForEmployeeDate(selectedEmployee, day.ymd).length"
-                      class="space-y-1"
+                      class="space-y-2"
                     >
                       <div
                         v-for="s in getSchedulesForEmployeeDate(selectedEmployee, day.ymd)"
                         :key="s.id"
                         class="flex items-center justify-between"
                       >
-                        <span class="text-xs font-black text-slate-700 dark:text-slate-200">{{
+                        <span class="text-xs font-black text-slate-800 uppercase tracking-tight">{{
                           s.shift?.name
                         }}</span>
-                        <Badge variant="outline" class="text-[9px] font-mono border-slate-200"
+                        <Badge
+                          variant="outline"
+                          class="text-[10px] font-mono border-slate-100 text-slate-500 bg-slate-50"
                           >{{ s.shift?.startTime?.slice(0, 5) }} —
                           {{ s.shift?.endTime?.slice(0, 5) }}</Badge
                         >
                       </div>
                     </div>
-                    <p v-else class="text-[11px] font-bold text-slate-300 italic">
-                      Nghỉ / Chưa gán ca
+                    <p v-else class="text-[11px] font-bold text-slate-300 tracking-tight">
+                      Nghỉ ca / Chưa phân bổ
                     </p>
                   </div>
                 </div>
@@ -490,13 +539,19 @@ const getShiftBadgeStyle = (shiftName?: string) => {
             </div>
           </div>
 
-          <div class="p-6 border-t bg-slate-50/30 dark:bg-slate-900/30 flex gap-3">
-            <Button class="flex-1 bg-indigo-600 hover:bg-indigo-700 font-bold gap-2"
-              ><Edit3 class="h-4 w-4" /> Chỉnh sửa</Button
+          <!-- Side Footer -->
+          <div class="p-6 border-t border-slate-100 bg-white grid grid-cols-2 gap-4">
+            <Button
+              class="h-12 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[11px] text-primary-foreground gap-2 rounded-2xl shadow-lg shadow-primary/20"
             >
-            <Button variant="outline" class="flex-1 font-bold gap-2"
-              ><Eye class="h-4 w-4" /> Lịch sử</Button
+              <Edit3 class="h-4 w-4" /> Chỉnh sửa
+            </Button>
+            <Button
+              variant="outline"
+              class="h-12 font-black uppercase tracking-widest text-[11px] text-slate-500 gap-2 rounded-2xl border-slate-100 hover:bg-slate-50 transition-all"
             >
+              <Eye class="h-4 w-4" /> Lịch sử
+            </Button>
           </div>
         </div>
       </Transition>

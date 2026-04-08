@@ -10,10 +10,10 @@ defineProps<{
     class="mb-6 flex flex-col gap-1 border-b border-slate-200/70 pb-5 sm:flex-row sm:items-start sm:justify-between dark:border-slate-800/80"
   >
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+      <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tight leading-none dark:text-white">
         {{ title }}
       </h1>
-      <p v-if="description" class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <p v-if="description" class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
         {{ description }}
       </p>
     </div>

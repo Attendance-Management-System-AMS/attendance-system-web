@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Check, X, Plus } from 'lucide-vue-next'
+import { Check, X, Plus, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
 import { useLeaves } from '@/composables/useLeaves'
 import type { CreateLeaveRequest, LeaveRequest } from '@/types/leave'
 import { isPendingLeave, normalizeLeaveStatus } from '@/lib/leaveStatus'
@@ -10,6 +10,8 @@ import LeaveCreateModal from '@/components/leaves/LeaveCreateModal.vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import DataTable from '@/components/ui/DataTable.vue'
+import { Card, CardContent } from '@/components/ui/card'
+import PageHeader from '@/components/ui/PageHeader.vue'
 import { toast } from 'vue-sonner'
 
 const filterStatus = ref('')
@@ -43,9 +45,9 @@ const filteredLeaves = computed(() => {
 })
 
 const stats = computed(() => [
-    { label: 'Chờ duyệt', value: leaves.value.filter(i => isPendingLeave(i.status)).length },
-    { label: 'Đã duyệt', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'approved').length },
-    { label: 'Từ chối', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'rejected').length },
+    { label: 'Chờ duyệt', value: leaves.value.filter(i => isPendingLeave(i.status)).length, icon: Clock },
+    { label: 'Đã duyệt', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'approved').length, icon: CheckCircle2 },
+    { label: 'Từ chối', value: leaves.value.filter(i => normalizeLeaveStatus(i.status) === 'rejected').length, icon: XCircle },
 ])
 
 const columns = [
@@ -87,24 +89,35 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header - Matching Portal Style -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100/50 pb-4">
-      <div>
-        <h1 class="text-lg sm:text-2xl font-black text-indigo-950 leading-none italic uppercase tracking-tight">Quản lý nghỉ phép</h1>
-        <p class="mt-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Phê duyệt và theo dõi đơn từ nhân viên</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <Button @click="isCreateModalOpen = true" class="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-indigo-100 rounded">
+    <PageHeader
+      title="Quản lý nghỉ phép"
+      description="Phê duyệt và theo dõi đơn từ nhân viên"
+    >
+      <template #actions>
+        <Button @click="isCreateModalOpen = true" class="h-9 px-4 bg-primary hover:bg-primary/90 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20 rounded">
           <Plus class="h-3.5 w-3.5" /> Tạo đơn mới
         </Button>
-      </div>
-    </div>
+      </template>
+    </PageHeader>
 
+    <!-- Statistics Grid - Clean & Minimal -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div v-for="s in stats" :key="s.label" class="p-3 sm:p-5 rounded border border-indigo-100 bg-indigo-50/20 transition-all shadow-none">
-             <p class="text-[9px] font-black uppercase tracking-widest text-indigo-400 opacity-80">{{ s.label }}</p>
-             <p class="text-2xl sm:text-3xl font-black mt-2 tabular-nums text-indigo-900 leading-none">{{ s.value }}</p>
+      <Card v-for="stat in stats" :key="stat.label" 
+        class="border-border shadow-none p-4 sm:p-5 hover:bg-muted transition-all group rounded bg-card">
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ stat.label }}</span>
+            <div class="h-7 w-7 rounded bg-muted flex items-center justify-center text-slate-400 border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
+                <component :is="stat.icon" class="h-3.5 w-3.5" />
+            </div>
+          </div>
+          <div class="mt-3">
+            <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums leading-none group-hover:text-primary transition-colors">
+              {{ stat.value }}
+            </span>
+          </div>
         </div>
+      </Card>
     </div>
 
     <SearchToolbar v-model="search" placeholder="Tìm theo tên hoặc mã nhân viên...">
