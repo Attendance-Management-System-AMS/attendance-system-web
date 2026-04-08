@@ -33,7 +33,7 @@ const changeColorClass = computed(() => {
 
 <template>
   <div
-    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow dark:border-slate-800 dark:bg-slate-900"
+    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow dark:border-slate-800 dark:bg-slate-900"
   >
     <div class="mb-3 flex items-center justify-between">
       <SkeletonLoader v-if="loading" width="60%" height="10px" rounded="full" />

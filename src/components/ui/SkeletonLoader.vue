@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
   height: '1rem',
   circle: false,
   rounded: 'md',
-  className: ''
+  className: '',
 })
 
 const roundedClasses = {
@@ -20,8 +20,8 @@ const roundedClasses = {
   md: 'rounded-md',
   lg: 'rounded-lg',
   xl: 'rounded-xl',
-  '2xl': 'rounded-2xl',
-  full: 'rounded-full'
+  '2xl': 'rounded-xl',
+  full: 'rounded-full',
 }
 </script>
 
@@ -30,7 +30,7 @@ const roundedClasses = {
     :class="[
       'relative overflow-hidden bg-slate-100 dark:bg-slate-800',
       props.circle ? 'rounded-full' : roundedClasses[props.rounded],
-      props.className
+      props.className,
     ]"
     :style="{ width: props.width, height: props.height }"
   >

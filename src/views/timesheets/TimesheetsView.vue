@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import PageHeader from '@/components/ui/PageHeader.vue'
 import { computed, ref } from 'vue'
 import { Check, X, Plus } from 'lucide-vue-next'
 import { useLeaves } from '@/composables/useLeaves'
@@ -88,13 +87,18 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
 <template>
   <div class="space-y-6">
-    <PageHeader title="Nghỉ phép" description="Quản lý và xét duyệt các đơn nghỉ phép">
-      <template #actions>
-        <Button @click="isCreateModalOpen = true" class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
-          <Plus class="h-4 w-4" /> Tạo đơn mới
+    <!-- Header - Matching Portal Style -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100/50 pb-4">
+      <div>
+        <h1 class="text-lg sm:text-2xl font-black text-indigo-950 leading-none italic uppercase tracking-tight">Quản lý nghỉ phép</h1>
+        <p class="mt-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Phê duyệt và theo dõi đơn từ nhân viên</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <Button @click="isCreateModalOpen = true" class="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 font-black uppercase text-[10px] tracking-widest gap-2 shadow-lg shadow-indigo-100 rounded">
+          <Plus class="h-3.5 w-3.5" /> Tạo đơn mới
         </Button>
-      </template>
-    </PageHeader>
+      </div>
+    </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div v-for="s in stats" :key="s.label" class="p-3 sm:p-5 rounded border border-indigo-100 bg-indigo-50/20 transition-all shadow-none">

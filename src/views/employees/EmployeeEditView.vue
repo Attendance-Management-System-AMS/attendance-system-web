@@ -127,7 +127,12 @@ const handleSubmit = async () => {
             </div>
             <div>
               <label :class="labelClass">Mã nhân viên</label>
-              <input v-model="form.empCode" type="text" :class="inputClass + ' font-mono'" readonly />
+              <input
+                v-model="form.empCode"
+                type="text"
+                :class="inputClass + ' font-mono'"
+                readonly
+              />
             </div>
             <div>
               <label :class="labelClass">Số CCCD</label>
@@ -188,10 +193,16 @@ const handleSubmit = async () => {
                 <option v-for="r in roles" :key="r.value" :value="r.value">{{ r.label }}</option>
               </select>
             </div>
-            <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+            <div
+              class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
+            >
               <div>
-                <p class="text-sm font-medium text-slate-900 dark:text-white">Trạng thái tài khoản</p>
-                <p class="text-xs text-slate-400">{{ form.isActive ? 'Đang hoạt động' : 'Đã vô hiệu' }}</p>
+                <p class="text-sm font-medium text-slate-900 dark:text-white">
+                  Trạng thái tài khoản
+                </p>
+                <p class="text-xs text-slate-400">
+                  {{ form.isActive ? 'Đang hoạt động' : 'Đã vô hiệu' }}
+                </p>
               </div>
               <button
                 type="button"
@@ -213,13 +224,17 @@ const handleSubmit = async () => {
         </FormCard>
 
         <!-- Action buttons -->
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
+        <div
+          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3"
+        >
           <button
             @click="handleSubmit"
             :disabled="updateEmployee.isPending.value"
             :class="[
               'flex w-full items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-colors dark:shadow-none',
-              updateEmployee.isPending.value ? 'bg-emerald-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700',
+              updateEmployee.isPending.value
+                ? 'bg-emerald-300 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-700',
             ]"
           >
             <RefreshCw class="h-4 w-4" />

@@ -215,7 +215,7 @@ Select dropdown với nhãn "Tất cả [X]" là giá trị mặc định.
 ### `DataTable.vue`
 
 Props: `columns`, `rows`
-Style: `rounded-2xl overflow-hidden border-slate-200`, header `bg-slate-50/50 text-[11px] font-bold uppercase text-slate-400`, row hover `hover:bg-slate-50/50 transition-colors`
+Style: `rounded-xl overflow-hidden border-slate-200`, header `bg-slate-50/50 text-[11px] font-bold uppercase text-slate-400`, row hover `hover:bg-slate-50/50 transition-colors`
 
 ### `StatusBadge.vue`
 
@@ -234,7 +234,7 @@ Style: `max-w-[425px] rounded-xl`, icon `AlertTriangle bg-rose-50`, nút xóa `b
 ### `FormCard.vue`
 
 Wrapper cho section trong form. Props: `title`, `icon`.
-Style: `rounded-2xl border border-slate-200 bg-white p-6 shadow-sm`
+Style: `rounded-xl border border-slate-200 bg-white p-6 shadow-sm`
 
 ---
 
@@ -242,7 +242,7 @@ Style: `rounded-2xl border border-slate-200 bg-white p-6 shadow-sm`
 
 | Mục đích                  | Class                         |
 | ------------------------- | ----------------------------- |
-| Card border-radius        | `rounded-2xl`                 |
+| Card border-radius        | `rounded-xl`                  |
 | Dialog/Dropdown radius    | `rounded-xl`                  |
 | Icon button radius        | `rounded-full`                |
 | Input radius              | `rounded-xl`                  |
@@ -368,7 +368,7 @@ export default {
 ## 📌 YÊU CẦU BẮT BUỘC
 
 1. **Không dùng class màu generic** như `blue`, `green`, `red` thuần — chỉ dùng `indigo`, `emerald`, `amber`, `rose`, `slate`.
-2. **Mỗi card lớn** phải có `rounded-2xl border border-slate-200 shadow-sm`.
+2. **Mỗi card lớn** phải có `rounded-xl border border-slate-200 shadow-sm`.
 3. **Mỗi element tương tác** phải có `transition-colors` và `hover:bg-*`.
 4. **Form trang New/Edit** phải chia 2 cột: `grid-cols-3`, cột trái `col-span-2` là form chính, cột phải `col-span-1` là action sidebar.
 5. **Xóa dữ liệu** phải qua [DeleteConfirmDialog](file:///d:/K22-DATN/warehouse-management/warehouse-management-frontend/src/components/features/DeleteConfirmDialog.tsx#23-73) xác nhận — không xóa trực tiếp.
@@ -387,7 +387,7 @@ export default {
 ```vue
 <template>
   <div
-    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
   >
     <div class="mb-2 flex items-center justify-between">
       <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ label }}</span>

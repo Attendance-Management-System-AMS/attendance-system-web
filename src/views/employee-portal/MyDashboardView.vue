@@ -123,7 +123,7 @@ const monthSummary = {
         <Card class="border-border shadow-none p-3 sm:p-6 rounded-md sm:rounded-xl">
           <div class="flex items-center gap-4">
             <div
-              class="h-9 w-9 sm:h-14 sm:w-14 shrink-0 rounded sm:rounded-2xl bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center text-amber-500 border border-amber-100 dark:border-amber-900/50 shadow-sm"
+              class="h-9 w-9 sm:h-14 sm:w-14 shrink-0 rounded sm:rounded-xl bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center text-amber-500 border border-amber-100 dark:border-amber-900/50 shadow-sm"
             >
               <Star class="h-4 w-4 sm:h-7 sm:w-7" />
             </div>

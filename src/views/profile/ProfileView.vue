@@ -48,7 +48,7 @@ const notifyPush = ref(false)
     <div class="grid gap-6 lg:grid-cols-3">
       <div class="lg:col-span-1 space-y-4">
         <div
-          class="rounded-2xl border border-slate-200 bg-linear-to-b from-white to-indigo-50/40 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-indigo-950/30"
+          class="rounded-xl border border-slate-200 bg-linear-to-b from-white to-indigo-50/40 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-indigo-950/30"
         >
           <div class="flex flex-col items-center text-center">
             <div class="relative">
@@ -83,7 +83,7 @@ const notifyPush = ref(false)
         </div>
 
         <div
-          class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Liên hệ nhanh</h3>
           <ul class="mt-3 space-y-3 text-sm">

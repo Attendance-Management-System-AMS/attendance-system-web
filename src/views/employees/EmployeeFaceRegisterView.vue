@@ -164,7 +164,7 @@ onUnmounted(() => {
 
     <div
       v-if="employeeQuery.isLoading.value"
-      class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900"
+      class="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900"
     >
       <div class="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
       Đang tải thông tin nhân viên...
@@ -172,7 +172,7 @@ onUnmounted(() => {
 
     <div
       v-else-if="employeeQuery.isError.value || !employee"
-      class="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
+      class="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
     >
       Không tìm thấy nhân viên.
     </div>
@@ -272,7 +272,7 @@ onUnmounted(() => {
         <!-- Cột phải -->
         <div class="flex flex-col gap-5 lg:col-span-5 xl:col-span-4">
           <div
-            class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
             :class="
               effectiveFaceRegistered
                 ? 'border-emerald-200/80 ring-1 ring-emerald-100 dark:border-emerald-900/40 dark:ring-emerald-900/30'
