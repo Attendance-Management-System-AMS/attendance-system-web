@@ -6,7 +6,7 @@ import { Home, SearchX } from 'lucide-vue-next'
 <template>
   <div class="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16">
     <div
-      class="relative mb-8 flex h-28 w-28 items-center justify-center rounded-3xl bg-linear-to-br from-indigo-500 via-violet-500 to-teal-400 shadow-xl shadow-indigo-500/25"
+      class="relative mb-8 flex h-28 w-28 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-indigo-600 to-indigo-700 shadow-xl shadow-indigo-500/25"
     >
       <SearchX class="h-14 w-14 text-white" />
       <span

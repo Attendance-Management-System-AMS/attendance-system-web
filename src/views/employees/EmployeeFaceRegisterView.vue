@@ -218,7 +218,7 @@ onUnmounted(() => {
         <!-- Camera -->
         <div class="lg:col-span-7 xl:col-span-8">
           <div
-            class="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-linear-to-b from-slate-900 to-slate-950 shadow-xl ring-1 ring-black/5 dark:border-slate-700/80"
+            class="relative overflow-hidden rounded-xl border border-slate-200/90 bg-linear-to-b from-slate-900 to-slate-950 shadow-xl ring-1 ring-black/5 dark:border-slate-700/80"
             :class="
               ui.feedback.status === 'success'
                 ? 'ring-2 ring-emerald-500/60 shadow-emerald-500/10'
@@ -255,7 +255,7 @@ onUnmounted(() => {
                 class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent px-4 pb-5 pt-16 sm:px-6"
               >
                 <div
-                  class="flex gap-3 rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md"
+                  class="flex gap-3 rounded-xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md"
                 >
                   <ScanFace class="mt-0.5 h-5 w-5 shrink-0 text-indigo-300" />
                   <p class="leading-relaxed">

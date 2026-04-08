@@ -79,7 +79,7 @@ const applyTheme = (t: 'light' | 'dark' | 'system') => {
             :class="[
               'flex flex-col items-center gap-2 rounded-xl border p-3 text-xs font-medium transition-colors',
               theme === 'system'
-                ? 'border-teal-400 bg-teal-50 text-teal-900 dark:bg-teal-950/40 dark:text-teal-200'
+                ? 'border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200'
                 : 'border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800',
             ]"
           >

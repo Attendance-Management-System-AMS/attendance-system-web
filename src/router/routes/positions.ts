@@ -5,18 +5,18 @@ export default [
     path: '/positions',
     name: 'positions',
     component: () => import('@/views/positions/PositionsView.vue'),
-    meta: { title: 'Chức vụ' },
+    meta: { title: 'Chức vụ', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
   },
   {
     path: '/positions/new',
     name: 'positions-new',
     component: () => import('@/views/positions/PositionNewView.vue'),
-    meta: { title: 'Thêm chức vụ' },
+    meta: { title: 'Thêm chức vụ', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
   },
   {
     path: '/positions/:id/edit',
     name: 'positions-edit',
     component: () => import('@/views/positions/PositionEditView.vue'),
-    meta: { title: 'Sửa chức vụ' },
+    meta: { title: 'Sửa chức vụ', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
   },
 ] as RouteRecordRaw[]

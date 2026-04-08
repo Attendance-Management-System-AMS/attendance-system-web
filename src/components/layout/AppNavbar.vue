@@ -13,13 +13,36 @@ import {
 } from 'lucide-vue-next'
 import { onClickOutside } from '@vueuse/core'
 import { clearAuthToken } from '@/lib/auth'
+import { useAuth } from '@/composables/useAuth'
 
 const emit = defineEmits<{
   (e: 'toggleSidebar'): void
 }>()
 
+const { user, setUser } = useAuth()
 const route = useRoute()
 const router = useRouter()
+
+const userDisplayName = computed(() => user.value?.fullName || 'Người dùng')
+const userEmail = computed(() => user.value?.email || '')
+const userInitials = computed(() => {
+  if (!user.value?.fullName) return '??'
+  return user.value.fullName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(-2)
+})
+
+const userRoleLabel = computed(() => {
+  const roles = user.value?.roles ?? []
+  if (roles.includes('ROLE_ADMIN')) return 'Quản trị viên'
+  if (roles.includes('ROLE_HR')) return 'Nhân sự'
+  if (roles.includes('ROLE_MANAGER')) return 'Quản lý'
+  if (roles.includes('ROLE_EMPLOYEE')) return 'Nhân viên'
+  return 'Khách'
+})
 const searchQuery = ref('')
 const isProfileOpen = ref(false)
 const profileRef = ref<HTMLElement | null>(null)
@@ -63,6 +86,7 @@ const menuItems = [
 ]
 
 const handleLogout = () => {
+  setUser(null)
   clearAuthToken()
   isProfileOpen.value = false
   router.push('/login')
@@ -131,9 +155,9 @@ const handleLogout = () => {
         <button @click="isProfileOpen = !isProfileOpen"
           class="flex items-center gap-2 rounded-xl px-2.5 py-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors">
           <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-            AD
+            {{ userInitials }}
           </div>
-          <span class="hidden md:block text-sm font-medium">Admin</span>
+          <span class="hidden md:block text-sm font-medium">{{ userDisplayName }}</span>
           <ChevronDown :class="['h-4 w-4 transition-transform duration-200', isProfileOpen && 'rotate-180']" />
         </button>
 
@@ -149,11 +173,14 @@ const handleLogout = () => {
               <div class="flex items-center gap-3">
                 <div
                   class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white text-sm font-bold">
-                  AD
+                  {{ userInitials }}
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-slate-900 dark:text-white">Admin System</p>
-                  <p class="text-xs text-slate-500">admin@timemaster.vn</p>
+                  <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ userDisplayName }}</p>
+                  <p class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400" v-if="user?.positionName || user?.departmentName">
+                    {{ user?.positionName }}{{ user?.departmentName ? ' • ' + user?.departmentName : '' }}
+                  </p>
+                  <p class="text-[10px] text-slate-500">{{ userRoleLabel }} • {{ userEmail }}</p>
                 </div>
               </div>
             </div>

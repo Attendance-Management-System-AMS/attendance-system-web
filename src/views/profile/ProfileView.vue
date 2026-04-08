@@ -1,8 +1,34 @@
 <script setup lang="ts">
 import FormCard from '@/components/ui/FormCard.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Bell, Camera, Mail, Phone, Shield, User } from 'lucide-vue-next'
+import { useAuth } from '@/composables/useAuth'
+
+const { user } = useAuth()
+
+const displayName = computed(() => user.value?.fullName || 'Người dùng')
+const email = computed(() => user.value?.email || '')
+const employeeCode = computed(() => user.value?.username?.toUpperCase() || 'NV000')
+const initials = computed(() => {
+  if (!user.value?.fullName) return '??'
+  return user.value.fullName
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(-2)
+})
+
+const roleLabel = computed(() => {
+  const roles = user.value?.roles ?? []
+  if (roles.includes('ROLE_ADMIN')) return 'Quản trị viên'
+  if (roles.includes('ROLE_HR')) return 'Nhân sự'
+  if (roles.includes('ROLE_MANAGER')) return 'Quản lý'
+  if (roles.includes('ROLE_EMPLOYEE')) return 'Nhân viên'
+  return 'Người dùng'
+})
 
 const inputClass =
   'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
@@ -27,21 +53,20 @@ const notifyPush = ref(false)
           <div class="flex flex-col items-center text-center">
             <div class="relative">
               <div
-                class="flex h-24 w-24 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-bold text-white shadow-lg shadow-indigo-500/30"
+                class="flex h-24 w-24 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-700 text-2xl font-bold text-white shadow-lg shadow-indigo-500/30"
               >
-                AD
+                {{ initials }}
               </div>
               <button
                 type="button"
                 class="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-xl border border-white bg-white text-slate-600 shadow-md hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 title="Đổi ảnh đại diện"
-                bg-linear-to-br
               >
                 <Camera class="h-4 w-4" />
               </button>
             </div>
-            <h2 class="mt-4 text-lg font-bold text-slate-900 dark:text-white">Admin System</h2>
-            <p class="text-sm text-slate-500">Quản trị viên · TimeMaster</p>
+            <h2 class="mt-4 text-lg font-bold text-slate-900 dark:text-white">{{ displayName }}</h2>
+            <p class="text-sm text-slate-500">{{ roleLabel }} · TimeMaster</p>
             <div class="mt-4 flex flex-wrap justify-center gap-2">
               <span
                 class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
@@ -49,7 +74,7 @@ const notifyPush = ref(false)
                 Đang hoạt động
               </span>
               <span
-                class="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800 dark:bg-violet-900/50 dark:text-violet-300"
+                class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300"
               >
                 MFA đã bật
               </span>
@@ -64,11 +89,11 @@ const notifyPush = ref(false)
           <ul class="mt-3 space-y-3 text-sm">
             <li class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
               <Mail class="h-4 w-4 shrink-0 text-indigo-500" />
-              admin@timemaster.vn
+              {{ email }}
             </li>
             <li class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-              <Phone class="h-4 w-4 shrink-0 text-teal-500" />
-              +84 90 000 0000
+              <Phone class="h-4 w-4 shrink-0 text-indigo-500" />
+              Chưa cập nhật SĐT
             </li>
           </ul>
         </div>
@@ -79,15 +104,20 @@ const notifyPush = ref(false)
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
               <label :class="labelClass">Họ và tên</label>
-              <input type="text" value="Admin System" :class="inputClass" />
+              <input type="text" :value="displayName" :class="inputClass" />
             </div>
             <div>
               <label :class="labelClass">Email đăng nhập</label>
-              <input type="email" value="admin@timemaster.vn" :class="inputClass" />
+              <input type="email" :value="email" :class="inputClass" />
             </div>
             <div>
               <label :class="labelClass">Mã nhân viên</label>
-              <input type="text" value="ADM001" :class="inputClass + ' font-mono'" readonly />
+              <input
+                type="text"
+                :value="employeeCode"
+                :class="inputClass + ' font-mono'"
+                readonly
+              />
             </div>
           </div>
         </FormCard>

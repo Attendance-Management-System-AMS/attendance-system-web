@@ -40,13 +40,13 @@ const emit = defineEmits<{
         >
           <div
             v-if="props.open"
-            class="relative w-full max-w-[425px] rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 dark:bg-slate-900 dark:border-slate-800"
+            class="relative w-full max-w-[425px] rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 dark:bg-slate-900 dark:border-slate-800"
           >
             <!-- Header -->
             <div class="p-6 pb-0">
               <div class="flex items-start gap-4">
                 <div
-                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950"
+                  class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950"
                 >
                   <AlertTriangle class="h-6 w-6 text-rose-600" />
                 </div>
@@ -62,9 +62,7 @@ const emit = defineEmits<{
                 v-if="itemName"
                 class="mt-4 rounded-xl border border-rose-100 bg-rose-50/50 px-4 py-3 dark:border-rose-900 dark:bg-rose-950/50"
               >
-                <p class="text-sm font-medium text-rose-700 dark:text-rose-400">
-                  "{{ itemName }}"
-                </p>
+                <p class="text-sm font-medium text-rose-700 dark:text-rose-400">"{{ itemName }}"</p>
               </div>
 
               <p class="mt-4 text-xs text-slate-400">

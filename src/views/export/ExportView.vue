@@ -96,7 +96,7 @@ const handleExport = () => {
       </div>
 
       <div
-        class="h-fit rounded-2xl border border-slate-200 bg-linear-to-b from-violet-50/80 to-white p-6 shadow-sm dark:border-slate-800 dark:from-violet-950/30 dark:to-slate-900"
+        class="h-fit rounded-xl border border-slate-200 bg-linear-to-b from-indigo-50/80 to-white p-6 shadow-sm dark:border-slate-800 dark:from-indigo-950/30 dark:to-slate-900"
       >
         <h3 class="text-sm font-bold text-slate-900 dark:text-white">Tóm tắt xuất</h3>
         <ul class="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-400">
@@ -110,7 +110,7 @@ const handleExport = () => {
         <button
           type="button"
           @click="handleExport"
-          class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:bg-violet-700"
+          class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700"
         >
           <Download class="h-4 w-4" />
           Tạo & tải xuống

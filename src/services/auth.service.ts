@@ -1,5 +1,6 @@
 import authHttp from '@/lib/auth-http'
 import type { ApiResponse } from '@/types/api'
+import type { UserProfile } from '@/composables/useAuth'
 
 export interface LoginRequest {
     email: string
@@ -11,6 +12,7 @@ export interface LoginResult {
     token?: string
     accessToken?: string
     jwt?: string
+    user?: UserProfile
 }
 
 export type RefreshResult = LoginResult
@@ -29,4 +31,6 @@ export const authApi = {
         }).then((res) => res.data),
     refresh: () =>
         authHttp.post<ApiResponse<RefreshResult>>('/auth/refresh').then((res) => res.data),
+    getProfile: () =>
+        authHttp.get<ApiResponse<UserProfile>>('/auth/me').then((res) => res.data),
 }

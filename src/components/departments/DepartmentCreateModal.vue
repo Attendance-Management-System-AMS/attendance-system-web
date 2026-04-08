@@ -34,9 +34,6 @@ const handleSubmit = async () => {
     error.value = null
 
     try {
-        // Thay bằng API call thực tế
-        // await api.post('/departments', { name: name.value, description: description.value })
-        console.log('Tạo phòng ban:', { name: name.value, description: description.value })
         emit('created', { name: name.value, description: description.value })
 
         resetForm()

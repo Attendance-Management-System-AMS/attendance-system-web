@@ -10,6 +10,8 @@ import {
     UserX,
 } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
+import StatCard from '@/components/ui/StatCard.vue'
+import StatusBadge from '@/components/ui/StatusBadge.vue'
 
 // Live clock
 const now = ref(new Date())

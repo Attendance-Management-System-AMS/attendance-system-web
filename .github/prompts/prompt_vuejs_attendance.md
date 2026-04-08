@@ -33,29 +33,31 @@ Toàn bộ giao diện phải tuân theo **Design System** được mô tả chi
 
 ### Màu sắc Chủ đạo
 
-| Vai trò | Tailwind class | Ý nghĩa |
-|---|---|---|
-| Primary | `indigo-600` | Navbar, nút CTA, icon active, điểm nhấn |
-| Primary Light | `indigo-50` | Background item active, highlight |
-| App Background | `bg-[#F8FAFC]` | Nền toàn bộ vùng content |
-| Sidebar | `bg-white` | Nền sidebar trái |
-| Card | `bg-white border border-slate-200` | Các khối thông tin |
-| Text Primary | `text-slate-900` | Tiêu đề, nội dung chính |
-| Text Secondary | `text-slate-500` | Mô tả, nhãn phụ |
-| Text Muted | `text-slate-400` | Gợi ý, placeholder |
+| Vai trò        | Tailwind class                     | Ý nghĩa                                 |
+| -------------- | ---------------------------------- | --------------------------------------- |
+| Primary        | `indigo-600`                       | Navbar, nút CTA, icon active, điểm nhấn |
+| Primary Light  | `indigo-50`                        | Background item active, highlight       |
+| App Background | `bg-[#F8FAFC]`                     | Nền toàn bộ vùng content                |
+| Sidebar        | `bg-white`                         | Nền sidebar trái                        |
+| Card           | `bg-white border border-slate-200` | Các khối thông tin                      |
+| Text Primary   | `text-slate-900`                   | Tiêu đề, nội dung chính                 |
+| Text Secondary | `text-slate-500`                   | Mô tả, nhãn phụ                         |
+| Text Muted     | `text-slate-400`                   | Gợi ý, placeholder                      |
 
 ### Màu Trạng Thái (Status)
 
-| Trạng thái | Background | Text | Dùng cho |
-|---|---|---|---|
-| Đúng giờ / Có mặt | `bg-emerald-50` | `text-emerald-600` | Check-in đúng giờ |
-| Đi trễ | `bg-amber-50` | `text-amber-600` | Trễ giờ, cần chú ý |
-| Vắng mặt / Nghỉ | `bg-rose-50` | `text-rose-600` | Vắng mặt, xóa |
-| Đang làm việc | `bg-indigo-50` | `text-indigo-600` | Đang trong ca |
-| Nghỉ phép | `bg-slate-100` | `text-slate-500` | Nghỉ có phép |
+| Trạng thái        | Background      | Text               | Dùng cho           |
+| ----------------- | --------------- | ------------------ | ------------------ |
+| Đúng giờ / Có mặt | `bg-emerald-50` | `text-emerald-600` | Check-in đúng giờ  |
+| Đi trễ            | `bg-amber-50`   | `text-amber-600`   | Trễ giờ, cần chú ý |
+| Vắng mặt / Nghỉ   | `bg-rose-50`    | `text-rose-600`    | Vắng mặt, xóa      |
+| Đang làm việc     | `bg-indigo-50`  | `text-indigo-600`  | Đang trong ca      |
+| Nghỉ phép         | `bg-slate-100`  | `text-slate-500`   | Nghỉ có phép       |
 
 ### Dark Mode
+
 Mỗi màu nền và viền đều phải có cặp `dark:*`:
+
 - Card: `dark:bg-slate-900 dark:border-slate-800`
 - Sidebar: `dark:bg-slate-950`
 - Navbar: `dark:bg-indigo-950`
@@ -84,6 +86,7 @@ Mỗi màu nền và viền đều phải có cặp `dark:*`:
 ```
 
 ### Chi tiết Sidebar
+
 - Width: `w-[240px]`, collapsible thành icon khi click rail `w-[56px]`
 - Logo: Icon `Clock` nền `indigo-600 rounded-xl`, text "TimeMaster" + "AMS Pro"
 - Online chip: Badge nhỏ "Hệ thống · Online" màu `emerald`
@@ -96,6 +99,7 @@ Mỗi màu nền và viền đều phải có cặp `dark:*`:
 - Footer: Card profile người dùng nhỏ (tên + chức vụ)
 
 ### Chi tiết Navbar
+
 - `h-16 bg-indigo-600 sticky top-0 z-40 text-white`
 - Trái: Hamburger toggle + Breadcrumb (`Home / Module / Page`) + Global Search (`rounded-full bg-white/10`)
 - Phải: Chip announcement + 🔔 Bell (dot đỏ pulse) + `|` divider + Avatar dropdown
@@ -106,20 +110,24 @@ Mỗi màu nền và viền đều phải có cặp `dark:*`:
 ## 📄 DANH SÁCH CÁC TRANG CẦN XÂY DỰNG
 
 ### 1. `/dashboard` — Tổng quan chấm công
+
 **Layout:** PageHeader → 4 StatCards → 2 cột (Bảng chấm công hôm nay | Biểu đồ tuần)
 
 StatCards:
+
 - Tổng nhân viên (icon: `Users`)
 - Có mặt hôm nay (icon: `CheckCircle2`, màu emerald)
 - Đi trễ (icon: `Clock`, màu amber)
 - Vắng mặt (icon: `UserX`, màu rose)
 
 ### 2. `/attendance` — Chấm công hôm nay
+
 **Layout:** PageHeader (nút "Chấm công nhanh") → SearchToolbar + Filter (Phòng ban, Ca, Trạng thái) → DataTable
 
 Cột bảng: Nhân viên & Phòng ban | Ca làm việc | Giờ vào | Giờ ra | Làm thêm | Trạng thái | Hành động
 
 Trạng thái badge:
+
 - "Đúng giờ" — `emerald`
 - "Đi trễ X phút" — `amber`
 - "Vắng mặt" — `rose`
@@ -127,11 +135,13 @@ Trạng thái badge:
 - "Nghỉ phép" — `slate`
 
 ### 3. `/employees` — Danh sách nhân viên
+
 **Layout:** PageHeader (nút "Thêm nhân viên" → link `/employees/new`) → SearchToolbar + Filter (Phòng ban, Ca) → DataTable hoặc Card Grid
 
 Card nhân viên gồm: Avatar + Tên + Mã NV + Phòng ban + Ca + Trạng thái + Dropdown action
 
 ### 4. `/employees/new` — Thêm nhân viên mới
+
 **Layout:** Grid 2/3 — 1/3
 
 - Cột trái (2 col): Card "Thông tin cá nhân" (Họ tên, Mã NV, CCCD, SĐT, Email, Địa chỉ), Card "Thông tin công việc" (Phòng ban, Chức vụ, Ca làm việc, Ngày vào làm)
@@ -139,22 +149,27 @@ Card nhân viên gồm: Avatar + Tên + Mã NV + Phòng ban + Ca + Trạng thái
 - Nút Lưu: `bg-indigo-600 shadow-lg shadow-indigo-200 w-full`
 
 ### 5. `/employees/:id/edit` — Chỉnh sửa nhân viên
+
 Giống `/employees/new` nhưng có dữ liệu điền sẵn. Nút action là `bg-emerald-600 "Cập nhật thay đổi"`.
 
 ### 6. `/departments` — Phòng ban
+
 **Layout:** PageHeader + Bảng phòng ban với: Tên PB | Trưởng PB | Số nhân viên | Ca mặc định | Trạng thái | Hành động (Edit/Delete)
 
 ### 7. `/shifts` — Ca làm việc
+
 **Layout:** Dạng Card Grid `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
 
 Mỗi card ca: Tên ca + Giờ bắt đầu → Giờ kết thúc + Cho phép trễ X phút + Số nhân viên đang áp dụng + Badge trạng thái + Dropdown action
 
 ### 8. `/timesheets` — Bảng công
+
 **Layout:** PageHeader (nút Export) → Bộ lọc tháng/phòng ban → Bảng tổng hợp công
 
 Bảng: Nhân viên | Ngày công chuẩn | Thực tế | Nghỉ phép | Vắng | Làm thêm | Tỷ lệ %
 
 ### 9. `/reports` — Báo cáo & Phân tích
+
 Trang thống kê với biểu đồ dạng đơn giản (CSS bar chart) + bảng tổng hợp
 
 ---
@@ -162,12 +177,15 @@ Trang thống kê với biểu đồ dạng đơn giản (CSS bar chart) + bản
 ## 🧩 COMPONENTS CẦN TẠO
 
 ### `AppSidebar.vue`
+
 Sidebar collapsible với navigation groups, active state, sub-items, user card footer.
 
 ### `AppNavbar.vue`
+
 Navbar indigo với breadcrumb tự động từ route, global search, bell notification, user avatar dropdown.
 
 ### `PageHeader.vue`
+
 ```vue
 <PageHeader title="..." description="...">
   <template #actions>
@@ -175,37 +193,46 @@ Navbar indigo với breadcrumb tự động từ route, global search, bell noti
   </template>
 </PageHeader>
 ```
+
 `h1 text-2xl font-bold tracking-tight text-slate-900` cho title.
 
 ### `StatCard.vue`
+
 Props: `label`, `value`, `change`, `icon`, `color`
 Hiển thị KPI widget với icon màu, giá trị nổi bật, badge thay đổi.
 
 ### `SearchToolbar.vue`
+
 Props: `placeholder`, `modelValue`
 Slot: `#filters` để chèn FilterSelect
 Input search full-width: `rounded-xl border-slate-200 bg-slate-50`
 
 ### `FilterSelect.vue`
+
 Props: `label`, `options`, `modelValue`
 Select dropdown với nhãn "Tất cả [X]" là giá trị mặc định.
 
 ### `DataTable.vue`
+
 Props: `columns`, `rows`
 Style: `rounded-2xl overflow-hidden border-slate-200`, header `bg-slate-50/50 text-[11px] font-bold uppercase text-slate-400`, row hover `hover:bg-slate-50/50 transition-colors`
 
 ### `StatusBadge.vue`
+
 Props: `status: 'present' | 'late' | 'absent' | 'working' | 'leave'`
 Render `inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold` với màu tương ứng.
 
 ### `ActionDropdown.vue`
+
 Dropdown 3 chấm (`MoreHorizontal`) với menu: Xem chi tiết, Chỉnh sửa (router-link), Xóa (EmitEvent).
 
 ### `DeleteConfirmDialog.vue`
+
 Modal xác nhận xóa: Props `title`, `description`, `itemName`, emit `confirm`/`cancel`.
-Style: `max-w-[425px] rounded-2xl`, icon `AlertTriangle bg-rose-50`, nút xóa `bg-rose-600 shadow-lg shadow-rose-200`.
+Style: `max-w-[425px] rounded-xl`, icon `AlertTriangle bg-rose-50`, nút xóa `bg-rose-600 shadow-lg shadow-rose-200`.
 
 ### `FormCard.vue`
+
 Wrapper cho section trong form. Props: `title`, `icon`.
 Style: `rounded-2xl border border-slate-200 bg-white p-6 shadow-sm`
 
@@ -213,31 +240,31 @@ Style: `rounded-2xl border border-slate-200 bg-white p-6 shadow-sm`
 
 ## 📏 SPACING & SIZING CHUẨN
 
-| Mục đích | Class |
-|---|---|
-| Card border-radius | `rounded-2xl` |
-| Dialog/Dropdown radius | `rounded-xl` |
-| Icon button radius | `rounded-full` |
-| Input radius | `rounded-xl` |
-| Card padding | `p-6` |
-| Khoảng cách giữa sections | `space-y-6` |
-| Grid gap | `gap-4` |
-| Chiều cao input | `h-10` |
-| Shadow card | `shadow-sm` |
-| Shadow CTA button | `shadow-lg shadow-indigo-200` |
+| Mục đích                  | Class                         |
+| ------------------------- | ----------------------------- |
+| Card border-radius        | `rounded-2xl`                 |
+| Dialog/Dropdown radius    | `rounded-xl`                  |
+| Icon button radius        | `rounded-full`                |
+| Input radius              | `rounded-xl`                  |
+| Card padding              | `p-6`                         |
+| Khoảng cách giữa sections | `space-y-6`                   |
+| Grid gap                  | `gap-4`                       |
+| Chiều cao input           | `h-10`                        |
+| Shadow card               | `shadow-sm`                   |
+| Shadow CTA button         | `shadow-lg shadow-indigo-200` |
 
 ---
 
 ## ✍️ TYPOGRAPHY
 
-| Cấp độ | Class | Dùng cho |
-|---|---|---|
-| H1 — Page title | `text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl` | PageHeader |
-| H3 — Section | `text-sm font-bold uppercase tracking-wider text-slate-900` | Card header |
-| Label form | `text-xs font-bold text-slate-500 uppercase` | Form field label |
-| Body | `text-sm font-medium text-slate-900` | Nội dung bảng |
-| Caption | `text-[11px] font-bold uppercase tracking-wider text-slate-400` | KPI label, header bảng |
-| Mã NV / Code | `font-mono text-sm` | Mã nhân viên |
+| Cấp độ          | Class                                                           | Dùng cho               |
+| --------------- | --------------------------------------------------------------- | ---------------------- |
+| H1 — Page title | `text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl`  | PageHeader             |
+| H3 — Section    | `text-sm font-bold uppercase tracking-wider text-slate-900`     | Card header            |
+| Label form      | `text-xs font-bold text-slate-500 uppercase`                    | Form field label       |
+| Body            | `text-sm font-medium text-slate-900`                            | Nội dung bảng          |
+| Caption         | `text-[11px] font-bold uppercase tracking-wider text-slate-400` | KPI label, header bảng |
+| Mã NV / Code    | `font-mono text-sm`                                             | Mã nhân viên           |
 
 ---
 
@@ -289,6 +316,7 @@ src/
 ## 🔧 HƯỚNG DẪN TRIỂN KHAI
 
 ### Bước 1 — Khởi tạo dự án
+
 ```bash
 npm create vite@latest timemaster-ams -- --template vue-ts
 cd timemaster-ams
@@ -299,13 +327,19 @@ npm install lucide-vue-next vue-router@4 pinia
 ```
 
 ### Bước 2 — Cài Google Fonts Inter
+
 Thêm vào `index.html`:
+
 ```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+  rel="stylesheet"
+/>
 ```
 
 ### Bước 3 — Cấu hình Tailwind (`tailwind.config.js`)
+
 ```js
 export default {
   content: ['./index.html', './src/**/*.{vue,ts,js}'],
@@ -313,13 +347,14 @@ export default {
   theme: {
     extend: {
       fontFamily: { sans: ['Inter', 'sans-serif'] },
-      maxWidth: { '8xl': '88rem' }
-    }
-  }
+      maxWidth: { '8xl': '88rem' },
+    },
+  },
 }
 ```
 
 ### Bước 4 — `App.vue` layout chính
+
 ```vue
 <template>
   <DashboardLayout>
@@ -348,9 +383,12 @@ export default {
 ## 💡 VÍ DỤ COMPONENT MẪU
 
 ### StatCard.vue
+
 ```vue
 <template>
-  <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+  <div
+    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+  >
     <div class="mb-2 flex items-center justify-between">
       <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ label }}</span>
       <span class="text-[10px] font-bold text-emerald-500">{{ change }}</span>
@@ -366,9 +404,13 @@ export default {
 ```
 
 ### StatusBadge.vue
+
 ```vue
 <template>
-  <span :class="badgeClass" class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold">
+  <span
+    :class="badgeClass"
+    class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
+  >
     {{ label }}
   </span>
 </template>
@@ -379,11 +421,11 @@ import { computed } from 'vue'
 const props = defineProps<{ status: 'present' | 'late' | 'absent' | 'working' | 'leave' }>()
 
 const config = {
-  present:  { class: 'bg-emerald-50 text-emerald-600', label: 'Đúng giờ' },
-  late:     { class: 'bg-amber-50 text-amber-600',     label: 'Đi trễ' },
-  absent:   { class: 'bg-rose-50 text-rose-600',       label: 'Vắng mặt' },
-  working:  { class: 'bg-indigo-50 text-indigo-600',   label: 'Đang làm' },
-  leave:    { class: 'bg-slate-100 text-slate-500',    label: 'Nghỉ phép' },
+  present: { class: 'bg-emerald-50 text-emerald-600', label: 'Đúng giờ' },
+  late: { class: 'bg-amber-50 text-amber-600', label: 'Đi trễ' },
+  absent: { class: 'bg-rose-50 text-rose-600', label: 'Vắng mặt' },
+  working: { class: 'bg-indigo-50 text-indigo-600', label: 'Đang làm' },
+  leave: { class: 'bg-slate-100 text-slate-500', label: 'Nghỉ phép' },
 }
 
 const badgeClass = computed(() => config[props.status]?.class)
@@ -399,4 +441,4 @@ Kết quả phải là một **SPA Vue 3** hoàn chỉnh trông **cực kỳ chu
 
 ---
 
-*Hãy bắt đầu bằng việc tạo: `DashboardLayout.vue`, `AppSidebar.vue`, `AppNavbar.vue`, sau đó `DashboardView.vue`. Từng bước một, đảm bảo mỗi component hoàn chỉnh trước khi sang component tiếp theo.*
+_Hãy bắt đầu bằng việc tạo: `DashboardLayout.vue`, `AppSidebar.vue`, `AppNavbar.vue`, sau đó `DashboardView.vue`. Từng bước một, đảm bảo mỗi component hoàn chỉnh trước khi sang component tiếp theo._

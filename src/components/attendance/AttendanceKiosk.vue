@@ -23,10 +23,7 @@ const ui = reactive({
 })
 
 /** Dựng object hiển thị kiosk từ snapshot API — không cần GET /employees/:id. */
-function employeeFromBrief(
-  row: AttendanceCheckInResult,
-  brief: AttendanceEmployeeBrief,
-): Employee {
+function employeeFromBrief(row: AttendanceCheckInResult, brief: AttendanceEmployeeBrief): Employee {
   const id = row.employeeId ?? 0
   return {
     id,
@@ -210,14 +207,14 @@ onUnmounted(() => {
       <div class="absolute inset-0 z-10 p-8 flex flex-col pointer-events-none">
         <div class="flex justify-between items-start w-full">
           <div
-            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-4"
+            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-xl flex items-center gap-4"
           >
-            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
             <h1 class="text-xl font-black tracking-tighter">AMS KIOSK</h1>
           </div>
 
           <div
-            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl text-right"
+            class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-xl text-right"
           >
             <div class="text-3xl font-mono font-black tracking-tighter">{{ time }}</div>
             <div class="text-[10px] text-white/40 font-bold uppercase tracking-widest">
@@ -229,19 +226,19 @@ onUnmounted(() => {
         <div v-if="isLoaded && !ui.locked" class="flex-1 flex items-center justify-center">
           <div class="w-72 h-72 sm:w-80 sm:h-80 relative">
             <div
-              class="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-2xl opacity-50"
+              class="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-indigo-500 rounded-tl-2xl opacity-50"
             ></div>
             <div
-              class="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-2xl opacity-50"
+              class="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-indigo-500 rounded-tr-2xl opacity-50"
             ></div>
             <div
-              class="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-2xl opacity-50"
+              class="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-indigo-500 rounded-bl-2xl opacity-50"
             ></div>
             <div
-              class="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-2xl opacity-50"
+              class="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-indigo-500 rounded-br-2xl opacity-50"
             ></div>
             <div
-              class="absolute inset-x-0 h-0.5 bg-linear-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_20px_#3b82f6] animate-scan"
+              class="absolute inset-x-0 h-0.5 bg-linear-to-r from-transparent via-indigo-400 to-transparent shadow-[0_0_20px_rgba(99,102,241,0.6)] animate-scan"
             ></div>
           </div>
         </div>
@@ -254,7 +251,7 @@ onUnmounted(() => {
           class="absolute top-24 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-6 pointer-events-none"
         >
           <div
-            class="flex items-center justify-center gap-3 rounded-2xl border border-rose-500/40 bg-black/75 px-5 py-4 text-center shadow-2xl backdrop-blur-xl"
+            class="flex items-center justify-center gap-3 rounded-xl border border-rose-500/40 bg-black/75 px-5 py-4 text-center shadow-2xl backdrop-blur-xl"
           >
             <XCircle class="h-6 w-6 shrink-0 text-rose-400" />
             <p class="text-sm font-semibold text-rose-100">{{ ui.errorMsg }}</p>
@@ -269,7 +266,7 @@ onUnmounted(() => {
           class="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-4 pb-6 pt-16 sm:px-8"
         >
           <div
-            class="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-emerald-500/30 bg-linear-to-t from-slate-950/95 via-slate-900/90 to-slate-900/75 shadow-2xl shadow-emerald-900/20 backdrop-blur-xl"
+            class="mx-auto max-w-2xl overflow-hidden rounded-xl border border-emerald-500/30 bg-linear-to-t from-slate-950/95 via-slate-900/90 to-slate-900/75 shadow-2xl shadow-emerald-900/20 backdrop-blur-xl"
           >
             <div
               class="flex items-center gap-2 border-b border-white/10 bg-emerald-500/10 px-5 py-3 text-emerald-300"
@@ -280,7 +277,7 @@ onUnmounted(() => {
 
             <div class="grid gap-4 px-5 py-5 sm:grid-cols-[auto_1fr] sm:items-start">
               <div
-                class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-2xl font-black text-emerald-300"
+                class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-2xl font-black text-emerald-300"
               >
                 <template v-if="successPanel.loadingProfile">
                   <span class="h-8 w-8 animate-pulse rounded-lg bg-white/10" />

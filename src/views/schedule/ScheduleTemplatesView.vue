@@ -60,7 +60,7 @@ const openEditModal = (template: ScheduleTemplate) => {
   editingId.value = template.id
   templateForm.name = template.name
   templateForm.description = template.description || ''
-  
+
   // Map existing items
   templateForm.items = daysOfWeek.map((day) => {
     const existing = template.items.find((item) => item.dayOfWeek === day.value)
@@ -69,7 +69,7 @@ const openEditModal = (template: ScheduleTemplate) => {
       shiftId: existing ? String(existing.shiftId) : '',
     }
   })
-  
+
   isModalOpen.value = true
 }
 
@@ -145,13 +145,13 @@ const getDayLabel = (dayValue: number) => {
 }
 
 const applyToAll = (shiftId: string) => {
-  templateForm.items.forEach(item => {
+  templateForm.items.forEach((item) => {
     item.shiftId = shiftId
   })
 }
 
 const applyToWeekdays = (shiftId: string) => {
-  templateForm.items.forEach(item => {
+  templateForm.items.forEach((item) => {
     if (item.dayOfWeek >= 2 && item.dayOfWeek <= 6) {
       item.shiftId = shiftId
     }
@@ -178,17 +178,27 @@ const applyToWeekdays = (shiftId: string) => {
 
     <div v-if="templatesQuery.isLoading.value" class="flex h-64 items-center justify-center">
       <div class="flex flex-col items-center gap-2">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
+        ></div>
         <p class="text-sm text-slate-500 font-medium">Đang tải danh sách mẫu...</p>
       </div>
     </div>
 
-    <div v-else-if="templates.length === 0" class="flex h-64 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
-      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800">
+    <div
+      v-else-if="templates.length === 0"
+      class="flex h-64 flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50"
+    >
+      <div
+        class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800"
+      >
         <CalendarDays class="h-6 w-6" />
       </div>
       <p class="mt-4 text-sm font-medium text-slate-500">Chưa có mẫu lịch nào được tạo.</p>
-      <button @click="openCreateModal" class="mt-2 text-sm font-bold text-indigo-600 hover:underline">
+      <button
+        @click="openCreateModal"
+        class="mt-2 text-sm font-bold text-indigo-600 hover:underline"
+      >
         Tạo mẫu đầu tiên ngay
       </button>
     </div>
@@ -197,10 +207,12 @@ const applyToWeekdays = (shiftId: string) => {
       <div
         v-for="template in templates"
         :key="template.id"
-        class="group relative flex flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50"
+        class="group relative flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/50"
       >
         <div class="flex items-start justify-between">
-          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30"
+          >
             <Clock class="h-5 w-5" />
           </div>
           <div class="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -223,15 +235,27 @@ const applyToWeekdays = (shiftId: string) => {
 
         <div class="mt-4">
           <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ template.name }}</h3>
-          <p class="mt-1 text-xs text-slate-500 line-clamp-2">{{ template.description || 'Không có mô tả' }}</p>
+          <p class="mt-1 text-xs text-slate-500 line-clamp-2">
+            {{ template.description || 'Không có mô tả' }}
+          </p>
         </div>
 
         <div class="mt-5 space-y-2">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Khung giờ làm việc</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Khung giờ làm việc
+          </p>
           <div class="grid grid-cols-2 gap-x-4 gap-y-1.5">
-            <div v-for="item in [...template.items].sort((a,b) => a.dayOfWeek - b.dayOfWeek)" :key="item.id || item.dayOfWeek" class="flex items-center gap-2">
-              <span class="text-[10px] font-bold text-slate-400 w-8">{{ getDayLabel(item.dayOfWeek) }}:</span>
-              <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{{ getShiftName(item.shiftId || (item as any).shift?.id) }}</span>
+            <div
+              v-for="item in [...template.items].sort((a, b) => a.dayOfWeek - b.dayOfWeek)"
+              :key="item.id || item.dayOfWeek"
+              class="flex items-center gap-2"
+            >
+              <span class="text-[10px] font-bold text-slate-400 w-8"
+                >{{ getDayLabel(item.dayOfWeek) }}:</span
+              >
+              <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{{
+                getShiftName(item.shiftId || (item as any).shift?.id)
+              }}</span>
             </div>
           </div>
         </div>
@@ -249,18 +273,28 @@ const applyToWeekdays = (shiftId: string) => {
         leave-to-class="opacity-0"
       >
         <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="isModalOpen = false"></div>
-          
+          <div
+            class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+            @click="isModalOpen = false"
+          ></div>
+
           <Transition
             enter-active-class="transition duration-200 ease-out"
             enter-from-class="opacity-0 scale-95 translate-y-4"
             enter-to-class="opacity-100 scale-100 translate-y-0"
           >
-            <div v-if="isModalOpen" class="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh]">
+            <div
+              v-if="isModalOpen"
+              class="relative w-full max-w-2xl rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh]"
+            >
               <!-- Header -->
-              <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+              <div
+                class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800"
+              >
                 <div class="flex items-center gap-3">
-                  <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30"
+                  >
                     <Plus v-if="!isEditMode" class="h-5 w-5" />
                     <Edit2 v-else class="h-5 w-5" />
                   </div>
@@ -268,10 +302,15 @@ const applyToWeekdays = (shiftId: string) => {
                     <h3 class="text-lg font-bold text-slate-900 dark:text-white">
                       {{ isEditMode ? 'Chỉnh sửa mẫu lịch' : 'Tạo mẫu lịch làm việc mới' }}
                     </h3>
-                    <p class="text-xs text-slate-500">Định nghĩa lịch chuẩn theo các thứ trong tuần.</p>
+                    <p class="text-xs text-slate-500">
+                      Định nghĩa lịch chuẩn theo các thứ trong tuần.
+                    </p>
                   </div>
                 </div>
-                <button @click="isModalOpen = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <button
+                  @click="isModalOpen = false"
+                  class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
                   <ArrowLeft class="h-5 w-5 rotate-180" />
                 </button>
               </div>
@@ -281,7 +320,9 @@ const applyToWeekdays = (shiftId: string) => {
                 <div class="grid gap-5">
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div class="md:col-span-1 space-y-1.5">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Tên mẫu <span class="text-rose-500">*</span></label>
+                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500"
+                        >Tên mẫu <span class="text-rose-500">*</span></label
+                      >
                       <input
                         v-model="templateForm.name"
                         type="text"
@@ -290,7 +331,9 @@ const applyToWeekdays = (shiftId: string) => {
                       />
                     </div>
                     <div class="md:col-span-2 space-y-1.5">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Mô tả</label>
+                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500"
+                        >Mô tả</label
+                      >
                       <input
                         v-model="templateForm.description"
                         type="text"
@@ -302,16 +345,25 @@ const applyToWeekdays = (shiftId: string) => {
 
                   <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Cấu hình chi tiết các ngày</label>
+                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500"
+                        >Cấu hình chi tiết các ngày</label
+                      >
                       <div class="flex gap-2">
                         <div class="group relative">
-                          <button type="button" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg transition-colors">
+                          <button
+                            type="button"
+                            class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg transition-colors"
+                          >
                             Gán nhanh...
                           </button>
-                          <div class="absolute right-0 top-full mt-1 hidden group-hover:block z-20 w-48 rounded-xl border border-slate-100 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                            <p class="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase">Chọn ca áp dụng:</p>
-                            <button 
-                              v-for="shift in shifts" 
+                          <div
+                            class="absolute right-0 top-full mt-1 hidden group-hover:block z-20 w-48 rounded-xl border border-slate-100 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900"
+                          >
+                            <p class="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase">
+                              Chọn ca áp dụng:
+                            </p>
+                            <button
+                              v-for="shift in shifts"
                               :key="shift.id"
                               @click="applyToWeekdays(String(shift.id))"
                               type="button"
@@ -320,8 +372,8 @@ const applyToWeekdays = (shiftId: string) => {
                               T2-T6: {{ shift.name }}
                             </button>
                             <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
-                            <button 
-                              v-for="shift in shifts" 
+                            <button
+                              v-for="shift in shifts"
                               :key="shift.id"
                               @click="applyToAll(String(shift.id))"
                               type="button"
@@ -333,17 +385,26 @@ const applyToWeekdays = (shiftId: string) => {
                         </div>
                       </div>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-                      <div v-for="item in templateForm.items" :key="item.dayOfWeek" class="flex flex-col gap-1.5 p-2 rounded-xl bg-white border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                        <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400">{{ getDayLabel(item.dayOfWeek) }}</span>
+
+                    <div
+                      class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50"
+                    >
+                      <div
+                        v-for="item in templateForm.items"
+                        :key="item.dayOfWeek"
+                        class="flex flex-col gap-1.5 p-2 rounded-xl bg-white border border-slate-100 dark:bg-slate-800 dark:border-slate-700"
+                      >
+                        <span
+                          class="text-[10px] font-bold uppercase tracking-wide text-slate-400"
+                          >{{ getDayLabel(item.dayOfWeek) }}</span
+                        >
                         <select
                           v-model="item.shiftId"
                           class="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                         >
                           <option value="">— Nghỉ —</option>
                           <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
-                            {{ shift.name }} 
+                            {{ shift.name }}
                             <template v-if="shift.startTime && shift.endTime">
                               ({{ shift.startTime.substring(0, 5) }}...)
                             </template>
@@ -356,13 +417,19 @@ const applyToWeekdays = (shiftId: string) => {
 
                 <!-- Messages -->
                 <Transition name="fade">
-                  <div v-if="errorMessage" class="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                  <div
+                    v-if="errorMessage"
+                    class="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600"
+                  >
                     <div class="h-1.5 w-1.5 rounded-full bg-rose-600"></div>
                     {{ errorMessage }}
                   </div>
                 </Transition>
                 <Transition name="fade">
-                  <div v-if="successMessage" class="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
+                  <div
+                    v-if="successMessage"
+                    class="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600"
+                  >
                     <div class="h-1.5 w-1.5 rounded-full bg-emerald-600"></div>
                     {{ successMessage }}
                   </div>
@@ -370,7 +437,9 @@ const applyToWeekdays = (shiftId: string) => {
               </div>
 
               <!-- Footer -->
-              <div class="flex items-center justify-end gap-3 border-t border-slate-100 p-6 dark:border-slate-800">
+              <div
+                class="flex items-center justify-end gap-3 border-t border-slate-100 p-6 dark:border-slate-800"
+              >
                 <button
                   @click="isModalOpen = false"
                   class="h-11 rounded-xl border border-slate-200 px-6 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
@@ -411,6 +480,12 @@ const applyToWeekdays = (shiftId: string) => {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>

@@ -47,10 +47,13 @@ const employeeSearch = ref('')
 const filteredEmployees = computed(() => {
   const search = employeeSearch.value.toLowerCase().trim()
   if (!search) return employees.value.slice(0, 50)
-  return employees.value.filter(e => 
-    e.fullName.toLowerCase().includes(search) || 
-    (e.employeeCode && e.employeeCode.toLowerCase().includes(search))
-  ).slice(0, 50)
+  return employees.value
+    .filter(
+      (e) =>
+        e.fullName.toLowerCase().includes(search) ||
+        (e.employeeCode && e.employeeCode.toLowerCase().includes(search)),
+    )
+    .slice(0, 50)
 })
 
 const toggleEmployee = (id: number) => {
@@ -384,7 +387,7 @@ const confirmDeleteSchedule = async () => {
         </select>
       </div>
 
-      <div class="mt-5 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
+      <div class="mt-5 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
         <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
           <thead class="bg-slate-50 dark:bg-slate-900">
             <tr>
@@ -552,7 +555,7 @@ const confirmDeleteSchedule = async () => {
           >
             <div
               v-if="isAssignDialogOpen"
-              class="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+              class="relative w-full max-w-2xl rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
             >
               <!-- Header -->
               <div
@@ -584,18 +587,26 @@ const confirmDeleteSchedule = async () => {
               <!-- Body -->
               <div class="max-h-[70vh] overflow-y-auto p-6 scrollbar-hide space-y-6">
                 <!-- Mode Selection -->
-                <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
-                  <button 
+                <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                  <button
                     @click="assignmentForm.mode = 'bulk'"
                     class="flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
-                    :class="assignmentForm.mode === 'bulk' ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700'"
+                    :class="
+                      assignmentForm.mode === 'bulk'
+                        ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400'
+                        : 'text-slate-500 hover:text-slate-700'
+                    "
                   >
                     Gán hàng loạt
                   </button>
-                  <button 
+                  <button
                     @click="assignmentForm.mode = 'template'"
                     class="flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
-                    :class="assignmentForm.mode === 'template' ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400' : 'text-slate-500 hover:text-slate-700'"
+                    :class="
+                      assignmentForm.mode === 'template'
+                        ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400'
+                        : 'text-slate-500 hover:text-slate-700'
+                    "
                   >
                     Áp dụng mẫu
                   </button>
@@ -605,17 +616,23 @@ const confirmDeleteSchedule = async () => {
                   <!-- Employee Selection -->
                   <div class="md:col-span-2 space-y-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Chọn nhân viên ({{ assignmentForm.employeeIds.length }}) <span class="text-rose-500">*</span>
+                      Chọn nhân viên ({{ assignmentForm.employeeIds.length }})
+                      <span class="text-rose-500">*</span>
                     </label>
                     <div class="relative">
-                      <input 
+                      <input
                         v-model="employeeSearch"
                         type="text"
                         placeholder="Tìm tên hoặc mã nhân viên..."
                         class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       />
-                      <div class="mt-2 flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 border border-slate-100 rounded-xl bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50">
-                        <div v-if="filteredEmployees.length === 0" class="w-full text-center py-4 text-xs text-slate-400 italic">
+                      <div
+                        class="mt-2 flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 border border-slate-100 rounded-xl bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50"
+                      >
+                        <div
+                          v-if="filteredEmployees.length === 0"
+                          class="w-full text-center py-4 text-xs text-slate-400 italic"
+                        >
                           Không tìm thấy nhân viên phù hợp
                         </div>
                         <button
@@ -627,7 +644,7 @@ const confirmDeleteSchedule = async () => {
                             'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border',
                             assignmentForm.employeeIds.includes(emp.id)
                               ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none'
-                              : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'
+                              : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400',
                           ]"
                         >
                           {{ emp.fullName }}
@@ -657,7 +674,9 @@ const confirmDeleteSchedule = async () => {
                       <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
                         Loại gán
                       </label>
-                      <div class="h-11 flex items-center px-4 rounded-xl border border-slate-200 bg-slate-100 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800">
+                      <div
+                        class="h-11 flex items-center px-4 rounded-xl border border-slate-200 bg-slate-100 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"
+                      >
                         Cố định hàng tuần
                       </div>
                     </div>
@@ -722,12 +741,20 @@ const confirmDeleteSchedule = async () => {
                         class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       >
                         <option value="">Chọn mẫu lịch</option>
-                        <option v-for="tpl in templatesQuery.data.value" :key="tpl.id" :value="String(tpl.id)">
+                        <option
+                          v-for="tpl in templatesQuery.data.value"
+                          :key="tpl.id"
+                          :value="String(tpl.id)"
+                        >
                           {{ tpl.name }} ({{ tpl.items.length }} ngày)
                         </option>
                       </select>
-                      <p v-if="assignmentForm.templateId" class="mt-2 text-[10px] text-slate-400 italic">
-                        Mẫu này sẽ áp dung khung giờ làm việc đã định nghĩa sẵn cho từng thứ trong tuần.
+                      <p
+                        v-if="assignmentForm.templateId"
+                        class="mt-2 text-[10px] text-slate-400 italic"
+                      >
+                        Mẫu này sẽ áp dung khung giờ làm việc đã định nghĩa sẵn cho từng thứ trong
+                        tuần.
                       </p>
                     </div>
                   </template>
@@ -745,13 +772,19 @@ const confirmDeleteSchedule = async () => {
                 </div>
 
                 <Transition name="fade">
-                  <div v-if="assignmentError" class="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                  <div
+                    v-if="assignmentError"
+                    class="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600"
+                  >
                     <div class="h-1.5 w-1.5 rounded-full bg-rose-600"></div>
                     {{ assignmentError }}
                   </div>
                 </Transition>
                 <Transition name="fade">
-                  <div v-if="assignmentSuccess" class="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600">
+                  <div
+                    v-if="assignmentSuccess"
+                    class="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600"
+                  >
                     <div class="h-1.5 w-1.5 rounded-full bg-emerald-600"></div>
                     {{ assignmentSuccess }}
                   </div>
@@ -759,7 +792,9 @@ const confirmDeleteSchedule = async () => {
               </div>
 
               <!-- Footer -->
-              <div class="flex items-center justify-end gap-3 border-t border-slate-100 p-6 dark:border-slate-800">
+              <div
+                class="flex items-center justify-end gap-3 border-t border-slate-100 p-6 dark:border-slate-800"
+              >
                 <button
                   type="button"
                   @click="isAssignDialogOpen = false"
@@ -773,8 +808,15 @@ const confirmDeleteSchedule = async () => {
                   :disabled="bulkAssign.isPending.value || applyTemplate.isPending.value"
                   class="h-11 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 text-sm font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 dark:shadow-none"
                 >
-                  <CalendarRange v-if="!bulkAssign.isPending.value && !applyTemplate.isPending.value" class="h-4 w-4" />
-                  <span>{{ (bulkAssign.isPending.value || applyTemplate.isPending.value) ? 'Đang xử lý...' : 'Xác nhận gán' }}</span>
+                  <CalendarRange
+                    v-if="!bulkAssign.isPending.value && !applyTemplate.isPending.value"
+                    class="h-4 w-4"
+                  />
+                  <span>{{
+                    bulkAssign.isPending.value || applyTemplate.isPending.value
+                      ? 'Đang xử lý...'
+                      : 'Xác nhận gán'
+                  }}</span>
                 </button>
               </div>
             </div>
