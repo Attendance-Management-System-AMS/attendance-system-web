@@ -66,7 +66,7 @@ const toggleMobileSidebar = () => {
       <AppNavbar class="hidden lg:flex" @toggle-sidebar="toggleSidebar" />
 
       <!-- Page content -->
-      <main class="flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+      <main :class="['flex-1 overflow-y-auto px-4 py-6 lg:px-8', isEmployeePortal ? 'pb-24 lg:pb-6' : '']">
         <router-view />
       </main>
     </div>

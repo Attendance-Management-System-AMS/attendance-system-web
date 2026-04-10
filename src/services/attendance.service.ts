@@ -1,6 +1,7 @@
 import api from '@/lib/api'
 import type { Attendance } from '@/types/attendance'
 import type { ApiResponse, Page } from '@/types/api'
+import type { EmployeeScheduleResponse } from '@/types/schedule'
 
 export interface AttendanceTodayApiRecord {
   id: number
@@ -40,12 +41,26 @@ export interface AttendanceCheckInResult {
   employee?: AttendanceEmployeeBrief | null
 }
 
+export interface MyAttendanceFilters {
+  fromDate?: string
+  toDate?: string
+  status?: 'PRESENT' | 'LATE' | 'EARLY_LEAVE' | 'ABSENT'
+  page?: number
+  size?: number
+}
+
 export const attendanceApi = {
   getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
   getToday: (filters?: AttendanceTodayFilters) =>
     api.get<ApiResponse<AttendanceTodayApiRecord[]>>('/attendance/today', {
       params: filters,
     }),
+  // Các API dành cho cá nhân (/me)
+  getMyHistory: (params?: MyAttendanceFilters) =>
+    api.get<ApiResponse<Page<Attendance>>>('/attendance/me', { params }),
+  getTodayMe: () => api.get<ApiResponse<Attendance | null>>('/attendance/today/me'),
+  getMySchedules: () => api.get<ApiResponse<EmployeeScheduleResponse[]>>('/attendance/schedules/me'),
+
   checkInByFace: (descriptor: number[]) =>
     api
       .post<ApiResponse<AttendanceCheckInResult>>('/attendance/check-in-by-face', { descriptor })

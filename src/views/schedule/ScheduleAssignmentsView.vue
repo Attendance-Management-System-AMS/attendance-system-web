@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { ArrowLeft, CalendarRange, LayoutGrid, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, CalendarRange, LayoutGrid, Trash2, Check, X, Calendar as CalendarIcon, Info, Star } from 'lucide-vue-next'
 import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog.vue'
 import FormCard from '@/components/ui/FormCard.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
@@ -16,12 +16,16 @@ import type { Page } from '@/types/api'
 import type { Schedule } from '@/types/schedule'
 import type { Shift } from '@/types/shift'
 import type { Employee } from '@/types/employee'
+import { toast } from 'vue-sonner'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface ScheduleWithShift extends Schedule {
   shift?: Shift
 }
 
-const { employeesQuery } = useEmployees()
+// Fetch more employees for assignment list to ensure search works
+const { employeesQuery } = useEmployees({ size: 2000 })
 const { shiftsQuery } = useShifts()
 const { templatesQuery } = useScheduleTemplates()
 const { bulkAssign, applyTemplate, deleteSchedule } = useSchedules(null)
@@ -35,26 +39,31 @@ const deleteDialogOpen = ref(false)
 const isAssignDialogOpen = ref(false)
 const deleteTarget = ref<ScheduleWithShift | null>(null)
 
+const initialWeeklyShifts = () => ({
+  2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''
+})
+
 const assignmentForm = reactive({
   mode: 'bulk' as 'bulk' | 'template',
   employeeIds: [] as number[],
   shiftId: '',
+  shiftsPerDay: initialWeeklyShifts() as Record<number, string>,
   templateId: '',
   daysOfWeek: [] as number[],
-  effectiveFrom: '',
+  effectiveFrom: new Date().toISOString().split('T')[0],
 })
 
 const employeeSearch = ref('')
 const filteredEmployees = computed(() => {
   const search = employeeSearch.value.toLowerCase().trim()
-  if (!search) return employees.value.slice(0, 50)
+  if (!search) return employees.value.slice(0, 100)
   return employees.value
     .filter(
       (e) =>
         e.fullName.toLowerCase().includes(search) ||
         (e.employeeCode && e.employeeCode.toLowerCase().includes(search)),
     )
-    .slice(0, 50)
+    .slice(0, 200)
 })
 
 const toggleEmployee = (id: number) => {
@@ -67,14 +76,20 @@ const toggleEmployee = (id: number) => {
 }
 
 const dayOfWeekOptions = [
-  { label: 'Thứ 2', value: '2' },
-  { label: 'Thứ 3', value: '3' },
-  { label: 'Thứ 4', value: '4' },
-  { label: 'Thứ 5', value: '5' },
-  { label: 'Thứ 6', value: '6' },
-  { label: 'Thứ 7', value: '7' },
-  { label: 'Chủ nhật', value: '8' },
+  { label: 'Thứ 2', value: 2 },
+  { label: 'Thứ 3', value: 3 },
+  { label: 'Thứ 4', value: 4 },
+  { label: 'Thứ 5', value: 5 },
+  { label: 'Thứ 6', value: 6 },
+  { label: 'Thứ 7', value: 7 },
+  { label: 'Chủ nhật', value: 8 },
 ]
+
+const setQuickShifts = (days: number[], shiftId: string) => {
+  days.forEach(d => {
+    assignmentForm.shiftsPerDay[d] = shiftId
+  })
+}
 
 const scheduleEmployeeFilter = ref('')
 const scheduleShiftFilter = ref('')
@@ -213,22 +228,14 @@ const getShiftName = (shiftId: number | string): string => {
 
 const formatDayOfWeekLabel = (dayOfWeek?: number): string => {
   switch (dayOfWeek) {
-    case 2:
-      return 'Thứ 2'
-    case 3:
-      return 'Thứ 3'
-    case 4:
-      return 'Thứ 4'
-    case 5:
-      return 'Thứ 5'
-    case 6:
-      return 'Thứ 6'
-    case 7:
-      return 'Thứ 7'
-    case 8:
-      return 'Chủ nhật'
-    default:
-      return '—'
+    case 2: return 'Thứ 2'
+    case 3: return 'Thứ 3'
+    case 4: return 'Thứ 4'
+    case 5: return 'Thứ 5'
+    case 6: return 'Thứ 6'
+    case 7: return 'Thứ 7'
+    case 8: return 'Chủ nhật'
+    default: return '—'
   }
 }
 
@@ -248,9 +255,10 @@ const resetAssignmentForm = () => {
   assignmentForm.mode = 'bulk'
   assignmentForm.employeeIds = []
   assignmentForm.shiftId = ''
+  assignmentForm.shiftsPerDay = initialWeeklyShifts()
   assignmentForm.templateId = ''
   assignmentForm.daysOfWeek = []
-  assignmentForm.effectiveFrom = ''
+  assignmentForm.effectiveFrom = new Date().toISOString().split('T')[0]
   employeeSearch.value = ''
 }
 
@@ -263,7 +271,8 @@ const submitAssignment = async () => {
     return
   }
 
-  if (!assignmentForm.effectiveFrom) {
+  const effectiveFrom = assignmentForm.effectiveFrom
+  if (!effectiveFrom) {
     assignmentError.value = 'Vui lòng chọn ngày hiệu lực.'
     return
   }
@@ -277,21 +286,36 @@ const submitAssignment = async () => {
       await applyTemplate.mutateAsync({
         employeeIds: assignmentForm.employeeIds,
         templateId: Number(assignmentForm.templateId),
-        effectiveFrom: assignmentForm.effectiveFrom,
+        effectiveFrom: effectiveFrom,
       })
       assignmentSuccess.value = 'Đã áp dụng mẫu lịch thành công.'
     } else {
-      if (!assignmentForm.shiftId || assignmentForm.daysOfWeek.length === 0) {
-        assignmentError.value = 'Vui lòng chọn ca và ít nhất một thứ trong tuần.'
+      const groups: Record<string, number[]> = {}
+      let hasSelection = false
+      Object.entries(assignmentForm.shiftsPerDay).forEach(([day, shiftId]) => {
+        if (shiftId) {
+          if (!groups[shiftId]) groups[shiftId] = []
+          groups[shiftId].push(Number(day))
+          hasSelection = true
+        }
+      })
+
+      if (!hasSelection) {
+        assignmentError.value = 'Vui lòng chọn ít nhất một ca làm việc cho một ngày.'
         return
       }
-      await bulkAssign.mutateAsync({
-        employeeIds: assignmentForm.employeeIds,
-        shiftId: Number(assignmentForm.shiftId),
-        daysOfWeek: assignmentForm.daysOfWeek,
-        effectiveFrom: assignmentForm.effectiveFrom,
-      })
-      assignmentSuccess.value = 'Đã gán lịch hàng loạt thành công.'
+
+      const promises = Object.entries(groups).map(([shiftId, days]) => 
+        bulkAssign.mutateAsync({
+          employeeIds: assignmentForm.employeeIds,
+          shiftId: Number(shiftId),
+          daysOfWeek: days,
+          effectiveFrom: effectiveFrom,
+        })
+      )
+      
+      await Promise.all(promises)
+      assignmentSuccess.value = 'Đã gán lịch làm việc thành công.'
     }
 
     await assignedSchedulesQuery.refetch()
@@ -303,6 +327,7 @@ const submitAssignment = async () => {
     }, 1200)
   } catch (err) {
     assignmentError.value = getApiErrorMessage(err, 'Thao tác thất bại. Vui lòng thử lại.')
+    toast.error(assignmentError.value)
   }
 }
 
@@ -319,15 +344,15 @@ const confirmDeleteSchedule = async () => {
     await assignedSchedulesQuery.refetch()
     deleteDialogOpen.value = false
     deleteTarget.value = null
-    assignmentSuccess.value = 'Đã xóa lịch làm việc.'
+    toast.success('Đã xóa lịch làm việc thành công.')
   } catch (err) {
-    assignmentError.value = getApiErrorMessage(err, 'Không thể xóa lịch làm việc.')
+    toast.error(getApiErrorMessage(err, 'Không thể xóa lịch làm việc.'))
   }
 }
 </script>
 
 <template>
-  <div class="space-y-6 px-6 py-6">
+  <div class="space-y-6 px-6 py-6 font-bold">
     <PageHeader
       title="Phân công lịch làm việc"
       description="Tìm kiếm, quản lý và gán ca làm việc cho nhân viên."
@@ -336,17 +361,17 @@ const confirmDeleteSchedule = async () => {
         <div class="flex items-center gap-3">
           <button
             @click="isAssignDialogOpen = true"
-            class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all dark:shadow-none"
+            class="h-10 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-black uppercase text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all dark:shadow-none"
           >
             <CalendarRange class="h-4 w-4" />
             Gán lịch mới
           </button>
           <RouterLink
             to="/schedule"
-            class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-muted dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            class="h-10 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-black uppercase text-slate-700 transition-colors hover:bg-muted dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <ArrowLeft class="h-4 w-4" />
-            Quay lại lịch
+            Quay lại
           </RouterLink>
         </div>
       </template>
@@ -356,12 +381,12 @@ const confirmDeleteSchedule = async () => {
         <input
           v-model="scheduleSearch"
           type="text"
-          placeholder="Tìm theo nhân viên, ca, mã..."
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          placeholder="Tìm tên nhân viên, ca làm..."
+          class="h-10 w-full rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
         />
         <select
           v-model="scheduleEmployeeFilter"
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
         >
           <option value="">Tất cả nhân viên</option>
           <option v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
@@ -370,7 +395,7 @@ const confirmDeleteSchedule = async () => {
         </select>
         <select
           v-model="scheduleShiftFilter"
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
         >
           <option value="">Tất cả ca</option>
           <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
@@ -379,10 +404,10 @@ const confirmDeleteSchedule = async () => {
         </select>
         <select
           v-model="scheduleDayFilter"
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
         >
           <option value="">Tất cả thứ</option>
-          <option v-for="option in dayOfWeekOptions" :key="option.value" :value="option.value">
+          <option v-for="option in dayOfWeekOptions" :key="option.value" :value="String(option.value)">
             {{ option.label }}
           </option>
         </select>
@@ -392,99 +417,49 @@ const confirmDeleteSchedule = async () => {
         <table class="min-w-full divide-y divide-border dark:divide-slate-700">
           <thead class="bg-muted/50 dark:bg-slate-900">
             <tr>
-              <th
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
-                Nhân viên
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
-                Ca
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
-                Thứ
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
-                Hiệu lực
-              </th>
-              <th
-                class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
-                Trạng thái
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-              >
-                Thao tác
-              </th>
+              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Nhân viên</th>
+              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Ca làm việc</th>
+              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Thứ</th>
+              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Hiệu lực</th>
+              <th class="px-4 py-3 text-center text-[11px] font-black uppercase tracking-widest text-slate-500">Trạng thái</th>
+              <th class="px-4 py-3 text-right text-[11px] font-black uppercase tracking-widest text-slate-500">Thao tác</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border bg-card dark:divide-slate-700 dark:bg-slate-900">
             <tr v-if="assignedSchedulesQuery.isLoading.value">
-              <td
-                colspan="6"
-                class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
-              >
-                Đang tải danh sách lịch từ máy chủ...
-              </td>
+              <td colspan="6" class="px-4 py-10 text-center text-sm font-bold text-slate-500 uppercase">Đang tải dữ liệu...</td>
             </tr>
             <tr v-else-if="filteredSchedules.length === 0">
-              <td
-                colspan="6"
-                class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
-              >
-                Chưa có lịch nào hoặc bộ lọc đang không có kết quả.
-              </td>
+              <td colspan="6" class="px-4 py-10 text-center text-sm font-bold text-slate-500 uppercase">Không tìm thấy dữ liệu.</td>
             </tr>
-            <tr
-              v-else
-              v-for="schedule in filteredSchedules"
-              :key="schedule.id"
-              class="hover:bg-slate-50 dark:hover:bg-slate-800/60"
-            >
-              <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">
-                <div class="font-medium">{{ getEmployeeName(schedule.employeeId) }}</div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">
-                  ID: {{ schedule.employeeId }}
+            <tr v-else v-for="schedule in filteredSchedules" :key="schedule.id" class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-4 py-3">
+                <div class="text-sm font-black text-slate-900 uppercase leading-none">{{ getEmployeeName(schedule.employeeId) }}</div>
+                <div class="text-[10px] font-black text-slate-400 uppercase mt-1">ID: {{ schedule.employeeId }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="text-sm font-black text-indigo-600 uppercase leading-none">{{ getShiftName(schedule.shiftId) }}</div>
+                <div v-if="schedule.shift" class="text-[10px] font-bold text-slate-400 mt-1 uppercase">
+                  {{ fmtTime(schedule.shift.startTime) }} — {{ fmtTime(schedule.shift.endTime) }}
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                <div class="font-medium">{{ getShiftName(schedule.shiftId) }}</div>
-                <div v-if="schedule.shift" class="text-xs text-slate-500 dark:text-slate-400">
-                  {{ fmtTime(schedule.shift.startTime) }} - {{ fmtTime(schedule.shift.endTime) }}
-                </div>
+              <td class="px-4 py-3">
+                <Badge variant="outline" class="h-6 px-2 text-[10px] font-black border-indigo-100 bg-indigo-50 text-indigo-600 rounded uppercase">
+                  {{ formatDayOfWeekLabel(schedule.dayOfWeek) }}
+                </Badge>
               </td>
-              <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                {{ formatDayOfWeekLabel(schedule.dayOfWeek) }}
-              </td>
-              <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
-                {{ fmtDateInput(schedule.effectiveFrom) }}
-              </td>
-              <td class="px-4 py-3 text-center text-sm">
-                <span
-                  :class="[
-                    'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
-                    schedule.isActive === false
-                      ? 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
-                      : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-                  ]"
-                >
-                  {{ schedule.isActive === false ? 'Ngừng' : 'Hoạt động' }}
+              <td class="px-4 py-3 text-xs font-black text-slate-500 uppercase">{{ fmtDateInput(schedule.effectiveFrom) }}</td>
+              <td class="px-4 py-3 text-center">
+                <span :class="[
+                  'inline-flex h-6 items-center rounded px-2 text-[9px] font-black uppercase tracking-widest',
+                  schedule.isActive === false ? 'bg-slate-100 text-slate-400' : 'bg-emerald-50 text-emerald-600'
+                ]">
+                  {{ schedule.isActive === false ? 'OFF' : 'ACTIVE' }}
                 </span>
               </td>
               <td class="px-4 py-3 text-right">
-                <button
-                  type="button"
-                  @click="requestDeleteSchedule(schedule)"
-                  class="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950"
-                >
-                  <Trash2 class="h-4 w-4" />
-                  Xóa
+                <button @click="requestDeleteSchedule(schedule)" class="h-9 w-9 inline-flex items-center justify-center rounded-xl text-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                  <Trash2 class="h-5 w-5" />
                 </button>
               </td>
             </tr>
@@ -493,28 +468,12 @@ const confirmDeleteSchedule = async () => {
       </div>
 
       <div class="mt-4 flex items-center justify-between">
-        <div class="text-sm text-slate-500 dark:text-slate-400">
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
           Trang {{ assignedPageLabel }} / {{ assignedTotalPages }}
         </div>
         <div class="flex items-center gap-2">
-          <button
-            type="button"
-            :disabled="assignedPage <= 1 || assignedSchedulesQuery.isFetching.value"
-            @click="assignedPage--"
-            class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-slate-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            Trước
-          </button>
-          <button
-            type="button"
-            :disabled="
-              assignedPage >= assignedTotalPages || assignedSchedulesQuery.isFetching.value
-            "
-            @click="assignedPage++"
-            class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-slate-600 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            Sau
-          </button>
+          <Button variant="ghost" size="sm" :disabled="assignedPage <= 1" @click="assignedPage--" class="h-9 rounded-xl font-black uppercase text-[10px]">Trước</Button>
+          <Button variant="ghost" size="sm" :disabled="assignedPage >= assignedTotalPages" @click="assignedPage++" class="h-9 rounded-xl font-black uppercase text-[10px]">Sau</Button>
         </div>
       </div>
     </FormCard>
@@ -523,11 +482,7 @@ const confirmDeleteSchedule = async () => {
       :open="deleteDialogOpen"
       title="Xóa lịch làm việc"
       description="Bạn có chắc chắn muốn xóa lịch đã gán này không?"
-      :item-name="
-        deleteTarget
-          ? `${getEmployeeName(deleteTarget.employeeId)} - ${getShiftName(deleteTarget.shiftId)}`
-          : ''
-      "
+      :item-name="deleteTarget ? `${getEmployeeName(deleteTarget.employeeId)} - ${getShiftName(deleteTarget.shiftId)}` : ''"
       @confirm="confirmDeleteSchedule"
       @cancel="deleteDialogOpen = false"
     />
@@ -542,283 +497,170 @@ const confirmDeleteSchedule = async () => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div
-          v-if="isAssignDialogOpen"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4"
-          @click.self="isAssignDialogOpen = false"
-        >
-          <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
-
+        <div v-if="isAssignDialogOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px]">
           <Transition
-            enter-active-class="transition duration-200 ease-out"
+            enter-active-class="transition duration-300 ease-out"
             enter-from-class="opacity-0 scale-95 translate-y-4"
             enter-to-class="opacity-100 scale-100 translate-y-0"
           >
-            <div
-              v-if="isAssignDialogOpen"
-              class="relative w-full max-w-2xl rounded-xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900"
-            >
+            <div v-if="isAssignDialogOpen" class="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
               <!-- Header -->
-              <div
-                class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800"
-              >
-                <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30"
-                  >
+              <div class="flex items-center justify-between border-b border-slate-50 p-5 bg-white shrink-0">
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
                     <CalendarRange class="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">
-                      Tạo lịch làm việc mới
-                    </h3>
-                    <p class="text-xs text-slate-500">
-                      Phân công ca làm cho nhân viên theo các thứ trong tuần.
-                    </p>
+                    <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Thiết lập lịch làm việc mới</h3>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Phân công ca làm chi tiết theo từng thứ trong tuần</p>
                   </div>
                 </div>
-                <button
-                  @click="isAssignDialogOpen = false"
-                  class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <ArrowLeft class="h-5 w-5 rotate-180" />
+                <button @click="isAssignDialogOpen = false" class="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-50 transition-all">
+                  <X class="h-5 w-5" />
                 </button>
               </div>
 
-              <!-- Body -->
-              <div class="max-h-[70vh] overflow-y-auto p-6 scrollbar-hide space-y-6">
-                <!-- Mode Selection -->
-                <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                  <button
-                    @click="assignmentForm.mode = 'bulk'"
-                    class="flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
-                    :class="
-                      assignmentForm.mode === 'bulk'
-                        ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400'
-                        : 'text-slate-500 hover:text-slate-700'
-                    "
-                  >
-                    Gán hàng loạt
-                  </button>
-                  <button
-                    @click="assignmentForm.mode = 'template'"
-                    class="flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
-                    :class="
-                      assignmentForm.mode === 'template'
-                        ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400'
-                        : 'text-slate-500 hover:text-slate-700'
-                    "
-                  >
-                    Áp dụng mẫu
-                  </button>
-                </div>
-
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <!-- Employee Selection -->
-                  <div class="md:col-span-2 space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Chọn nhân viên ({{ assignmentForm.employeeIds.length }})
-                      <span class="text-rose-500">*</span>
-                    </label>
-                    <div class="relative">
-                      <input
-                        v-model="employeeSearch"
-                        type="text"
-                        placeholder="Tìm tên hoặc mã nhân viên..."
-                        class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                      />
-                      <div
-                        class="mt-2 flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 border border-slate-100 rounded-xl bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50"
-                      >
-                        <div
-                          v-if="filteredEmployees.length === 0"
-                          class="w-full text-center py-4 text-xs text-slate-400"
-                        >
-                          Không tìm thấy nhân viên phù hợp
-                        </div>
-                        <button
-                          v-for="emp in filteredEmployees"
-                          :key="emp.id"
-                          type="button"
-                          @click="toggleEmployee(emp.id)"
+              <!-- Content -->
+              <div class="flex-1 overflow-y-auto p-6 space-y-8 min-h-0">
+                <!-- Step 1: Mode & Employees -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div class="lg:col-span-1 space-y-6">
+                    <div>
+                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3 block">1. Phương thức gán</label>
+                      <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
+                        <button @click="assignmentForm.mode = 'bulk'" 
                           :class="[
-                            'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border',
-                            assignmentForm.employeeIds.includes(emp.id)
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100 dark:shadow-none'
-                              : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400',
-                          ]"
-                        >
-                          {{ emp.fullName }}
-                        </button>
+                            'py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
+                            assignmentForm.mode === 'bulk' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                          ]">Tùy chỉnh tuần</button>
+                        <button @click="assignmentForm.mode = 'template'" 
+                          :class="[
+                            'py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
+                            assignmentForm.mode === 'template' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                          ]">Theo mẫu lịch</button>
+                      </div>
+                    </div>
+
+                    <div class="space-y-3">
+                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 block">2. Ngày hiệu lực</label>
+                      <div class="relative">
+                        <CalendarIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                        <input v-model="assignmentForm.effectiveFrom" type="date"
+                          class="h-11 w-full pl-10 rounded-xl border border-slate-100 bg-slate-50 text-sm font-black text-slate-900 focus:ring-1 focus:ring-primary outline-none" />
                       </div>
                     </div>
                   </div>
 
-                  <!-- Mode: Bulk -->
-                  <template v-if="assignmentForm.mode === 'bulk'">
-                    <div class="space-y-1.5">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                        Ca làm <span class="text-rose-500">*</span>
-                      </label>
-                      <select
-                        v-model="assignmentForm.shiftId"
-                        class="h-11 w-full rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                      >
-                        <option value="">Chọn ca làm</option>
-                        <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
-                          {{ shift.name || `Ca #${shift.id}` }}
-                        </option>
-                      </select>
+                  <div class="lg:col-span-2 space-y-4">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">3. Chọn nhân viên ({{ assignmentForm.employeeIds.length }} đã chọn)</label>
+                      <button v-if="assignmentForm.employeeIds.length > 0" @click="assignmentForm.employeeIds = []" class="text-[10px] font-black text-rose-500 uppercase hover:underline tracking-widest">Bỏ chọn tất cả</button>
                     </div>
-
-                    <div class="space-y-1.5 cursor-not-allowed opacity-50 select-none">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                        Loại gán
-                      </label>
-                      <div
-                        class="h-11 flex items-center px-4 rounded-xl border border-border bg-muted/50 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800"
-                      >
-                        Cố định hàng tuần
-                      </div>
-                    </div>
-
-                    <div class="md:col-span-2 space-y-2">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                        Thứ trong tuần <span class="text-rose-500">*</span>
-                      </label>
-                      <div class="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          @click="assignmentForm.daysOfWeek = [2, 3, 4, 5, 6]"
-                          class="rounded-lg bg-indigo-50 px-3 py-1.5 text-[10px] font-bold uppercase text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30"
-                        >
-                          Thứ 2 - Thứ 6
-                        </button>
-                        <button
-                          type="button"
-                          @click="assignmentForm.daysOfWeek = [2, 3, 4, 5, 6, 7, 8]"
-                          class="rounded-lg bg-indigo-50 px-3 py-1.5 text-[10px] font-bold uppercase text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30"
-                        >
-                          Tất cả (T2 - CN)
-                        </button>
-                        <button
-                          type="button"
-                          @click="assignmentForm.daysOfWeek = []"
-                          class="rounded-lg bg-muted px-3 py-1.5 text-[10px] font-bold uppercase text-slate-600 hover:bg-emphasis dark:bg-slate-800"
-                        >
-                          Bỏ chọn
+                    <div class="relative">
+                      <input v-model="employeeSearch" type="text" placeholder="Tìm tên hoặc mã nhân viên..."
+                        class="h-11 w-full rounded-xl border border-slate-100 bg-slate-50 px-4 text-sm font-black text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-primary outline-none" />
+                      
+                      <div class="mt-3 flex flex-wrap gap-2 max-h-48 overflow-y-auto p-4 border border-slate-50 rounded-xl bg-slate-50/50">
+                        <div v-if="filteredEmployees.length === 0" class="w-full text-center py-6">
+                           <p class="text-xs font-black text-slate-300 uppercase tracking-widest">Không tìm thấy dữ liệu</p>
+                        </div>
+                        <button v-for="emp in filteredEmployees" :key="emp.id" @click="toggleEmployee(emp.id)"
+                          :class="[
+                            'px-3 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border flex items-center gap-2',
+                            assignmentForm.employeeIds.includes(emp.id)
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100'
+                              : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-200'
+                          ]">
+                          <Check v-if="assignmentForm.employeeIds.includes(emp.id)" class="h-3 w-3" />
+                          {{ emp.fullName }} ({{ emp.employeeCode || emp.id }})
                         </button>
                       </div>
-                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <label
-                          v-for="option in dayOfWeekOptions"
-                          :key="option.value"
-                          class="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-muted/30 cursor-pointer hover:bg-card hover:shadow-sm transition-all"
-                          :class="{
-                            'border-primary bg-card ring-1 ring-primary/20 shadow-none':
-                              assignmentForm.daysOfWeek.includes(Number(option.value)),
-                          }"
-                        >
-                          <input
-                            type="checkbox"
-                            v-model="assignmentForm.daysOfWeek"
-                            :value="Number(option.value)"
-                            class="h-4 w-4 rounded border-slate-300 text-indigo-600"
-                          />
-                          <span class="text-xs font-semibold">{{ option.label }}</span>
-                        </label>
-                      </div>
                     </div>
-                  </template>
-
-                  <!-- Mode: Template -->
-                  <template v-else>
-                    <div class="md:col-span-2 space-y-1.5">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                        Chọn mẫu lịch <span class="text-rose-500">*</span>
-                      </label>
-                      <select
-                        v-model="assignmentForm.templateId"
-                        class="h-11 w-full rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                      >
-                        <option value="">Chọn mẫu lịch</option>
-                        <option
-                          v-for="tpl in templatesQuery.data.value"
-                          :key="tpl.id"
-                          :value="String(tpl.id)"
-                        >
-                          {{ tpl.name }} ({{ tpl.items.length }} ngày)
-                        </option>
-                      </select>
-                      <p
-                        v-if="assignmentForm.templateId"
-                        class="mt-2 text-[10px] text-slate-400"
-                      >
-                        Mẫu này sẽ áp dung khung giờ làm việc đã định nghĩa sẵn cho từng thứ trong
-                        tuần.
-                      </p>
-                    </div>
-                  </template>
-
-                  <div class="space-y-1.5">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Ngày hiệu lực <span class="text-rose-500">*</span>
-                    </label>
-                    <input
-                      v-model="assignmentForm.effectiveFrom"
-                      type="date"
-                      class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                    />
                   </div>
                 </div>
 
-                <Transition name="fade">
-                  <div
-                    v-if="assignmentError"
-                    class="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600"
-                  >
-                    <div class="h-1.5 w-1.5 rounded-full bg-rose-600"></div>
-                    {{ assignmentError }}
+                <!-- Step 2: Shift Configuration -->
+                <div v-if="assignmentForm.mode === 'bulk'" class="space-y-6 pt-6 border-t border-slate-50">
+                   <div class="flex items-center justify-between">
+                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">4. Thiết lập ca làm việc hàng tuần</label>
+                      <div class="flex gap-2">
+                         <Button variant="outline" size="sm" @click="setQuickShifts([2,3,4,5,6], assignmentForm.shiftId)" 
+                           class="h-8 text-[10px] font-black uppercase tracking-widest rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 px-3"
+                           v-if="assignmentForm.shiftId">Gán T2-T6</Button>
+                         <Button variant="outline" size="sm" @click="setQuickShifts([2,3,4,5,6,7,8], assignmentForm.shiftId)" 
+                           class="h-8 text-[10px] font-black uppercase tracking-widest rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 px-3"
+                           v-if="assignmentForm.shiftId">Gán cả tuần</Button>
+                      </div>
+                   </div>
+
+                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+                      <div v-for="day in dayOfWeekOptions" :key="day.value" 
+                        class="p-4 rounded-2xl border transition-all"
+                        :class="assignmentForm.shiftsPerDay[day.value] ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-50 bg-slate-50/20'">
+                        <div class="flex items-center justify-between mb-3">
+                           <span class="text-xs font-black text-slate-800 uppercase tracking-tight">{{ day.label }}</span>
+                           <div v-if="assignmentForm.shiftsPerDay[day.value]" class="h-4 w-4 rounded-full bg-indigo-600 flex items-center justify-center">
+                              <Check class="h-2.5 w-2.5 text-white" />
+                           </div>
+                        </div>
+                        <select v-model="assignmentForm.shiftsPerDay[day.value]"
+                          class="w-full bg-white rounded-xl border border-slate-100 p-2 text-xs font-black text-slate-700 outline-none focus:ring-1 focus:ring-primary uppercase">
+                          <option value="">Nghỉ</option>
+                          <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
+                            {{ shift.name }}
+                          </option>
+                        </select>
+                      </div>
+                   </div>
+                   
+                   <div class="flex items-center gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100/50">
+                      <div class="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm shrink-0">
+                        <Info class="h-5 w-5" />
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 leading-none">Mẹo gán nhanh hàng tuần</p>
+                        <div class="flex items-center gap-3">
+                          <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Chọn ca mẫu:</p>
+                          <select v-model="assignmentForm.shiftId" class="h-8 rounded-lg border-slate-100 text-[10px] font-black px-3 outline-none bg-white uppercase tracking-tight">
+                            <option value="">Khung giờ mẫu</option>
+                            <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">{{ shift.name }}</option>
+                          </select>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div v-else class="space-y-4 pt-6 border-t border-slate-50">
+                  <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 block">4. Chọn mẫu lịch chuẩn</label>
+                  <select v-model="assignmentForm.templateId"
+                    class="h-12 w-full rounded-xl border border-slate-100 bg-slate-50 px-4 text-sm font-black text-slate-900 focus:ring-1 focus:ring-primary outline-none uppercase tracking-tight">
+                    <option value="">Chọn mẫu từ danh sách lưu sẵn</option>
+                    <option v-for="tpl in templatesQuery.data.value" :key="tpl.id" :value="String(tpl.id)">
+                      {{ tpl.name }} ({{ tpl.items.length }} ngày phân ca)
+                    </option>
+                  </select>
+                  <div v-if="assignmentForm.templateId" class="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
+                    <div class="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
+                      <Star class="h-5 w-5 fill-emerald-600" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-black text-emerald-900 uppercase">Đã kích hoạt chế độ áp dụng mẫu lịch</p>
+                      <p class="text-[10px] font-black text-emerald-600/70 uppercase tracking-widest mt-1">Lịch biểu sẽ tự động đồng bộ theo cấu hình chuyên gia.</p>
+                    </div>
                   </div>
-                </Transition>
-                <Transition name="fade">
-                  <div
-                    v-if="assignmentSuccess"
-                    class="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600"
-                  >
-                    <div class="h-1.5 w-1.5 rounded-full bg-emerald-600"></div>
-                    {{ assignmentSuccess }}
-                  </div>
-                </Transition>
+                </div>
               </div>
 
               <!-- Footer -->
-              <div
-                class="flex items-center justify-end gap-3 border-t border-slate-100 p-6 dark:border-slate-800"
-              >
-                <button
-                  type="button"
-                  @click="isAssignDialogOpen = false"
-                  class="h-11 rounded-xl border border-slate-200 px-6 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                >
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  @click="submitAssignment"
+              <div class="border-t border-slate-50 p-6 bg-white shrink-0 flex items-center justify-end gap-4">
+                <Button variant="ghost" @click="isAssignDialogOpen = false"
+                  class="h-11 px-8 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">Hủy bỏ</Button>
+                
+                <Button @click="submitAssignment" 
                   :disabled="bulkAssign.isPending.value || applyTemplate.isPending.value"
-                  class="h-11 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 text-sm font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 dark:shadow-none"
-                >
-                  <CalendarRange
-                    v-if="!bulkAssign.isPending.value && !applyTemplate.isPending.value"
-                    class="h-4 w-4"
-                  />
-                  <span>{{
-                    bulkAssign.isPending.value || applyTemplate.isPending.value
-                      ? 'Đang xử lý...'
-                      : 'Xác nhận gán'
-                  }}</span>
-                </button>
+                  class="h-12 px-12 rounded-xl bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
+                  {{ bulkAssign.isPending.value || applyTemplate.isPending.value ? 'Đang thực thi...' : 'Xác nhận thiết lập' }}
+                </Button>
               </div>
             </div>
           </Transition>
@@ -827,3 +669,13 @@ const confirmDeleteSchedule = async () => {
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

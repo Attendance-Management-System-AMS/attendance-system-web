@@ -8,15 +8,40 @@ import {
   XCircle,
   HelpCircle,
 } from 'lucide-vue-next'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import DataTable from '@/components/ui/DataTable.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import { useMyAttendance } from '@/composables/useMyAttendance'
+import type { Attendance } from '@/types/attendance'
+import type { EmployeeScheduleResponse } from '@/types/schedule'
 
 const today = new Date()
 const currentMonth = ref(today.getMonth())
 const currentYear = ref(today.getFullYear())
+
+const formatDateStr = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+const getStartOfMonth = (year: number, month: number) => new Date(year, month, 1)
+const getEndOfMonth = (year: number, month: number) => new Date(year, month + 1, 0)
+
+const filters = computed(() => {
+  const start = getStartOfMonth(currentYear.value, currentMonth.value)
+  const end = getEndOfMonth(currentYear.value, currentMonth.value)
+  return {
+    fromDate: formatDateStr(start),
+    toDate: formatDateStr(end),
+    page: 0,
+    size: 100,
+  }
+})
+
+const { historyQuery, scheduleQuery } = useMyAttendance(filters)
 
 const monthLabel = computed(() =>
   new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' }).format(
@@ -37,200 +62,355 @@ const nextMonth = () => {
   } else currentMonth.value++
 }
 
-const columns = [
-  { key: 'date', label: 'Ngày' },
-  { key: 'shift', label: 'Ca làm việc' },
-  { key: 'checkIn', label: 'Giờ vào' },
-  { key: 'checkOut', label: 'Giờ ra' },
-  { key: 'status', label: 'Trạng thái' },
-]
+const logs = computed(() => {
+  const apiData = (historyQuery.data.value?.content || []) as Attendance[]
+  const scheduleData = (scheduleQuery.data.value || []) as EmployeeScheduleResponse[]
+  const daysInMonth = getEndOfMonth(currentYear.value, currentMonth.value).getDate()
+  const allDays = []
+  const todayStr = formatDateStr(new Date())
 
-const mockLogs = [
-  {
-    date: '01/04',
-    dayLabel: 'Thứ 3',
-    shift: 'Ca hành chính',
-    checkIn: '07:58',
-    checkOut: '17:05',
-    status: 'present',
-  },
-  {
-    date: '02/04',
-    dayLabel: 'Thứ 4',
-    shift: 'Ca hành chính',
-    checkIn: '08:18',
-    checkOut: '17:00',
-    status: 'late',
-    lateMinutes: 18,
-  },
-  {
-    date: '03/04',
-    dayLabel: 'Thứ 5',
-    shift: 'Ca hành chính',
-    checkIn: '08:01',
-    checkOut: '17:30',
-    status: 'present',
-  },
-  {
-    date: '04/04',
-    dayLabel: 'Thứ 6',
-    shift: 'Ca hành chính',
-    checkIn: '07:55',
-    checkOut: null,
-    status: 'incomplete',
-  },
-  {
-    date: '08/04',
-    dayLabel: 'Thứ 3',
-    shift: 'Ca hành chính',
-    checkIn: null,
-    checkOut: null,
-    status: 'absent',
-  },
-  {
-    date: '09/04',
-    dayLabel: 'Thứ 4',
-    shift: 'Ca hành chính',
-    checkIn: '08:05',
-    checkOut: '17:10',
-    status: 'present',
-  },
-]
+  for (let i = 1; i <= daysInMonth; i++) {
+    const dateObj = new Date(currentYear.value, currentMonth.value, i)
+    const dateStr = formatDateStr(dateObj)
+
+    const logEntry = apiData.find((item) => {
+      const itemDate = item.workDate ? formatDateStr(new Date(item.workDate)) : null
+      return itemDate === dateStr
+    })
+
+    const checkInValue = logEntry
+      ? logEntry.checkIn || logEntry.checkInTime || logEntry.check_in_time
+      : null
+    const checkOutValue = logEntry
+      ? logEntry.checkOut || logEntry.checkOutTime || logEntry.check_out_time
+      : null
+
+    const checkInDate = checkInValue ? new Date(checkInValue) : null
+    const checkOutDate = checkOutValue ? new Date(checkOutValue) : null
+
+    allDays.push({
+      id: logEntry?.id || `empty-${dateStr}`,
+      date: new Intl.DateTimeFormat('vi-VN', { day: '2-digit' }).format(dateObj),
+      month: new Intl.DateTimeFormat('vi-VN', { month: '2-digit' }).format(dateObj),
+      dayLabel: new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(dateObj),
+      dateObj: dateObj,
+      shift: (() => {
+        const dayOfWeek = dateObj.getDay()
+        const backendDay = dayOfWeek === 0 ? 8 : dayOfWeek + 1
+        const matchedSchedule = scheduleData
+          .filter(
+            (s) => s.dayOfWeek === backendDay && s.isActive && s.effectiveFrom <= dateStr,
+          )
+          .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0]
+
+        if (matchedSchedule) return matchedSchedule.shiftName
+        if (logEntry?.shiftName) return logEntry.shiftName
+        return '—'
+      })(),
+      displayCheckIn: checkInDate
+        ? new Intl.DateTimeFormat('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          }).format(checkInDate)
+        : '—',
+      displayCheckOut: checkOutDate
+        ? new Intl.DateTimeFormat('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+          }).format(checkOutDate)
+        : '—',
+      status: logEntry?.status || '',
+      lateMinutes: logEntry?.lateMinutes || 0,
+      isToday: dateStr === todayStr,
+    })
+  }
+
+  return allDays
+})
 
 const summary = computed(() => {
+  const data = (historyQuery.data.value?.content || []) as Attendance[]
   return {
-    present: mockLogs.filter((l) => l.status === 'present').length,
-    late: mockLogs.filter((l) => l.status === 'late').length,
-    absent: mockLogs.filter((l) => l.status === 'absent').length,
-    incomplete: mockLogs.filter((l) => l.status === 'incomplete').length,
+    present: data.filter((l) => l.status === 'PRESENT').length,
+    late: data.filter((l) => l.status === 'LATE').length,
+    absent: data.filter((l) => l.status === 'ABSENT').length,
+    incomplete: data.filter((l) => l.status === 'EARLY_LEAVE').length,
   }
 })
 
-const getStatusBadge = (status: string, lateMinutes?: number) => {
-  switch (status) {
-    case 'present':
-      return { label: 'Đúng giờ', class: 'bg-emerald-50 text-emerald-600 border-none' }
-    case 'late':
-      return { label: `Muộn (${lateMinutes}p)`, class: 'bg-amber-50 text-amber-600 border-none' }
-    case 'absent':
-      return { label: 'Vắng mặt', class: 'bg-rose-50 text-rose-600 border-none' }
+const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) => {
+  if (!status) {
+    if (isToday) return { label: 'Đang đợi', class: 'bg-indigo-50 text-indigo-600' }
+    return { label: 'Trống', class: 'bg-slate-50 text-slate-300 italic' }
+  }
+
+  switch (String(status || '').toUpperCase()) {
+    case 'PRESENT':
+      return { label: 'Đúng giờ', class: 'bg-emerald-50 text-emerald-600' }
+    case 'LATE':
+      return { label: `Muộn (${lateMinutes || 0}p)`, class: 'bg-amber-50 text-amber-600' }
+    case 'ABSENT':
+      return { label: 'Vắng mặt', class: 'bg-rose-50 text-rose-600' }
+    case 'EARLY_LEAVE':
+      return { label: 'Về sớm', class: 'bg-indigo-50 text-indigo-600' }
     default:
-      return { label: 'Thiếu dữ liệu', class: 'bg-slate-100 text-slate-500 border-none' }
+      return { label: status, class: 'bg-slate-100 text-slate-500' }
   }
 }
 </script>
 
 <template>
-  <div class="space-y-4 lg:space-y-6">
+  <div class="space-y-4 lg:space-y-6 px-0 md:px-0 font-bold">
     <PageHeader
-      title="Bảng công"
-      description="Lịch sử & Thống kê chi tiết"
+      title="Bảng công tháng"
+      description="Lịch sử chi tiết chấm công."
+      class="px-4 md:px-0"
     >
       <template #actions>
         <div
-          class="flex items-center gap-1 rounded-md border border-border bg-card  sm:p-1 shadow-sm self-start sm:self-auto p-4"
+          class="flex items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-sm shrink-0"
         >
-          <Button variant="ghost" size="icon" @click="prevMonth" class="h-7 w-7 sm:h-9 sm:w-9">
-            <ChevronLeft class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Button variant="ghost" size="icon" @click="prevMonth" class="h-8 w-8 rounded-lg">
+            <ChevronLeft class="h-4 w-4" />
           </Button>
           <div
-            class="px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-700 min-w-[100px] sm:min-w-[140px] text-center"
+            class="px-2 text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-700 min-w-[100px] md:min-w-[120px] text-center"
           >
             {{ monthLabel }}
           </div>
-          <Button variant="ghost" size="icon" @click="nextMonth" class="h-7 w-7 sm:h-9 sm:w-9">
-            <ChevronRight class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Button variant="ghost" size="icon" @click="nextMonth" class="h-8 w-8 rounded-lg">
+            <ChevronRight class="h-4 w-4" />
           </Button>
         </div>
       </template>
     </PageHeader>
 
-    <!-- Summary Cards - Compact Indigo Theme -->
-    <div class="grid grid-cols-4 gap-2 lg:gap-4">
+    <div
+      v-if="historyQuery.isLoading.value || scheduleQuery.isLoading.value"
+      class="flex h-64 items-center justify-center"
+    >
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div v-else class="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-0">
       <Card
         v-for="item in [
-          { label: 'Đúng giờ', value: summary.present, icon: CheckCircle2 },
-          { label: 'Muộn', value: summary.late, icon: Clock },
-          { label: 'Vắng', value: summary.absent, icon: XCircle },
-          { label: 'Thiếu', value: summary.incomplete, icon: HelpCircle },
+          {
+            label: 'Đúng giờ',
+            labelShort: 'Đúng',
+            value: summary.present,
+            icon: CheckCircle2,
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-50/50',
+          },
+          {
+            label: 'Đi muộn',
+            labelShort: 'Muộn',
+            value: summary.late,
+            icon: Clock,
+            color: 'text-amber-500',
+            bg: 'bg-amber-50/50',
+          },
+          {
+            label: 'Vắng mặt',
+            labelShort: 'Vắng',
+            value: summary.absent,
+            icon: XCircle,
+            color: 'text-rose-500',
+            bg: 'bg-rose-50/50',
+          },
+          {
+            label: 'Về sớm',
+            labelShort: 'Sớm',
+            value: summary.incomplete,
+            icon: HelpCircle,
+            color: 'text-indigo-500',
+            bg: 'bg-indigo-50/50',
+          },
         ]"
         :key="item.label"
-        class="border-none bg-indigo-50/40 dark:bg-indigo-950/20 shadow-none rounded-md"
+        class="border-none shadow-sm rounded-xl md:rounded-2xl overflow-hidden"
       >
-        <CardContent class="p-1.5 sm:p-5 flex flex-col items-center justify-center text-center">
-          <div class="mb-1 sm:mb-2 text-indigo-600">
-            <component :is="item.icon" class="h-4 w-4 sm:h-7 sm:w-7" />
-          </div>
-          <p
-            class="text-[7px] sm:text-[10px] font-bold text-indigo-600/60 uppercase tracking-tighter sm:tracking-widest leading-none mb-0.5 sm:mb-1"
+        <CardContent
+          class="p-2 md:p-5 flex flex-col md:flex-row items-center md:gap-4 text-center md:text-left"
+        >
+          <div
+            :class="[
+              item.bg,
+              item.color,
+              'h-7 w-7 md:h-10 md:w-10 rounded-lg md:rounded-xl flex items-center justify-center border border-current opacity-20 hidden md:flex',
+            ]"
           >
-            {{ item.label }}
-          </p>
-          <p class="text-sm sm:text-2xl font-black text-slate-900 dark:text-white">
-            {{ item.value }}
-          </p>
+            <component :is="item.icon" class="h-4 w-4 md:h-5 md:w-5" />
+          </div>
+          <div>
+            <p
+              class="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-tighter md:tracking-widest leading-none mb-1"
+            >
+              <span class="md:hidden">{{ item.labelShort }}</span>
+              <span class="hidden md:inline">{{ item.label }}</span>
+            </p>
+            <p class="text-xs md:text-xl font-black text-slate-900 leading-none">
+              {{ item.value }}
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
 
-    <!-- Attendance Table - Responsive -->
-    <Card class="shadow-none border-border rounded-md sm:rounded-xl">
-      <CardHeader class="py-2.5 px-3 sm:py-5 sm:px-6 bg-slate-50/50 dark:bg-slate-900/50 border-b">
-        <div class="flex items-center justify-between">
-          <CardTitle class="text-[11px] sm:text-sm font-black uppercase tracking-widest"
-            >Chi tiết chấm công tháng {{ currentMonth + 1 }}</CardTitle
-          >
-          <Badge
-            class="text-[9px] sm:text-[11px] font-bold bg-white dark:bg-slate-950 border-slate-200 text-slate-500 px-2 sm:px-3 h-5 sm:h-6"
-            >22 ngày công</Badge
-          >
-        </div>
-      </CardHeader>
+    <!-- Main Attendance Table -->
+    <div
+      v-if="!historyQuery.isLoading.value && !scheduleQuery.isLoading.value"
+      class="overflow-hidden md:rounded-2xl border-y md:border border-border bg-card shadow-sm"
+    >
       <div class="overflow-x-auto">
-        <DataTable :columns="columns" :rows="mockLogs" class="sm:text-sm">
-          <template #cell-date="{ row }">
-            <div class="flex flex-col py-1 sm:py-2">
-              <span
-                class="text-xs sm:text-sm font-black text-slate-700 dark:text-slate-200 leading-none"
-                >{{ row.date }}</span
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-slate-50/50 border-b border-border">
+              <th
+                class="px-3 md:px-6 py-3 text-left text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-500"
               >
-              <span
-                class="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase leading-none mt-1"
-                >{{ row.dayLabel }}</span
+                Ngày
+              </th>
+              <th
+                class="hidden md:table-cell px-6 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500"
               >
-            </div>
-          </template>
-
-          <template #cell-shift="{ value }">
-            <span class="text-[11px] font-bold text-slate-500 whitespace-nowrap">{{ value }}</span>
-          </template>
-
-          <template #cell-checkIn="{ value }">
-            <code
-              class="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-slate-600"
+                Ca làm việc
+              </th>
+              <th
+                class="px-3 md:px-6 py-3 text-left text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-500"
+              >
+                <span class="md:hidden">Check In/Out</span>
+                <span class="hidden md:inline">Giờ vào</span>
+              </th>
+              <th
+                class="hidden md:table-cell px-6 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500"
+              >
+                Giờ ra
+              </th>
+              <th
+                class="px-3 md:px-6 py-3 text-center text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-500"
+              >
+                Trạng thái
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border text-center md:text-left">
+            <tr
+              v-for="row in logs"
+              :key="row.id"
+              class="group hover:bg-slate-50/50 transition-colors"
+              :class="{ 'bg-indigo-50/20': row.isToday }"
             >
-              {{ value || '—' }}
-            </code>
-          </template>
+              <!-- Date Column -->
+              <td class="px-3 md:px-6 py-3">
+                <div class="flex items-center gap-2 md:gap-3">
+                  <div
+                    v-if="row.isToday"
+                    class="w-1 md:w-1.5 h-6 md:h-8 bg-indigo-500 rounded-full shrink-0"
+                  ></div>
+                  <div class="flex flex-col text-left">
+                    <div class="flex items-center gap-1.5 md:gap-2">
+                      <span
+                        class="text-xs md:text-sm font-black uppercase leading-none"
+                        :class="row.isToday ? 'text-indigo-600' : 'text-slate-700'"
+                      >
+                        {{ row.date }}<span class="md:hidden">/{{ row.month }}</span>
+                      </span>
+                      <div
+                        v-if="row.isToday"
+                        class="h-3 md:h-4 px-1 flex items-center bg-indigo-600 text-[6px] md:text-[8px] font-black text-white rounded border-none uppercase whitespace-nowrap"
+                      >
+                        Nay
+                      </div>
+                    </div>
+                    <span
+                      class="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-0.5 md:mt-1"
+                      >{{ row.dayLabel }}</span
+                    >
+                  </div>
+                </div>
+              </td>
 
-          <template #cell-checkOut="{ value }">
-            <code
-              class="text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-slate-600"
-            >
-              {{ value || '—' }}
-            </code>
-          </template>
+              <!-- Shift Column -->
+              <td class="hidden md:table-cell px-6 py-3">
+                <span
+                  class="text-xs font-black uppercase"
+                  :class="row.shift !== '—' && row.shift !== 'Ngày nghỉ' ? 'text-slate-700' : 'text-slate-300'"
+                >
+                  {{ row.shift }}
+                </span>
+              </td>
 
-          <template #cell-status="{ row }">
-            <Badge
-              :class="getStatusBadge(row.status, row.lateMinutes).class"
-              class="font-bold uppercase text-[8px] h-4 px-1.5 whitespace-nowrap"
-            >
-              {{ getStatusBadge(row.status, row.lateMinutes).label }}
-            </Badge>
-          </template>
-        </DataTable>
+              <!-- Time In/Out Column -->
+              <td class="px-3 md:px-6 py-2 md:py-3 text-left">
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span
+                      class="md:hidden text-[6px] font-black text-slate-300 uppercase w-5 shrink-0"
+                      >Vào:</span
+                    >
+                    <code
+                      v-if="row.displayCheckIn !== '—'"
+                      class="text-[9px] md:text-[11px] font-mono font-black bg-slate-50 md:bg-slate-100 px-1 md:px-2 py-0.5 md:py-1 rounded text-slate-600"
+                    >
+                      {{ row.displayCheckIn }}
+                    </code>
+                    <span v-else class="text-slate-200 font-mono text-[9px] md:text-xs"
+                      >--:--:--</span
+                    >
+                  </div>
+                  <div class="md:hidden flex items-center gap-1.5 border-t border-slate-50 pt-1.5">
+                    <span class="text-[6px] font-black text-slate-300 uppercase w-5 shrink-0"
+                      >Ra :</span
+                    >
+                    <code
+                      v-if="row.displayCheckOut !== '—'"
+                      class="text-[9px] font-mono font-black bg-slate-50 px-1 py-0.5 rounded text-slate-600"
+                    >
+                      {{ row.displayCheckOut }}
+                    </code>
+                    <span v-else class="text-slate-200 font-mono text-[9px]">--:--:--</span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Out Column (Desktop only) -->
+              <td class="hidden md:table-cell px-6 py-3">
+                <code
+                  v-if="row.displayCheckOut !== '—'"
+                  class="text-[11px] font-mono font-black bg-slate-100 px-2 py-1 rounded-lg text-slate-600"
+                >
+                  {{ row.displayCheckOut }}
+                </code>
+                <span v-else class="text-slate-200 font-mono text-xs">--:--:--</span>
+              </td>
+
+              <!-- Status Column -->
+              <td class="px-3 md:px-6 py-3 text-center">
+                <Badge
+                  :class="[
+                    getStatusBadge(row.status, row.lateMinutes, row.isToday).class,
+                    'h-5 md:h-6 px-1 md:px-3 rounded md:rounded-lg font-black uppercase text-[7px] md:text-[9px] tracking-widest border-none whitespace-nowrap',
+                  ]"
+                >
+                  <span class="md:hidden text-[6px]">{{
+                    getStatusBadge(row.status, row.lateMinutes, row.isToday).label.substring(0, 4)
+                  }}</span>
+                  <span class="hidden md:inline">{{
+                    getStatusBadge(row.status, row.lateMinutes, row.isToday).label
+                  }}</span>
+                </Badge>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </Card>
+    </div>
   </div>
 </template>

@@ -53,3 +53,15 @@ export interface BulkAssignRequest {
   daysOfWeek: number[];
   effectiveFrom: string;
 }
+
+export interface EmployeeScheduleResponse {
+  id: number;
+  employeeId: number;
+  shiftId: number;
+  shiftName: string;
+  startTime: string;
+  endTime: string;
+  dayOfWeek: number;
+  isActive: boolean;
+  effectiveFrom: string;
+}

@@ -1,6 +1,6 @@
 import api from '@/lib/api'
 import type { ApiResponse, Page } from '@/types/api'
-import type { CreateLeaveRequest, LeaveRequest, LeaveType } from '@/types/leave'
+import type { CreateLeaveRequest, CreateMyLeaveRequest, LeaveRequest, LeaveType } from '@/types/leave'
 
 function buildCreateLeaveBody(data: CreateLeaveRequest): Record<string, unknown> {
   return {
@@ -25,4 +25,9 @@ export const leaveApi = {
   approve: (id: string | number) => api.put<ApiResponse<LeaveRequest>>(`/leaves/${id}/approve`),
   reject: (id: string | number) => api.put<ApiResponse<LeaveRequest>>(`/leaves/${id}/reject`),
   delete: (id: string | number) => api.delete<ApiResponse<void>>(`/leaves/${id}`),
+
+  // Các API dành cho cá nhân (/me)
+  getMyLeaves: (params?: { status?: string }) =>
+    api.get<ApiResponse<Page<LeaveRequest>>>('/leaves/me', { params }),
+  createMe: (data: CreateMyLeaveRequest) => api.post<ApiResponse<LeaveRequest>>('/leaves/me', data),
 }

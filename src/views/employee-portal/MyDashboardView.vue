@@ -1,22 +1,58 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { CheckCircle2, Clock, Star, TrendingUp, ChevronRight, Download, Timer } from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import { useAuth } from '@/composables/useAuth'
+import { useMyAttendance } from '@/composables/useMyAttendance'
+import { useMyLeaves } from '@/composables/useMyLeaves'
 
-const userProfile = { fullName: 'Nguyễn Văn A' }
+const { user } = useAuth()
 
-const stats = [
-  { label: 'Công', value: '18/22', icon: CheckCircle2, status: 'Đạt' },
-  { label: 'Muộn', value: '2', icon: Clock, status: 'Cảnh báo' },
-  { label: 'Phép', value: '12', icon: Star, status: 'Còn lại' },
-  { label: 'Tổng giờ', value: '156.5', icon: TrendingUp, status: 'Giờ làm' },
-]
+const today = new Date()
+
+// Helper functions to replace date-fns
+const formatDateStr = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+const getStartOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
+const getEndOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
+
+const filters = computed(() => ({
+  fromDate: formatDateStr(getStartOfMonth(today)),
+  toDate: formatDateStr(getEndOfMonth(today)),
+  page: 0,
+  size: 100,
+}))
+
+const { historyQuery, todayQuery } = useMyAttendance(filters)
+const { leavesQuery } = useMyLeaves()
+
+const userProfile = computed(() => ({
+  fullName: user.value?.fullName || 'Nhân viên'
+}))
+
+const attendanceStats = computed(() => {
+  const data = historyQuery.data.value?.content || []
+  const present = data.filter(l => l.status === 'PRESENT').length
+  const late = data.filter(l => l.status === 'LATE').length
+  return { present, late }
+})
+
+const stats = computed(() => [
+  { label: 'Công', value: `${attendanceStats.value.present}/22`, icon: CheckCircle2, status: 'Trong tháng' },
+  { label: 'Muộn', value: String(attendanceStats.value.late), icon: Clock, status: 'Số lần' },
+  { label: 'Phép', value: String(leavesQuery.data.value?.totalElements || 0), icon: Star, status: 'Đã gửi' },
+  { label: 'Trạng thái', value: todayQuery.data.value?.status || 'Chưa có', icon: TrendingUp, status: 'Hôm nay' },
+])
 
 const recentActivities = [
-  { id: 1, title: 'Cập nhật lịch trực tuần sau', time: '2 giờ trước', category: 'Hành chính' },
-  { id: 2, title: 'Thông báo nghỉ lễ Giỗ Tổ Hùng Vương', time: '4 giờ trước', category: 'Nhân sự' },
-  { id: 3, title: 'Chương trình đào tạo kỹ năng mềm', time: '1 ngày trước', category: 'Đào tạo' },
+  { id: 1, title: 'Cập nhật lịch trực tuần sau', time: 'Mới nhất', category: 'Hành chính' },
+  { id: 2, title: 'Thông báo nghỉ lễ', time: 'Gần đây', category: 'Nhân sự' },
 ]
 </script>
 
@@ -30,11 +66,11 @@ const recentActivities = [
         <div class="flex items-center gap-2">
           <Button variant="outline" size="sm" class="h-8 text-[10px] font-bold uppercase tracking-widest gap-2">
             <Download class="h-3 w-3" />
-            Xuất báo cáo
+            Báo cáo
           </Button>
           <Button size="sm" class="h-8 bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-widest gap-2">
             <Timer class="h-3 w-3" />
-            Check-in
+            Ghi danh
           </Button>
         </div>
       </template>
@@ -54,8 +90,7 @@ const recentActivities = [
           <div class="mt-3 flex items-end justify-between">
             <span
               class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums leading-none group-hover:text-primary transition-colors"
-              >{{ stat.value }}</span
-            >
+              >{{ stat.value }}</span>
             <div
               class="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
             >
@@ -75,17 +110,11 @@ const recentActivities = [
             <div>
               <CardTitle
                 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none"
-                >Hiệu suất chuyên cần</CardTitle
+                >Biểu đồ chuyên cần</CardTitle
               >
               <p class="mt-2 text-xs font-black text-slate-900 uppercase">
-                Thống kê 7 ngày qua
+                Dữ liệu mô phỏng 7 ngày
               </p>
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-1.5 shrink-0">
-                <div class="h-2 w-2 rounded-full bg-primary"></div>
-                <span class="text-[9px] font-bold text-slate-400 uppercase">Hoàn thành</span>
-              </div>
             </div>
           </div>
         </CardHeader>
@@ -116,7 +145,7 @@ const recentActivities = [
 
       <!-- Side Content -->
       <div class="space-y-6">
-        <!-- Birthday Compact -->
+        <!-- Dashboard shortcuts -->
         <Card class="border-slate-100 shadow-none p-5 rounded-xl bg-white">
           <div class="flex items-center gap-4">
             <div
@@ -128,14 +157,14 @@ const recentActivities = [
               <p
                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none"
               >
-                Sự kiện tuần này
+                Lịch làm việc
               </p>
-              <h4 class="text-xl font-black text-slate-900 mt-2 leading-none">2 Sinh nhật mới</h4>
-              <p
-                class="text-[9px] font-bold text-primary mt-1.5 uppercase cursor-pointer hover:underline"
+              <h4 class="text-xl font-black text-slate-900 mt-2 leading-none">Xem lịch trực</h4>
+              <RouterLink to="/my/schedule"
+                class="inline-block text-[9px] font-bold text-primary mt-1.5 uppercase cursor-pointer hover:underline"
               >
-                Xem danh sách
-              </p>
+                Đi tới lịch biểu
+              </RouterLink>
             </div>
           </div>
         </Card>
@@ -177,9 +206,10 @@ const recentActivities = [
             </div>
             <Button
               variant="ghost"
+              as-child
               class="w-full rounded-none border-t border-slate-50 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors"
             >
-              Xem toàn bộ <ChevronRight class="ml-2 h-3 w-3" />
+              <RouterLink to="/my/attendance">Xem chi tiết <ChevronRight class="ml-2 h-3 w-3" /></RouterLink>
             </Button>
           </CardContent>
         </Card>

@@ -21,7 +21,6 @@ export interface LeaveRequest {
   status: LeaveStatus
 }
 
-/** Khớp body POST /leaves từ backend */
 export interface CreateLeaveRequest {
   employeeId: string | number
   leaveTypeCode: string
@@ -29,3 +28,5 @@ export interface CreateLeaveRequest {
   toDate: string
   reason: string
 }
+
+export type CreateMyLeaveRequest = Omit<CreateLeaveRequest, 'employeeId'>
