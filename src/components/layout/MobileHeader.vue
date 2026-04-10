@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Bell } from 'lucide-vue-next'
+import { Bell, Menu } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
+
+const props = defineProps<{
+  showMenu?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'menu-click'): void
+}>()
 
 const route = useRoute()
 const { user } = useAuth()
@@ -26,11 +34,22 @@ const userInitials = computed(() => {
     class="sticky top-0 z-40 bg-white/80 backdrop-blur-md dark:bg-slate-900/80 lg:hidden border-b border-slate-100 dark:border-slate-800"
   >
     <div class="flex h-14 items-center justify-between px-4 pt-[env(safe-area-inset-top)]">
-      <!-- Left: Simple Avatar or Logo -->
-      <div
-        class="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600/10 text-xs font-black text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400"
-      >
-        {{ userInitials }}
+      <!-- Left: Simple Avatar or Menu Button -->
+      <div class="flex items-center">
+        <button
+          v-if="props.showMenu"
+          @click="emit('menu-click')"
+          class="mr-3 flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+        >
+          <Menu class="h-6 w-6" />
+        </button>
+        
+        <div
+          v-else
+          class="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600/10 text-xs font-black text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400"
+        >
+          {{ userInitials }}
+        </div>
       </div>
 
       <!-- Center: Title -->

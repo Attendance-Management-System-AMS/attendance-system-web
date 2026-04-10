@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import {
   BarChart3,
+  Building2,
+  Briefcase,
   CalendarDays,
   ChevronLeft,
   Clock,
@@ -12,6 +14,7 @@ import {
   Lock,
   Settings,
   Timer,
+  Users,
 } from 'lucide-vue-next'
 import { useAuth, type UserRole } from '@/composables/useAuth'
 
@@ -67,6 +70,15 @@ const navGroups: NavGroup[] = [
           { label: 'Mẫu lịch làm việc', to: '/schedule/templates' },
         ],
       },
+    ],
+  },
+  {
+    label: 'Nhân sự',
+    roles: ['ROLE_ADMIN', 'ROLE_HR'],
+    items: [
+      { label: 'Nhân viên', to: '/employees', icon: Users },
+      { label: 'Phòng ban', to: '/departments', icon: Building2 },
+      { label: 'Chức vụ', to: '/positions', icon: Briefcase },
     ],
   },
   {

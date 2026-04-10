@@ -218,7 +218,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
 
           <Button
             as-child
-            class="h-11 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[11px] rounded-xl gap-2 text-primary-foreground"
+            class="h-11 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black tracking-widest text-[11px] rounded-xl gap-2 text-primary-foreground"
           >
             <RouterLink to="/schedule/assignments">
               <Plus class="h-4 w-4" /> Phân công ca
@@ -343,7 +343,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                   </Avatar>
                   <div class="min-w-0">
                     <p
-                      class="text-sm font-black text-slate-800 truncate group-hover:text-primary transition-colors uppercase leading-none"
+                      class="text-sm font-black text-slate-800 truncate group-hover:text-primary transition-colors leading-none"
                     >
                       {{ employee.fullName }}
                     </p>

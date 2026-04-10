@@ -13,7 +13,7 @@ defineProps<{
       <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tight leading-none dark:text-white">
         {{ title }}
       </h1>
-      <p v-if="description" class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+      <p v-if="description" class="mt-2 text-[12px] font-semibold text-slate-400 tracking-widest leading-none">
         {{ description }}
       </p>
     </div>
