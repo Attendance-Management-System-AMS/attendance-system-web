@@ -66,7 +66,7 @@ const openEditModal = (template: ScheduleTemplate) => {
     const existing = template.items.find((item) => item.dayOfWeek === day.value)
     return {
       dayOfWeek: day.value,
-      shiftId: existing ? String(existing.shiftId) : '',
+      shiftId: existing ? String(existing.shiftId || existing.shift?.id || '') : '',
     }
   })
 
@@ -168,7 +168,7 @@ const applyToWeekdays = (shiftId: string) => {
       <template #actions>
         <button
           @click="openCreateModal"
-          class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all dark:shadow-none"
+          class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold tracking-wide text-white shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all dark:shadow-none"
         >
           <Plus class="h-4 w-4" />
           Thêm mẫu mới
@@ -241,7 +241,7 @@ const applyToWeekdays = (shiftId: string) => {
         </div>
 
         <div class="mt-5 space-y-2">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <p class="text-[10px] font-bold tracking-wider text-slate-400">
             Khung giờ làm việc
           </p>
           <div class="grid grid-cols-2 gap-x-4 gap-y-1.5">
@@ -320,25 +320,25 @@ const applyToWeekdays = (shiftId: string) => {
                 <div class="grid gap-5">
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div class="md:col-span-1 space-y-1.5">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500"
+                      <label class="text-xs font-bold tracking-wider text-slate-500"
                         >Tên mẫu <span class="text-rose-500">*</span></label
                       >
                       <input
                         v-model="templateForm.name"
                         type="text"
                         placeholder="VD: Hành chính..."
-                        class="h-11 w-full rounded-xl border border-border bg-muted/30 px-4 text-sm focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        class="h-10 w-full rounded-xl border border-border bg-muted/30 px-4 text-sm focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       />
                     </div>
                     <div class="md:col-span-2 space-y-1.5">
-                      <label class="text-xs font-bold uppercase tracking-wider text-slate-500"
+                      <label class="text-xs font-bold tracking-wider text-slate-500"
                         >Mô tả</label
                       >
                       <input
                         v-model="templateForm.description"
                         type="text"
                         placeholder="Ghi chú ngắn về mẫu này..."
-                        class="h-11 w-full rounded-xl border border-border bg-muted/30 px-4 text-sm focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        class="h-10 w-full rounded-xl border border-border bg-muted/30 px-4 text-sm focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       />
                     </div>
                   </div>
@@ -442,14 +442,14 @@ const applyToWeekdays = (shiftId: string) => {
                 >
                   <button
                     @click="isModalOpen = false"
-                    class="h-11 rounded-xl border border-border px-6 text-sm font-medium text-slate-600 hover:bg-muted dark:border-slate-700 dark:text-slate-300"
+                    class="h-10 rounded-xl border border-border px-6 text-sm font-medium text-slate-600 hover:bg-muted dark:border-slate-700 dark:text-slate-300"
                   >
                     Hủy
                   </button>
                   <button
                     @click="handleSubmit"
                     :disabled="createTemplate.isPending.value || updateTemplate.isPending.value"
-                    class="h-11 flex items-center gap-2 rounded-xl bg-primary px-8 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-primary/20 hover:bg-primary/90 disabled:opacity-50"
+                    class="h-10 flex items-center gap-2 rounded-xl bg-primary px-8 text-sm font-bold tracking-wide text-white shadow-lg shadow-primary/20 hover:bg-primary/90 disabled:opacity-50"
                   >
                     <Save class="h-4 w-4" />
                     <span>{{ isEditMode ? 'Cập nhật' : 'Lưu mẫu' }}</span>

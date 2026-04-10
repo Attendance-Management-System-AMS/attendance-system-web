@@ -23,6 +23,7 @@ export interface ScheduleTemplateItem {
   id?: number;
   dayOfWeek: number;
   shiftId: number;
+  shift?: { id: number };
 }
 
 export interface ScheduleTemplate {
