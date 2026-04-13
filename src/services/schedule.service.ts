@@ -5,7 +5,7 @@ import type { Schedule, CreateSchedule, ApplyTemplateRequest, BulkAssignRequest 
 export const scheduleApi = {
   getAll: (params?: Record<string, unknown>) => api.get<ApiResponse<Page<Schedule>>>('/attendance/schedules', { params }),
   getByEmployee: (employeeId: string | number) =>
-    api.get<ApiResponse<Page<Schedule>>>(`/attendance/schedules/employee/${employeeId}`),
+    api.get<ApiResponse<Schedule[]>>(`/attendance/schedules/employee/${employeeId}`),
   search: (params: Record<string, unknown>) =>
     api.get<ApiResponse<Page<Schedule>>>('/attendance/schedules', { params }),
   create: (data: CreateSchedule) => api.post<ApiResponse<Schedule>>('/attendance/schedules', data),

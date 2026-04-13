@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { clearAuthToken, isAuthenticated, setAuthToken } from '@/lib/auth'
+import { clearAuthToken, isAuthenticated, setAuthTokens } from '@/lib/auth'
 import { authApi, resolveAuthToken } from '@/services/auth.service'
 import { useAuth, type UserProfile, type UserRole } from '@/composables/useAuth'
 
@@ -70,7 +70,7 @@ router.beforeEach(async (to) => {
       const response = await authApi.refresh()
       const token = resolveAuthToken(response.result)
       if (token) {
-        setAuthToken(token)
+        setAuthTokens(token, response.result?.refreshToken)
       } else {
         throw new Error('No token')
       }

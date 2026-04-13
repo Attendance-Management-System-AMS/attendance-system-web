@@ -1,4 +1,5 @@
 import authHttp from '@/lib/auth-http'
+import { getRefreshToken } from '@/lib/auth'
 import type { ApiResponse } from '@/types/api'
 import type { UserProfile } from '@/composables/useAuth'
 
@@ -12,6 +13,7 @@ export interface LoginResult {
     token?: string
     accessToken?: string
     jwt?: string
+    refreshToken?: string
     user?: UserProfile
 }
 
@@ -30,7 +32,9 @@ export const authApi = {
             remember: payload.remember,
         }).then((res) => res.data),
     refresh: () =>
-        authHttp.post<ApiResponse<RefreshResult>>('/auth/refresh').then((res) => res.data),
+        authHttp.post<ApiResponse<RefreshResult>>('/auth/refresh', {
+            refreshToken: getRefreshToken(),
+        }).then((res) => res.data),
     getProfile: () =>
         authHttp.get<ApiResponse<UserProfile>>('/auth/me').then((res) => res.data),
 }

@@ -17,10 +17,14 @@ const time = useDateFormat(useNow(), 'HH:mm:ss')
 const date = useDateFormat(useNow(), 'DD/MM/YYYY')
 const ui = reactive({
   locked: false,
-  progress: 0,
   /** Chỉ dùng cho lỗi (camera, API…) — thành công hiển thị ở panel dưới */
   errorMsg: '' as string,
 })
+
+const FACE_SCORE_THRESHOLD = 0.45
+const FACE_HOLD_MS = 700
+const SCAN_DELAY_MS = 120
+const RESET_DELAY_MS = 3500
 
 /** Dựng object hiển thị kiosk từ snapshot API — không cần GET /employees/:id. */
 function employeeFromBrief(row: AttendanceCheckInResult, brief: AttendanceEmployeeBrief): Employee {
@@ -63,18 +67,30 @@ const successPanel = reactive({
   show: false,
   loadingProfile: false,
   employee: null as Employee | null,
-  checkInTime: '',
+  eventTime: '',
+  eventLabel: 'Giờ vào',
   attendanceStatus: '',
   employeeId: null as number | null,
 })
 
 async function showSuccessFromResult(result: AttendanceCheckInResult | undefined) {
   successPanel.show = true
-  successPanel.checkInTime = formatCheckInTime(result?.checkInTime)
+  const isCheckout = Boolean(result?.checkOutTime)
+  successPanel.eventTime = formatCheckInTime(isCheckout ? result?.checkOutTime ?? undefined : result?.checkInTime)
+  successPanel.eventLabel = isCheckout ? 'Giờ ra' : 'Giờ vào'
   successPanel.attendanceStatus = result?.status ?? ''
   successPanel.employeeId = result?.employeeId ?? null
 
-  const brief = result?.employee
+  const brief =
+    result?.employee ??
+    (result?.employeeFullName && result?.employeeSnapshotCode
+      ? {
+          fullName: result.employeeFullName,
+          employeeCode: result.employeeSnapshotCode,
+          departmentName: result.employeeSnapshotDepartmentName ?? null,
+          positionName: result.employeeSnapshotPositionName ?? null,
+        }
+      : null)
   const hasBrief =
     brief &&
     typeof brief.fullName === 'string' &&
@@ -106,7 +122,8 @@ function clearSuccessPanel() {
   successPanel.show = false
   successPanel.employee = null
   successPanel.loadingProfile = false
-  successPanel.checkInTime = ''
+  successPanel.eventTime = ''
+  successPanel.eventLabel = 'Giờ vào'
   successPanel.attendanceStatus = ''
   successPanel.employeeId = null
 }
@@ -118,45 +135,34 @@ let faceDetectedStartTime: number | null = null
 // --- Logic ---
 const handleCheckIn = async (descriptor: Float32Array) => {
   ui.locked = true
-  ui.progress = 0
-
-  const progressInterval = window.setInterval(() => {
-    if (ui.progress < 90) ui.progress += 10
-  }, 50)
 
   try {
     const descriptorArray = Array.from(descriptor) as number[]
-    const data = await attendanceApi.checkInByFace(descriptorArray)
-    ui.progress = 100
+    const data = await attendanceApi.scanByFace(descriptorArray)
     ui.errorMsg = ''
     await showSuccessFromResult(data.result)
   } catch (err) {
     ui.errorMsg = getApiErrorMessage(err, 'Không thể chấm công.')
-    ui.progress = 0
-  } finally {
-    window.clearInterval(progressInterval)
   }
 
-  // Reset sau 3s để chuẩn bị lần quét tiếp theo
+  // Reset nhanh để kiosk sẵn sàng cho lượt tiếp theo.
   setTimeout(() => {
     ui.locked = false
-    ui.progress = 0
     ui.errorMsg = ''
     clearSuccessPanel()
     runScanner()
-  }, 5000)
+  }, RESET_DELAY_MS)
 }
 
 const runScanner = async () => {
   if (!ui.locked && isLoaded.value) {
     const det = await detectFace()
-    if (det && det.detection.score > 0.7) {
+    if (det && det.detection.score >= FACE_SCORE_THRESHOLD) {
       if (!faceDetectedStartTime) {
         faceDetectedStartTime = Date.now()
       } else {
         const duration = Date.now() - faceDetectedStartTime
-        if (duration >= 2000) {
-          // Đã đứng im đủ 2 giây
+        if (duration >= FACE_HOLD_MS) {
           faceDetectedStartTime = null
           if (scanTimer) window.clearTimeout(scanTimer)
           await handleCheckIn(det.descriptor)
@@ -170,7 +176,7 @@ const runScanner = async () => {
   } else {
     faceDetectedStartTime = null
   }
-  scanTimer = window.setTimeout(runScanner, 200) // Tăng tần suất quét để mượt hơn khi tracking 2s
+  scanTimer = window.setTimeout(runScanner, SCAN_DELAY_MS)
 }
 
 onMounted(async () => {
@@ -209,7 +215,7 @@ onUnmounted(() => {
           <div
             class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-xl flex items-center gap-4"
           >
-            <div class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+            <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
             <h1 class="text-xl font-black tracking-tighter">AMS KIOSK</h1>
           </div>
 
@@ -237,164 +243,111 @@ onUnmounted(() => {
             <div
               class="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-indigo-500 rounded-br-2xl opacity-50"
             ></div>
-            <div
-              class="absolute inset-x-0 h-0.5 bg-linear-to-r from-transparent via-indigo-400 to-transparent shadow-[0_0_20px_rgba(99,102,241,0.6)] animate-scan"
-            ></div>
           </div>
         </div>
       </div>
 
       <!-- Lỗi: gọn phía trên -->
-      <Transition name="fade">
+      <div
+        v-if="ui.errorMsg"
+        class="absolute top-24 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-6 pointer-events-none"
+      >
         <div
-          v-if="ui.errorMsg"
-          class="absolute top-24 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-6 pointer-events-none"
+          class="flex items-center justify-center gap-3 rounded-xl border border-rose-500/40 bg-black/75 px-5 py-4 text-center shadow-2xl backdrop-blur-xl"
         >
-          <div
-            class="flex items-center justify-center gap-3 rounded-xl border border-rose-500/40 bg-black/75 px-5 py-4 text-center shadow-2xl backdrop-blur-xl"
-          >
-            <XCircle class="h-6 w-6 shrink-0 text-rose-400" />
-            <p class="text-sm font-semibold text-rose-100">{{ ui.errorMsg }}</p>
-          </div>
+          <XCircle class="h-6 w-6 shrink-0 text-rose-400" />
+          <p class="text-sm font-semibold text-rose-100">{{ ui.errorMsg }}</p>
         </div>
-      </Transition>
+      </div>
 
       <!-- Chấm công thành công: thông tin nhân viên phía dưới -->
-      <Transition name="slide-up">
+      <div
+        v-if="successPanel.show"
+        class="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-4 pb-6 pt-16 sm:px-8"
+      >
         <div
-          v-if="successPanel.show"
-          class="pointer-events-none absolute inset-x-0 bottom-0 z-40 px-4 pb-6 pt-16 sm:px-8"
+          class="mx-auto max-w-2xl overflow-hidden rounded-xl border border-emerald-500/30 bg-linear-to-t from-slate-950/95 via-slate-900/90 to-slate-900/75 shadow-2xl shadow-emerald-900/20 backdrop-blur-xl"
         >
           <div
-            class="mx-auto max-w-2xl overflow-hidden rounded-xl border border-emerald-500/30 bg-linear-to-t from-slate-950/95 via-slate-900/90 to-slate-900/75 shadow-2xl shadow-emerald-900/20 backdrop-blur-xl"
+            class="flex items-center gap-2 border-b border-white/10 bg-emerald-500/10 px-5 py-3 text-emerald-300"
           >
+            <CheckCircle2 class="h-5 w-5 shrink-0" />
+            <span class="text-sm font-bold tracking-wide">Đã chấm công</span>
+          </div>
+
+          <div class="grid gap-4 px-5 py-5 sm:grid-cols-[auto_1fr] sm:items-start">
             <div
-              class="flex items-center gap-2 border-b border-white/10 bg-emerald-500/10 px-5 py-3 text-emerald-300"
+              class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-2xl font-black text-emerald-300"
             >
-              <CheckCircle2 class="h-5 w-5 shrink-0" />
-              <span class="text-sm font-bold tracking-wide">Đã chấm công</span>
+              <template v-if="successPanel.loadingProfile">
+                <span class="h-8 w-8 rounded-lg bg-white/10" />
+              </template>
+              <template v-else-if="successPanel.employee?.fullName">
+                {{ successPanel.employee.fullName.charAt(0).toUpperCase() }}
+              </template>
+              <User v-else class="h-8 w-8 text-emerald-400/80" />
             </div>
 
-            <div class="grid gap-4 px-5 py-5 sm:grid-cols-[auto_1fr] sm:items-start">
-              <div
-                class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-2xl font-black text-emerald-300"
-              >
-                <template v-if="successPanel.loadingProfile">
-                  <span class="h-8 w-8 animate-pulse rounded-lg bg-white/10" />
-                </template>
-                <template v-else-if="successPanel.employee?.fullName">
-                  {{ successPanel.employee.fullName.charAt(0).toUpperCase() }}
-                </template>
-                <User v-else class="h-8 w-8 text-emerald-400/80" />
-              </div>
-
-              <div class="min-w-0 space-y-3 text-left">
-                <div>
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-white/40">
-                    Họ và tên
-                  </p>
-                  <p
-                    v-if="successPanel.loadingProfile"
-                    class="mt-1 h-6 w-48 animate-pulse rounded bg-white/10"
-                  />
-                  <p v-else class="truncate text-xl font-bold text-white">
-                    {{ successPanel.employee?.fullName ?? `Nhân viên #${successPanel.employeeId}` }}
-                  </p>
-                </div>
-
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2">
-                    <Hash class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
-                    <div>
-                      <p class="text-[10px] font-bold uppercase text-white/35">Mã NV</p>
-                      <p class="font-mono text-sm text-white/90">
-                        {{ successPanel.employee?.employeeCode ?? '—' }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2">
-                    <Clock class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
-                    <div>
-                      <p class="text-[10px] font-bold uppercase text-white/35">Giờ vào</p>
-                      <p class="text-sm font-medium text-emerald-200/95">
-                        {{ successPanel.checkInTime }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2 sm:col-span-2">
-                    <Building2 class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
-                    <div class="min-w-0 flex-1">
-                      <p class="text-[10px] font-bold uppercase text-white/35">Phòng ban</p>
-                      <p class="truncate text-sm text-white/85">
-                        {{ successPanel.employee?.departmentName ?? '—' }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2 sm:col-span-2">
-                    <Briefcase class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
-                    <div class="min-w-0 flex-1">
-                      <p class="text-[10px] font-bold uppercase text-white/35">Chức vụ</p>
-                      <p class="truncate text-sm text-white/85">
-                        {{ successPanel.employee?.positionName ?? '—' }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <p v-if="successPanel.attendanceStatus" class="text-[11px] text-white/45">
-                  Trạng thái: <span class="text-white/70">{{ successPanel.attendanceStatus }}</span>
+            <div class="min-w-0 space-y-3 text-left">
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-white/40">
+                  Họ và tên
+                </p>
+                <p
+                  v-if="successPanel.loadingProfile"
+                  class="mt-1 h-6 w-48 rounded bg-white/10"
+                />
+                <p v-else class="truncate text-xl font-bold text-white">
+                  {{ successPanel.employee?.fullName ?? `Nhân viên #${successPanel.employeeId}` }}
                 </p>
               </div>
+
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2">
+                  <Hash class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
+                  <div>
+                    <p class="text-[10px] font-bold uppercase text-white/35">Mã NV</p>
+                    <p class="font-mono text-sm text-white/90">
+                      {{ successPanel.employee?.employeeCode ?? '—' }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2">
+                  <Clock class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
+                  <div>
+                    <p class="text-[10px] font-bold uppercase text-white/35">{{ successPanel.eventLabel }}</p>
+                    <p class="text-sm font-medium text-emerald-200/95">
+                      {{ successPanel.eventTime }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2 sm:col-span-2">
+                  <Building2 class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-bold uppercase text-white/35">Phòng ban</p>
+                    <p class="truncate text-sm text-white/85">
+                      {{ successPanel.employee?.departmentName ?? '—' }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2 sm:col-span-2">
+                  <Briefcase class="mt-0.5 h-4 w-4 shrink-0 text-white/35" />
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-bold uppercase text-white/35">Chức vụ</p>
+                    <p class="truncate text-sm text-white/85">
+                      {{ successPanel.employee?.positionName ?? '—' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p v-if="successPanel.attendanceStatus" class="text-[11px] text-white/45">
+                Trạng thái: <span class="text-white/70">{{ successPanel.attendanceStatus }}</span>
+              </p>
             </div>
           </div>
         </div>
-      </Transition>
+      </div>
     </main>
   </div>
 </template>
-
-<style scoped>
-@keyframes scan {
-  0% {
-    top: 0;
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
-}
-
-.animate-scan {
-  animation: scan 3s linear infinite;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.35s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.slide-up-enter-active {
-  transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.slide-up-leave-active {
-  transition: all 0.35s ease-in;
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(24px);
-}
-</style>

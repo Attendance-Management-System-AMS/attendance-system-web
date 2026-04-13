@@ -11,6 +11,10 @@ const API_STATUS_TO_UI: Record<string, AttendanceStatus> = {
   LEAVE: 'Nghỉ phép',
   ON_LEAVE: 'Nghỉ phép',
   SICK_LEAVE: 'Nghỉ phép',
+  HOLIDAY: 'Ngày lễ',
+  EARLY_LEAVE: 'Về sớm',
+  LATE_AND_EARLY_LEAVE: 'Muộn + về sớm',
+  MISSING_CHECKOUT: 'Thiếu checkout',
 }
 
 export function mapAttendanceStatusFromApi(raw: string | undefined | null): AttendanceStatus {
@@ -32,9 +36,33 @@ export function mergeTodayAttendance(
 ): Attendance[] {
   return rows.map((row) => ({
     id: String(row.id),
-    employee: byEmployeeId.get(row.employeeId),
+    employeeId: row.employeeId,
+    employee: byEmployeeId.get(row.employeeId) ?? {
+      id: row.employeeId,
+      employeeCode: row.employeeSnapshotCode ?? '',
+      fullName: row.employeeFullName ?? '',
+      gender: '',
+      email: '',
+      departmentId: null,
+      departmentName: row.employeeSnapshotDepartmentName ?? null,
+      positionId: null,
+      positionName: row.employeeSnapshotPositionName ?? null,
+      managerId: null,
+      managerName: null,
+      status: '',
+      biometricHash: null,
+      joinDate: '',
+      createdAt: '',
+    },
     checkIn: formatAttendanceClock(row.checkInTime),
     checkOut: formatAttendanceClock(row.checkOutTime),
+    checkInTime: row.checkInTime,
+    checkOutTime: row.checkOutTime,
+    workDate: row.workDate,
     status: mapAttendanceStatusFromApi(row.status),
+    lateMinutes: row.lateMinutes ?? undefined,
+    earlyLeaveMinutes: row.earlyLeaveMinutes ?? undefined,
+    workedMinutes: row.workedMinutes ?? undefined,
+    expectedMinutes: row.expectedMinutes ?? undefined,
   }))
 }

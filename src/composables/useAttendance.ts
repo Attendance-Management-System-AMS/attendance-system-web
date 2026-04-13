@@ -45,8 +45,8 @@ export function useAttendance(filters?: MaybeRefOrGetter<AttendanceTodayFilters>
                 attendanceApi.getToday(normalizedFilters.value),
                 employeeApi.getAll(),
             ])
-            const rows =
-                attRes.data?.success && attRes.data.result ? attRes.data.result : []
+            const result = attRes.data?.result
+            const rows = Array.isArray(result) ? result : (result?.content ?? [])
             const employees = parseEmployeesPage(empRes.data?.result)
             const byEmployeeId = new Map(employees.map((e) => [e.id, e]))
             return mergeTodayAttendance(rows, byEmployeeId)

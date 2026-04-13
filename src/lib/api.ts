@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { clearAuthToken, getAuthToken, setAuthToken } from '@/lib/auth'
+import { clearAuthToken, getAuthToken, setAuthTokens } from '@/lib/auth'
 import { authApi, resolveAuthToken } from '@/services/auth.service'
 
 const api = axios.create({
@@ -37,7 +37,7 @@ api.interceptors.response.use(
         const refreshResponse = await authApi.refresh()
         const nextToken = resolveAuthToken(refreshResponse.result)
         if (nextToken) {
-          setAuthToken(nextToken)
+          setAuthTokens(nextToken, refreshResponse.result?.refreshToken)
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${nextToken}`
           } else {

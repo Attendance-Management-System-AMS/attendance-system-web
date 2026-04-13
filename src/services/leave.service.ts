@@ -17,7 +17,7 @@ export const leaveApi = {
   getTypes: () => api.get<ApiResponse<LeaveType[]>>('/leaves/types'),
   getById: (id: string | number) => api.get<ApiResponse<LeaveRequest>>(`/leaves/${id}`),
   getByEmployee: (employeeId: string | number) =>
-    api.get<ApiResponse<Page<LeaveRequest>>>(`/leaves/employee/${employeeId}`),
+    api.get<ApiResponse<Page<LeaveRequest>>>('/leaves', { params: { employeeId } }),
   create: (data: CreateLeaveRequest) =>
     api.post<ApiResponse<LeaveRequest>>('/leaves', buildCreateLeaveBody(data)),
   update: (id: string | number, data: Partial<CreateLeaveRequest>) =>

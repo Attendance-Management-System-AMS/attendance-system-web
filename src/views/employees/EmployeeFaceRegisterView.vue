@@ -2,13 +2,20 @@
 import { computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import { ArrowLeft, CheckCircle2, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
+import { ArrowLeft, Camera, CheckCircle2, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
 import { getApiErrorMessage } from '@/lib/apiErrorMessage'
 import { queryKeys } from '@/lib/queryKeys'
 import { employeeApi } from '@/services/employee.service'
 import { useEmployees } from '@/composables/useEmployees'
 import { useFaceDetection } from '@/composables/useFaceDetection'
 import type { Employee } from '@/types/employee'
+
+const FACE_SCORE_THRESHOLD = 0.5
+const SCAN_DELAY_MS = 180
+const CAPTURE_SAMPLE_COUNT = 5
+const CAPTURE_MAX_ATTEMPTS = 12
+const CAPTURE_SAMPLE_DELAY_MS = 120
+const FACE_DESCRIPTOR_LENGTH = 128
 
 const route = useRoute()
 const router = useRouter()
@@ -28,12 +35,15 @@ const employeeQuery = useQuery<Employee>({
 const employee = computed(() => employeeQuery.data.value)
 
 const ui = reactive({
-  locked: false,
-  progress: 0,
+  busy: false,
+  faceReady: false,
+  faceScore: 0,
+  captureStep: 0,
   feedback: { status: 'idle' as 'idle' | 'success' | 'error', msg: '' },
   /** Đặt true sau khi API lưu thành công — giữ UI “đã đăng ký” kể cả khi GET chưa kịp trả faceRegistered */
   justSavedFace: false,
   lastSuccessAt: null as number | null,
+  hint: 'Đưa mặt vào giữa khung để kiểm tra chất lượng.',
 })
 
 let successAutoHideTimer: number | undefined
@@ -62,43 +72,62 @@ function dismissFeedback() {
 
 const { videoRef, isLoaded, loadModels, setupCamera, detectFace, stopCamera } = useFaceDetection()
 let scanTimer: number | undefined
-let faceDetectedStartTime: number | null = null
 
-const submitDescriptor = async (descriptor: Float32Array) => {
-  ui.locked = true
-  ui.progress = 0
-  const progressInterval = window.setInterval(() => {
-    if (ui.progress < 90) ui.progress += 12
-  }, 60)
+const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
+
+const isValidDescriptor = (descriptor: number[]) =>
+  descriptor.length === FACE_DESCRIPTOR_LENGTH && descriptor.every((value) => Number.isFinite(value))
+
+const averageDescriptors = (samples: number[][]) =>
+  Array.from({ length: FACE_DESCRIPTOR_LENGTH }, (_, index) => {
+    const value = samples.reduce((sum, sample) => sum + (sample[index] ?? 0), 0) / samples.length
+    return Number(value.toFixed(8))
+  })
+
+const collectDescriptorSamples = async () => {
+  const samples: number[][] = []
+  let attempts = 0
+
+  while (samples.length < CAPTURE_SAMPLE_COUNT && attempts < CAPTURE_MAX_ATTEMPTS) {
+    attempts += 1
+    const det = await detectFace()
+    if (det && det.detection.score >= FACE_SCORE_THRESHOLD) {
+      const descriptor = Array.from(det.descriptor) as number[]
+      if (isValidDescriptor(descriptor)) {
+        samples.push(descriptor)
+        ui.captureStep = samples.length
+      }
+    }
+    await sleep(CAPTURE_SAMPLE_DELAY_MS)
+  }
+
+  if (samples.length < 3) {
+    throw new Error('Chưa lấy đủ mẫu khuôn mặt rõ. Vui lòng nhìn thẳng camera, giữ sáng đều và thử lại.')
+  }
+
+  return averageDescriptors(samples)
+}
+
+const submitDescriptor = async (descriptor: number[]) => {
+  if (!isValidDescriptor(descriptor)) {
+    throw new Error('Descriptor khuôn mặt không hợp lệ.')
+  }
 
   try {
-    const descriptorArray = Array.from(descriptor) as number[]
     await registerFaceDescriptor.mutateAsync({
       id: employeeId.value,
-      body: { descriptor: descriptorArray },
+      body: { descriptor },
     })
-    ui.progress = 100
     ui.justSavedFace = true
     ui.lastSuccessAt = Date.now()
     ui.feedback = {
       status: 'success',
-      msg: 'Đã lưu khuôn mặt thành công. Mẫu descriptor đã được gửi lên máy chủ.',
+      msg: 'Đã lưu khuôn mặt thành công. Hệ thống đã lấy nhiều mẫu và lưu descriptor ổn định hơn.',
     }
     await employeeQuery.refetch()
   } catch (err) {
-    ui.feedback = {
-      status: 'error',
-      msg: getApiErrorMessage(err, 'Không thể đăng ký khuôn mặt.'),
-    }
-  } finally {
-    window.clearInterval(progressInterval)
+    throw err
   }
-
-  window.setTimeout(() => {
-    ui.locked = false
-    ui.progress = 0
-    runScanner()
-  }, 500)
 
   if (successAutoHideTimer) window.clearTimeout(successAutoHideTimer)
   successAutoHideTimer = window.setTimeout(() => {
@@ -106,28 +135,55 @@ const submitDescriptor = async (descriptor: Float32Array) => {
   }, 20000)
 }
 
-const runScanner = async () => {
-  if (!ui.locked && isLoaded.value) {
-    const det = await detectFace()
-    if (det && det.detection.score > 0.72) {
-      if (!faceDetectedStartTime) {
-        faceDetectedStartTime = Date.now()
-      } else {
-        const duration = Date.now() - faceDetectedStartTime
-        if (duration >= 1800) {
-          faceDetectedStartTime = null
-          if (scanTimer) window.clearTimeout(scanTimer)
-          await submitDescriptor(det.descriptor)
-          return
-        }
-      }
-    } else {
-      faceDetectedStartTime = null
-    }
-  } else {
-    faceDetectedStartTime = null
+const handleSaveFace = async () => {
+  if (ui.busy || !isLoaded.value) return
+
+  if (scanTimer) {
+    window.clearTimeout(scanTimer)
+    scanTimer = undefined
   }
-  scanTimer = window.setTimeout(runScanner, 200)
+
+  ui.busy = true
+  ui.captureStep = 0
+  ui.feedback = { status: 'idle', msg: '' }
+  ui.hint = 'Giữ yên, hệ thống đang lấy nhiều mẫu khuôn mặt.'
+
+  try {
+    const descriptor = await collectDescriptorSamples()
+    await submitDescriptor(descriptor)
+    ui.hint = 'Mẫu khuôn mặt đã sẵn sàng để dùng khi chấm công.'
+  } catch (err) {
+    const localError =
+      err instanceof Error &&
+      (err.message.startsWith('Chưa lấy đủ mẫu') || err.message.startsWith('Descriptor'))
+    ui.feedback = {
+      status: 'error',
+      msg: localError ? err.message : getApiErrorMessage(err, 'Không thể đăng ký khuôn mặt.'),
+    }
+    ui.hint = 'Đưa mặt vào giữa khung để thử lại.'
+  } finally {
+    ui.busy = false
+    ui.captureStep = 0
+    scanTimer = window.setTimeout(runScanner, 400)
+  }
+}
+
+const runScanner = async () => {
+  if (!ui.busy && isLoaded.value) {
+    const det = await detectFace()
+    ui.faceScore = det?.detection.score ?? 0
+    if (det && det.detection.score >= FACE_SCORE_THRESHOLD) {
+      ui.faceReady = true
+      ui.hint = 'Khuôn mặt đạt điều kiện. Bấm lưu để đăng ký.'
+    } else if (det) {
+      ui.faceReady = false
+      ui.hint = 'Camera đã thấy mặt nhưng chưa đủ rõ. Nhìn thẳng và tăng ánh sáng.'
+    } else {
+      ui.faceReady = false
+      ui.hint = 'Đưa mặt vào giữa khung để kiểm tra chất lượng.'
+    }
+  }
+  scanTimer = window.setTimeout(runScanner, SCAN_DELAY_MS)
 }
 
 onMounted(async () => {
@@ -220,8 +276,12 @@ onUnmounted(() => {
           <div
             class="relative overflow-hidden rounded-xl border border-slate-200/90 bg-linear-to-b from-slate-900 to-slate-950 shadow-xl ring-1 ring-black/5 dark:border-slate-700/80"
             :class="
-              ui.feedback.status === 'success'
+              ui.busy
+                ? 'ring-2 ring-sky-400/60 shadow-sky-500/10'
+                : ui.feedback.status === 'success'
                 ? 'ring-2 ring-emerald-500/60 shadow-emerald-500/10'
+                : ui.faceReady
+                ? 'ring-2 ring-emerald-400/50 shadow-emerald-500/10'
                 : ''
             "
           >
@@ -248,7 +308,8 @@ onUnmounted(() => {
                 class="pointer-events-none absolute inset-0 flex items-center justify-center border-[3px] border-white/15"
               >
                 <div
-                  class="h-[68%] max-h-[min(420px,70vw)] w-[55%] max-w-[min(340px,85vw)] rounded-[50%] border-2 border-dashed border-white/45 shadow-[0_0_0_9999px_rgba(0,0,0,0.42)]"
+                  class="h-[68%] max-h-[min(420px,70vw)] w-[55%] max-w-[min(340px,85vw)] rounded-[50%] border-2 border-dashed shadow-[0_0_0_9999px_rgba(0,0,0,0.42)]"
+                  :class="ui.faceReady || ui.busy ? 'border-emerald-300/80' : 'border-white/45'"
                 />
               </div>
               <div
@@ -259,9 +320,7 @@ onUnmounted(() => {
                 >
                   <ScanFace class="mt-0.5 h-5 w-5 shrink-0 text-indigo-300" />
                   <p class="leading-relaxed">
-                    Đặt mặt trong khung, ánh sáng đều. Giữ yên khoảng
-                    <strong class="font-semibold text-white">2 giây</strong>
-                    để hệ thống chụp descriptor.
+                    {{ ui.hint }}
                   </p>
                 </div>
               </div>
@@ -310,19 +369,48 @@ onUnmounted(() => {
               v-if="!isLoaded"
               class="mt-4 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
             >
-              <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+              <span class="h-1.5 w-1.5 rounded-full bg-amber-500" />
               Đang tải model nhận diện...
             </div>
 
             <div
-              v-if="ui.progress > 0 && ui.progress < 100"
-              class="mt-5 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+              class="mt-5 rounded-lg border px-4 py-3 text-sm"
+              :class="
+                ui.faceReady
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100'
+                  : 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300'
+              "
             >
-              <div
-                class="h-full rounded-full bg-indigo-500 transition-[width] duration-150"
-                :style="{ width: `${ui.progress}%` }"
-              />
+              <div class="flex items-start gap-2">
+                <span
+                  class="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                  :class="ui.faceReady ? 'bg-emerald-500' : 'bg-slate-400'"
+                />
+                <div class="min-w-0 flex-1">
+                  <p>{{ ui.hint }}</p>
+                  <p class="mt-1 text-xs opacity-75">
+                    Độ rõ hiện tại: {{ Math.round(ui.faceScore * 100) }}%
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <button
+              type="button"
+              class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              :class="
+                ui.faceReady || ui.busy
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600'
+              "
+              :disabled="ui.busy || !isLoaded"
+              @click="handleSaveFace"
+            >
+              <Camera class="h-4 w-4 shrink-0" />
+              <span v-if="ui.busy">Đang lấy mẫu {{ ui.captureStep }}/{{ CAPTURE_SAMPLE_COUNT }}</span>
+              <span v-else-if="effectiveFaceRegistered">Cập nhật khuôn mặt</span>
+              <span v-else>Lưu khuôn mặt</span>
+            </button>
 
             <div
               v-if="ui.feedback.status === 'success'"

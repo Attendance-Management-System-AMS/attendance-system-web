@@ -10,7 +10,15 @@ export interface AttendanceTodayApiRecord {
   checkOutTime: string | null
   workDate: string
   status: string
+  lateMinutes?: number | null
+  earlyLeaveMinutes?: number | null
+  workedMinutes?: number | null
+  expectedMinutes?: number | null
   createdAt: string
+  employeeFullName?: string | null
+  employeeSnapshotCode?: string | null
+  employeeSnapshotDepartmentName?: string | null
+  employeeSnapshotPositionName?: string | null
 }
 
 export interface AttendanceTodayFilters {
@@ -36,9 +44,17 @@ export interface AttendanceCheckInResult {
   checkOutTime?: string
   workDate?: string
   status?: string
+  lateMinutes?: number | null
+  earlyLeaveMinutes?: number | null
+  workedMinutes?: number | null
+  expectedMinutes?: number | null
   createdAt?: string
   /** Có khi backend trả kèm (check-in bằng mặt) — tránh gọi thêm GET /employees. */
   employee?: AttendanceEmployeeBrief | null
+  employeeFullName?: string | null
+  employeeSnapshotCode?: string | null
+  employeeSnapshotDepartmentName?: string | null
+  employeeSnapshotPositionName?: string | null
 }
 
 export interface MyAttendanceFilters {
@@ -52,8 +68,11 @@ export interface MyAttendanceFilters {
 export const attendanceApi = {
   getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
   getToday: (filters?: AttendanceTodayFilters) =>
-    api.get<ApiResponse<AttendanceTodayApiRecord[]>>('/attendance/today', {
-      params: filters,
+    api.get<ApiResponse<Page<AttendanceTodayApiRecord>>>('/attendance', {
+      params: {
+        ...filters,
+        date: filters?.date ?? new Date().toISOString().slice(0, 10),
+      },
     }),
   // Các API dành cho cá nhân (/me)
   getMyHistory: (params?: MyAttendanceFilters) =>
@@ -65,11 +84,15 @@ export const attendanceApi = {
     api
       .post<ApiResponse<AttendanceCheckInResult>>('/attendance/check-in-by-face', { descriptor })
       .then((res) => res.data),
+  scanByFace: (descriptor: number[]) =>
+    api
+      .post<ApiResponse<AttendanceCheckInResult>>('/attendance/scan-by-face', { descriptor })
+      .then((res) => res.data),
   checkIn: (employeeId: number) =>
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-in/${employeeId}`),
   checkOut: (employeeId: number) =>
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-out/${employeeId}`),
   search: (params: Record<string, unknown>) =>
-    api.get<ApiResponse<Page<Attendance>>>('/attendance/attendance/search', { params }),
+    api.get<ApiResponse<Page<Attendance>>>('/attendance', { params }),
   delete: (id: string | number) => api.delete<ApiResponse<void>>(`/attendance/${id}`),
 }

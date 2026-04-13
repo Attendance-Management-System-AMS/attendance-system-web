@@ -95,8 +95,8 @@ const logs = computed(() => {
       dayLabel: new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(dateObj),
       dateObj: dateObj,
       shift: (() => {
-        const dayOfWeek = dateObj.getDay()
-        const backendDay = dayOfWeek === 0 ? 8 : dayOfWeek + 1
+        const jsDay = dateObj.getDay()
+        const backendDay = jsDay === 0 ? 7 : jsDay
         const matchedSchedule = scheduleData
           .filter(
             (s) => s.dayOfWeek === backendDay && s.isActive && s.effectiveFrom <= dateStr,
@@ -157,6 +157,14 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
       return { label: 'Vắng mặt', class: 'bg-rose-50 text-rose-600' }
     case 'EARLY_LEAVE':
       return { label: 'Về sớm', class: 'bg-indigo-50 text-indigo-600' }
+    case 'LATE_AND_EARLY_LEAVE':
+      return { label: 'Muộn + sớm', class: 'bg-amber-50 text-amber-600' }
+    case 'ON_LEAVE':
+      return { label: 'Nghỉ phép', class: 'bg-slate-50 text-slate-500' }
+    case 'HOLIDAY':
+      return { label: 'Ngày lễ', class: 'bg-slate-50 text-slate-500' }
+    case 'MISSING_CHECKOUT':
+      return { label: 'Thiếu ra', class: 'bg-rose-50 text-rose-600' }
     default:
       return { label: status, class: 'bg-slate-100 text-slate-500' }
   }

@@ -50,10 +50,10 @@ const shifts = [
 ]
 
 const statuses = [
-    { label: 'Có mặt', value: 'Có mặt' },
-    { label: 'Đi muộn', value: 'Đi muộn' },
-    { label: 'Nghỉ phép', value: 'Nghỉ phép' },
-    { label: 'Vắng mặt', value: 'Vắng mặt' },
+    { label: 'Có mặt', value: 'PRESENT' },
+    { label: 'Đi muộn', value: 'LATE' },
+    { label: 'Về sớm', value: 'EARLY_LEAVE' },
+    { label: 'Vắng mặt', value: 'ABSENT' },
 ]
 
 const deleteTarget = ref<Attendance | null>(null)
@@ -149,9 +149,10 @@ const getInitials = (name?: string) => {
                         class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-none"
                         :class="{
                             'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30': value === 'Có mặt',
-                            'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn',
-                            'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt',
-                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800': value === 'Nghỉ phép'
+                            'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn' || value === 'Muộn + về sớm',
+                            'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30': value === 'Về sớm',
+                            'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt' || value === 'Thiếu checkout',
+                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800': value === 'Nghỉ phép' || value === 'Ngày lễ'
                         }"
                     >
                         {{ value }}

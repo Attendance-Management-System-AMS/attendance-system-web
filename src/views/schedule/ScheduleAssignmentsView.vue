@@ -40,7 +40,7 @@ const isAssignDialogOpen = ref(false)
 const deleteTarget = ref<ScheduleWithShift | null>(null)
 
 const initialWeeklyShifts = () => ({
-  2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: ''
+  1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: ''
 })
 
 const assignmentForm = reactive({
@@ -76,13 +76,13 @@ const toggleEmployee = (id: number) => {
 }
 
 const dayOfWeekOptions = [
-  { label: 'Thứ 2', value: 2 },
-  { label: 'Thứ 3', value: 3 },
-  { label: 'Thứ 4', value: 4 },
-  { label: 'Thứ 5', value: 5 },
-  { label: 'Thứ 6', value: 6 },
-  { label: 'Thứ 7', value: 7 },
-  { label: 'Chủ nhật', value: 8 },
+  { label: 'Thứ 2', value: 1 },
+  { label: 'Thứ 3', value: 2 },
+  { label: 'Thứ 4', value: 3 },
+  { label: 'Thứ 5', value: 4 },
+  { label: 'Thứ 6', value: 5 },
+  { label: 'Thứ 7', value: 6 },
+  { label: 'Chủ nhật', value: 7 },
 ]
 
 const setQuickShifts = (days: number[], shiftId: string) => {
@@ -228,13 +228,13 @@ const getShiftName = (shiftId: number | string): string => {
 
 const formatDayOfWeekLabel = (dayOfWeek?: number): string => {
   switch (dayOfWeek) {
-    case 2: return 'Thứ 2'
-    case 3: return 'Thứ 3'
-    case 4: return 'Thứ 4'
-    case 5: return 'Thứ 5'
-    case 6: return 'Thứ 6'
-    case 7: return 'Thứ 7'
-    case 8: return 'Chủ nhật'
+    case 1: return 'Thứ 2'
+    case 2: return 'Thứ 3'
+    case 3: return 'Thứ 4'
+    case 4: return 'Thứ 5'
+    case 5: return 'Thứ 6'
+    case 6: return 'Thứ 7'
+    case 7: return 'Chủ nhật'
     default: return '—'
   }
 }
@@ -584,10 +584,10 @@ const confirmDeleteSchedule = async () => {
                    <div class="flex items-center justify-between">
                       <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">4. Thiết lập ca làm việc hàng tuần</label>
                       <div class="flex gap-2">
-                         <Button variant="outline" size="sm" @click="setQuickShifts([2,3,4,5,6], assignmentForm.shiftId)" 
+                         <Button variant="outline" size="sm" @click="setQuickShifts([1,2,3,4,5], assignmentForm.shiftId)" 
                            class="h-8 text-[10px] font-black uppercase tracking-widest rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 px-3"
                            v-if="assignmentForm.shiftId">Gán T2-T6</Button>
-                         <Button variant="outline" size="sm" @click="setQuickShifts([2,3,4,5,6,7,8], assignmentForm.shiftId)" 
+                         <Button variant="outline" size="sm" @click="setQuickShifts([1,2,3,4,5,6,7], assignmentForm.shiftId)" 
                            class="h-8 text-[10px] font-black uppercase tracking-widest rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 px-3"
                            v-if="assignmentForm.shiftId">Gán cả tuần</Button>
                       </div>

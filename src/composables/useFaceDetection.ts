@@ -2,9 +2,12 @@ import { ref } from 'vue'
 import * as faceapi from 'face-api.js'
 
 const MODELS_PATH = '/models'
-const detectorOptions = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+const detectorOptions = new faceapi.TinyFaceDetectorOptions({
+  inputSize: 320,
+  scoreThreshold: 0.35,
+})
 
-const DETECT_MAX_SIDE = 480
+const DETECT_MAX_SIDE = 360
 
 export function useFaceDetection() {
   const isLoaded = ref(false)
@@ -15,8 +18,8 @@ export function useFaceDetection() {
   const loadModels = async () => {
     if (isLoaded.value) return
     await Promise.all([
-      faceapi.nets.ssdMobilenetv1.loadFromUri(MODELS_PATH),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_PATH),
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS_PATH),
       faceapi.nets.faceRecognitionNet.loadFromUri(MODELS_PATH),
     ])
     isLoaded.value = true
@@ -26,8 +29,8 @@ export function useFaceDetection() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: 'user',
-        width: { ideal: 640, max: 1280 },
-        height: { ideal: 480, max: 720 },
+        width: { ideal: 640, max: 640 },
+        height: { ideal: 480, max: 480 },
       },
     })
     if (videoRef.value) {
@@ -59,7 +62,7 @@ export function useFaceDetection() {
       ctx.drawImage(video, 0, 0, cw, ch)
       return await faceapi
         .detectSingleFace(detectCanvas, detectorOptions)
-        .withFaceLandmarks()
+        .withFaceLandmarks(true)
         .withFaceDescriptor()
     } finally {
       detectInFlight = false

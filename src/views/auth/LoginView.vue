@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-vue-next'
 import { getApiErrorMessage } from '@/lib/apiErrorMessage'
-import { setAuthToken } from '@/lib/auth'
+import { setAuthTokens } from '@/lib/auth'
 import { authApi } from '@/services/auth.service'
 import { useAuth, type UserProfile, type UserRole } from '@/composables/useAuth'
 import LoadingOverlay from '@/components/ui/LoadingOverlay.vue'
@@ -43,7 +43,7 @@ const handleSubmit = async () => {
       throw new Error('Phản hồi đăng nhập không chứa token.')
     }
 
-    setAuthToken(token)
+    setAuthTokens(token, result?.refreshToken)
 
     // Cập nhật thông tin user vào store ngay lập tức nếu có
     if (result?.user) {
