@@ -1,5 +1,14 @@
 import type { Employee } from './employee'
-export type AttendanceStatus = 'Có mặt' | 'Đi muộn' | 'Về sớm' | 'Muộn + về sớm' | 'Nghỉ phép' | 'Ngày lễ' | 'Vắng mặt' | 'Thiếu checkout'
+export type AttendanceStatus =
+  | 'Chưa chấm công'
+  | 'Có mặt'
+  | 'Đi muộn'
+  | 'Về sớm'
+  | 'Muộn + về sớm'
+  | 'Nghỉ phép'
+  | 'Ngày lễ'
+  | 'Vắng mặt'
+  | 'Thiếu checkout'
 
 export interface Attendance {
   id: string | number
@@ -18,4 +27,5 @@ export interface Attendance {
   earlyLeaveMinutes?: number
   workedMinutes?: number
   expectedMinutes?: number
+  isRecorded?: boolean
 }

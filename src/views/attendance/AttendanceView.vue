@@ -2,6 +2,7 @@
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { ref, computed } from 'vue'
 import { useAttendance } from '@/composables/useAttendance'
+import { useDepartments } from '@/composables/useDepartments'
 import type { Attendance } from '@/types/attendance'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -16,6 +17,7 @@ const search = ref('')
 const filterDept = ref('')
 const filterShift = ref('')
 const filterStatus = ref('')
+const { departmentsQuery } = useDepartments({ size: 200, sort: 'name', sortDir: 'asc' })
 
 const attendanceFilters = computed(() => ({
     search: search.value,
@@ -35,13 +37,13 @@ const columns = [
     { key: 'actions', label: 'Hành động', align: 'right' as const },
 ]
 
-const departments = [
-    { label: 'Nhân sự', value: 'hr' },
-    { label: 'Công nghệ', value: 'it' },
-    { label: 'Tài chính', value: 'finance' },
-    { label: 'Kinh doanh', value: 'sales' },
-    { label: 'Vận hành', value: 'ops' },
-]
+const departments = computed(
+    () =>
+        departmentsQuery.data.value?.content.map((department) => ({
+            label: department.name,
+            value: String(department.id),
+        })) ?? [],
+)
 
 const shifts = [
     { label: 'Ca sáng', value: 'morning' },
@@ -50,10 +52,15 @@ const shifts = [
 ]
 
 const statuses = [
+    { label: 'Chưa chấm công', value: 'UNRECORDED' },
     { label: 'Có mặt', value: 'PRESENT' },
     { label: 'Đi muộn', value: 'LATE' },
     { label: 'Về sớm', value: 'EARLY_LEAVE' },
+    { label: 'Muộn + về sớm', value: 'LATE_AND_EARLY_LEAVE' },
+    { label: 'Nghỉ phép', value: 'ON_LEAVE' },
+    { label: 'Ngày lễ', value: 'HOLIDAY' },
     { label: 'Vắng mặt', value: 'ABSENT' },
+    { label: 'Thiếu checkout', value: 'MISSING_CHECKOUT' },
 ]
 
 const deleteTarget = ref<Attendance | null>(null)
@@ -61,7 +68,7 @@ const isAlertOpen = ref(false)
 
 const handleDelete = (id: string | number) => {
     const record = records.value?.find(r => String(r.id) === String(id))
-    if (record) {
+    if (record?.isRecorded) {
         deleteTarget.value = record
         isAlertOpen.value = true
     }
@@ -152,7 +159,7 @@ const getInitials = (name?: string) => {
                             'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn' || value === 'Muộn + về sớm',
                             'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30': value === 'Về sớm',
                             'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt' || value === 'Thiếu checkout',
-                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800': value === 'Nghỉ phép' || value === 'Ngày lễ'
+                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800': value === 'Chưa chấm công' || value === 'Nghỉ phép' || value === 'Ngày lễ'
                         }"
                     >
                         {{ value }}
@@ -160,7 +167,8 @@ const getInitials = (name?: string) => {
                 </template>
 
                 <template #cell-actions="{ row }">
-                    <ActionDropdown :item-id="row.id" @delete="handleDelete" />
+                    <ActionDropdown v-if="row.isRecorded" :item-id="row.id" @delete="handleDelete" />
+                    <span v-else class="text-xs text-slate-400">—</span>
                 </template>
             </DataTable>
         </div>

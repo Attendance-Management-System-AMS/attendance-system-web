@@ -65,13 +65,20 @@ export interface MyAttendanceFilters {
   size?: number
 }
 
+function formatLocalDate(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export const attendanceApi = {
   getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
   getToday: (filters?: AttendanceTodayFilters) =>
     api.get<ApiResponse<Page<AttendanceTodayApiRecord>>>('/attendance', {
       params: {
         ...filters,
-        date: filters?.date ?? new Date().toISOString().slice(0, 10),
+        date: filters?.date ?? formatLocalDate(),
       },
     }),
   // Các API dành cho cá nhân (/me)

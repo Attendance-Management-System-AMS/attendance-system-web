@@ -4,6 +4,8 @@ import type { AttendanceTodayApiRecord } from '@/services/attendance.service'
 
 /** Giá trị status từ attendance-service (enum chuỗi). */
 const API_STATUS_TO_UI: Record<string, AttendanceStatus> = {
+  UNRECORDED: 'Chưa chấm công',
+  NOT_CHECKED_IN: 'Chưa chấm công',
   PRESENT: 'Có mặt',
   LATE: 'Đi muộn',
   LATE_ARRIVAL: 'Đi muộn',
@@ -64,5 +66,21 @@ export function mergeTodayAttendance(
     earlyLeaveMinutes: row.earlyLeaveMinutes ?? undefined,
     workedMinutes: row.workedMinutes ?? undefined,
     expectedMinutes: row.expectedMinutes ?? undefined,
+    isRecorded: true,
   }))
+}
+
+export function createUnrecordedTodayAttendance(employee: Employee, workDate: string): Attendance {
+  return {
+    id: `pending-${employee.id}-${workDate}`,
+    employeeId: employee.id,
+    employee,
+    checkIn: '—',
+    checkOut: '—',
+    checkInTime: undefined,
+    checkOutTime: undefined,
+    workDate,
+    status: 'Chưa chấm công',
+    isRecorded: false,
+  }
 }
