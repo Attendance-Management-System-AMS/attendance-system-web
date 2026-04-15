@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
-import { useAuth } from '@/composables/useAuth'
-import { useTheme } from '@/composables/useTheme'
-import LoadingOverlay from '@/components/ui/LoadingOverlay.vue'
-import { Toaster } from '@/components/ui/sonner'
+import { useAuth } from '@/modules/auth/composables/useAuth'
+import { useTheme } from '@/shared/theme/useTheme'
+import LoadingOverlay from '@/shared/ui/LoadingOverlay.vue'
+import { Toaster } from '@/shared/ui/sonner'
 
 const { isLoadingProfile } = useAuth()
 const { initTheme } = useTheme()
@@ -19,7 +19,7 @@ onMounted(() => {
     <!-- Toàn màn hình Splash Screen khi khởi tạo app -->
     <LoadingOverlay 
       :show="isLoadingProfile" 
-      text="Đang khởi tạo hệ thống..." 
+      text="Đang tải..." 
       full-screen
     />
     

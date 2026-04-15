@@ -1,0 +1,146 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { Timer, Plus } from 'lucide-vue-next'
+import PageHeader from '@/shared/ui/PageHeader.vue'
+import { Button } from '@/shared/ui/button'
+import { Badge } from '@/shared/ui/badge'
+import DataTable from '@/shared/ui/DataTable.vue'
+import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog'
+import { useShifts } from '@/modules/schedules/composables/useShifts'
+import type { Shift } from '@/modules/schedules/types/shift.types'
+
+const { shiftsQuery, deleteShift } = useShifts()
+const { data: shiftsRaw, isLoading } = shiftsQuery
+const shifts = computed(() => shiftsRaw.value ?? [])
+
+const columns = [
+  { key: 'name', label: 'Tên ca' },
+  { key: 'time', label: 'Giờ làm việc' },
+  { key: 'gracePeriod', label: 'Cho phép trễ', align: 'center' as const },
+  { key: 'status', label: 'Trạng thái' },
+  { key: 'actions', label: 'Hành động', align: 'right' as const },
+]
+
+const deleteTarget = ref<Shift | null>(null)
+const isAlertOpen = ref(false)
+
+const handleDelete = (id: string | number) => {
+  const item = shifts.value.find((s) => String(s.id) === String(id))
+  if (item) {
+    deleteTarget.value = item
+    isAlertOpen.value = true
+  }
+}
+
+const confirmDelete = () => {
+  if (deleteTarget.value) {
+    deleteShift.mutate(deleteTarget.value.id)
+    isAlertOpen.value = false
+    deleteTarget.value = null
+  }
+}
+
+const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
+</script>
+
+<template>
+  <div class="space-y-6">
+    <PageHeader title="Ca làm việc" description="Quản lý danh mục ca làm việc">
+      <template #actions>
+        <Button as-child class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+          <RouterLink to="/shifts/new">
+            <Plus class="h-4 w-4" />
+            Tạo mới
+          </RouterLink>
+        </Button>
+      </template>
+    </PageHeader>
+
+    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <DataTable 
+        :columns="columns" 
+        :rows="shifts" 
+        :loading="isLoading"
+      >
+        <!-- Custom Name Column -->
+        <template #cell-name="{ row }">
+          <div class="flex items-center gap-3">
+             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+              <Timer class="h-4 w-4" />
+            </div>
+            <span class="font-bold text-slate-700 dark:text-slate-200">{{ row.name }}</span>
+          </div>
+        </template>
+
+        <!-- Custom Time Column -->
+        <template #cell-time="{ row }">
+          <div class="flex items-center gap-2">
+            <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+              {{ fmtTime(row.startTime) }}
+            </code>
+            <span class="text-slate-400 text-[10px]">→</span>
+            <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+              {{ fmtTime(row.endTime) }}
+            </code>
+          </div>
+        </template>
+
+        <!-- Custom Grace Period Column -->
+        <template #cell-gracePeriod="{ row }">
+          <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+             {{ typeof row.gracePeriod === 'number' ? `${row.gracePeriod} phút` : '—' }}
+          </span>
+        </template>
+
+        <!-- Custom Status Column -->
+        <template #cell-status="{ row }">
+          <Badge 
+            :variant="row.status === 'inactive' ? 'secondary' : 'default'"
+            class="font-bold flex-shrink-0"
+            :class="row.status !== 'inactive' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30' : ''"
+          >
+            {{ row.status === 'inactive' ? 'Ngừng hoạt động' : 'Hoạt động' }}
+          </Badge>
+        </template>
+
+        <!-- Custom Actions Column -->
+        <template #cell-actions="{ row }">
+          <ActionDropdown 
+            :item-id="row.id" 
+            :edit-to="`/shifts/${row.id}/edit`" 
+            @delete="handleDelete" 
+          />
+        </template>
+      </DataTable>
+    </div>
+
+    <!-- Shadcn Alert Dialog for Deletion -->
+    <AlertDialog :open="isAlertOpen" @update:open="isAlertOpen = $event">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+          <AlertDialogDescription>
+            Bạn có chắc chắn muốn xóa ca làm việc <span class="font-bold text-slate-900 dark:text-white">"{{ deleteTarget?.name }}"</span>? 
+            Hành động này không thể hoàn tác.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Hủy</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDelete" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Xác nhận xóa
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </div>
+</template>
