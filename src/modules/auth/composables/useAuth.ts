@@ -13,12 +13,30 @@ export interface UserProfile {
   avatar?: string
 }
 
+export type RawUserProfile = Omit<UserProfile, 'roles'> & {
+  roles?: UserRole[] | string | null
+}
+
 const currentUser = ref<UserProfile | null>(null)
 const isLoadingProfile = ref(false)
 
+export function normalizeUserProfile(user: RawUserProfile): UserProfile {
+  const roles =
+    typeof user.roles === 'string'
+      ? user.roles.split(',').map((role) => role.trim()).filter(Boolean)
+      : Array.isArray(user.roles)
+        ? user.roles
+        : []
+
+  return {
+    ...user,
+    roles: roles as UserRole[],
+  }
+}
+
 export function useAuth() {
-  const setUser = (user: UserProfile | null) => {
-    currentUser.value = user
+  const setUser = (user: RawUserProfile | UserProfile | null) => {
+    currentUser.value = user ? normalizeUserProfile(user) : null
   }
 
   const user = computed(() => currentUser.value)
@@ -27,7 +45,6 @@ export function useAuth() {
   const hasRole = (roles: UserRole | UserRole[]) => {
     if (!currentUser.value) return false
     const roleList = Array.isArray(roles) ? roles : [roles]
-    // Kiểm tra xem user có ít nhất một trong các vai trò yêu cầu hay không
     return currentUser.value.roles.some((r) => roleList.includes(r))
   }
 

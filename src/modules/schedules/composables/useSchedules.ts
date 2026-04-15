@@ -64,7 +64,7 @@ export function useSchedules(
 
       const response = id
         ? await scheduleApi.getByEmployee(id)
-        : await scheduleApi.getAll(queryParams)
+        : await scheduleApi.search(queryParams)
       return normalizeScheduleListResult(response.data?.result)
     },
     staleTime: 1000 * 60 * 3,

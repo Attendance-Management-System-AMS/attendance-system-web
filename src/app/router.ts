@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { clearAuthToken, isAuthenticated, setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
-import { useAuth, type UserProfile, type UserRole } from '@/modules/auth/composables/useAuth'
+import { useAuth, type UserRole } from '@/modules/auth/composables/useAuth'
 
 // Route nghiệp vụ nằm trong chính module để dễ lần theo chức năng.
 import attendance from '@/modules/attendance/attendance.routes'
@@ -87,17 +87,7 @@ router.beforeEach(async (to) => {
       const result = resp.result
       if (!result) return
 
-      // Tạo một bản sao để xử lý role nếu nó là string
-      const userData = { ...result } as UserProfile & { roles: string | UserRole[] }
-
-      if (userData.roles) {
-        if (typeof userData.roles === 'string') {
-          userData.roles = (userData.roles as string).split(',').map((r) => r.trim() as UserRole)
-        }
-      } else {
-        userData.roles = []
-      }
-      setUser(userData as UserProfile)
+      setUser(result)
     } catch {
       clearAuthToken()
       setUser(null)

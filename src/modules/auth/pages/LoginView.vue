@@ -4,8 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-vue-next'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 import { setAuthTokens } from '@/shared/auth/token'
-import { authApi } from '@/modules/auth/api/auth.api'
-import { useAuth, type UserProfile, type UserRole } from '@/modules/auth/composables/useAuth'
+import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
+import { useAuth } from '@/modules/auth/composables/useAuth'
 import LoadingOverlay from '@/shared/ui/LoadingOverlay.vue'
 
 const router = useRouter()
@@ -37,7 +37,7 @@ const handleSubmit = async () => {
     })
 
     const result = data?.result
-    const token = result?.token || result?.accessToken || result?.jwt
+    const token = resolveAuthToken(result)
 
     if (!token) {
       throw new Error('Phản hồi đăng nhập không chứa token.')
@@ -45,14 +45,9 @@ const handleSubmit = async () => {
 
     setAuthTokens(token, result?.refreshToken)
 
-    // Cập nhật thông tin user vào store ngay lập tức nếu có
     if (result?.user) {
       const { setUser } = useAuth()
-      const userData = { ...result.user } as UserProfile & { roles: string | UserRole[] }
-      if (userData.roles && typeof userData.roles === 'string') {
-        userData.roles = (userData.roles as string).split(',').map((r) => r.trim() as UserRole)
-      }
-      setUser(userData as UserProfile)
+      setUser(result.user)
     }
 
     // Re-check roles immediately to decide where to go

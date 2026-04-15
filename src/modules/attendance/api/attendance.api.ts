@@ -73,7 +73,6 @@ function formatLocalDate(date = new Date()) {
 }
 
 export const attendanceApi = {
-  getAll: () => api.get<ApiResponse<Page<Attendance>>>('/attendance'),
   getToday: (filters?: AttendanceTodayFilters) =>
     api.get<ApiResponse<Page<AttendanceTodayApiRecord>>>('/attendance', {
       params: {

@@ -130,6 +130,7 @@ function clearSuccessPanel() {
 
 const { videoRef, isLoaded, loadModels, setupCamera, detectFace, stopCamera } = useFaceDetection()
 let scanTimer: number | undefined
+let resetTimer: number | undefined
 let faceDetectedStartTime: number | null = null
 
 // --- Logic ---
@@ -146,7 +147,7 @@ const handleCheckIn = async (descriptor: Float32Array) => {
   }
 
   // Reset nhanh để kiosk sẵn sàng cho lượt tiếp theo.
-  setTimeout(() => {
+  resetTimer = window.setTimeout(() => {
     ui.locked = false
     ui.errorMsg = ''
     clearSuccessPanel()
@@ -192,6 +193,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (scanTimer) window.clearTimeout(scanTimer)
+  if (resetTimer) window.clearTimeout(resetTimer)
   stopCamera()
 })
 </script>
@@ -216,7 +218,7 @@ onUnmounted(() => {
             class="bg-black/60 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-xl flex items-center gap-4"
           >
             <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-            <h1 class="text-xl font-black tracking-tighter">AMS KIOSK</h1>
+            <h1 class="text-xl font-black tracking-tighter">CHẤM CÔNG KHUÔN MẶT</h1>
           </div>
 
           <div

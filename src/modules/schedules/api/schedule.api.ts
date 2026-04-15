@@ -3,7 +3,6 @@ import type { ApiResponse, Page } from '@/shared/types/api'
 import type { Schedule, CreateSchedule, ApplyTemplateRequest, BulkAssignRequest } from '@/modules/schedules/types/schedule.types'
 
 export const scheduleApi = {
-  getAll: (params?: Record<string, unknown>) => api.get<ApiResponse<Page<Schedule>>>('/attendance/schedules', { params }),
   getByEmployee: (employeeId: string | number) =>
     api.get<ApiResponse<Schedule[]>>(`/attendance/schedules/employee/${employeeId}`),
   search: (params: Record<string, unknown>) =>
