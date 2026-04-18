@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PageHeader from '@/shared/ui/PageHeader.vue'
-import { Check, Minus, ShieldCheck, Plus, Clock } from 'lucide-vue-next'
+import { Check, Minus, ShieldCheck, Lock } from 'lucide-vue-next'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
 
@@ -61,9 +61,9 @@ function getPermissionState(v: boolean | 'partial') {
             title="Phân quyền"
             description="Ma trận phân quyền hệ thống theo vai trò người dùng"
         />
-        <Button class="gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none">
-            <Plus class="h-4 w-4" />
-            Thêm vai trò
+        <Button disabled class="gap-2">
+            <Lock class="h-4 w-4" />
+            Chỉ đọc
         </Button>
     </div>
 
@@ -129,9 +129,9 @@ function getPermissionState(v: boolean | 'partial') {
 
     <Card class="border-amber-100 bg-amber-50/30 dark:bg-amber-950/10 shadow-none">
        <CardContent class="py-4 flex gap-3 items-center">
-          <Clock class="h-4 w-4 text-amber-500" />
+          <Lock class="h-4 w-4 text-amber-500" />
           <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">
-            Lưu ý: Bạn đang ở chế độ xem trước. Chỉnh sửa vai trò sẽ được kích hoạt sau khi hệ thống phân quyền Backend sẵn sàng.
+            Ma trận này phản ánh chính sách quyền hiện tại trong hệ thống. Thay đổi quyền cần cập nhật đồng bộ ở backend và router frontend.
           </p>
        </CardContent>
     </Card>

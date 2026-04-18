@@ -15,14 +15,7 @@ import { Avatar, AvatarFallback } from '@/shared/ui/avatar'
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/card'
 import DataTable from '@/shared/ui/DataTable.vue'
 import StatCard from '@/shared/ui/StatCard.vue'
-
-// Mock loading state
-const isLoading = ref(true)
-onMounted(() => {
-    setTimeout(() => {
-        isLoading.value = false
-    }, 1500)
-})
+import { useAttendance } from '@/modules/attendance/composables/useAttendance'
 
 // Live clock
 const now = ref(new Date())
@@ -42,12 +35,9 @@ const dateString = computed(() =>
     }).format(now.value),
 )
 
-const statCards = [
-    { label: 'Tổng nhân viên', value: '128', change: '+3 tháng này', changeType: 'positive' as const, icon: Users, color: 'indigo' as const },
-    { label: 'Có mặt hôm nay', value: '112', change: '87.5%', changeType: 'positive' as const, icon: UserCheck, color: 'emerald' as const },
-    { label: 'Đi trễ', value: '9', change: '-2 so với hôm qua', changeType: 'positive' as const, icon: Clock, color: 'amber' as const },
-    { label: 'Vắng mặt', value: '7', change: '+1 so với hôm qua', changeType: 'negative' as const, icon: UserX, color: 'rose' as const },
-]
+const todayFilter = computed(() => ({ date: formatLocalDate(now.value) }))
+const { attendanceQuery } = useAttendance(todayFilter)
+const isLoading = computed(() => attendanceQuery.isLoading.value)
 
 const columns = [
     { key: 'name', label: 'Nhân viên' },
@@ -57,24 +47,65 @@ const columns = [
     { key: 'status', label: 'Trạng thái' },
 ]
 
-const attendanceData = [
-    { name: 'Trần Minh Anh', dept: 'Nhân sự', shift: 'Ca sáng', checkIn: '07:58', checkOut: '17:30', status: 'present' },
-    { name: 'Nguyễn Đức Dũng', dept: 'Công nghệ', shift: 'Ca sáng', checkIn: '08:22', checkOut: '18:00', status: 'late' },
-    { name: 'Lê Hoài Nam', dept: 'Tài chính', shift: 'Ca sáng', checkIn: '07:55', checkOut: '17:30', status: 'present' },
-    { name: 'Phạm Thị Thủy', dept: 'Kinh doanh', shift: 'Ca sáng', checkIn: '--', checkOut: '--', status: 'leave' },
-    { name: 'Ngô Phương Linh', dept: 'Vận hành', shift: 'Ca chiều', checkIn: '13:00', checkOut: '--', status: 'working' },
-    { name: 'Võ Minh Khoa', dept: 'IT', shift: 'Ca chiều', checkIn: '--', checkOut: '--', status: 'absent' },
-]
+function formatLocalDate(date: Date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
 
-const weeklyData = [
-    { day: 'T2', present: 115, total: 128 },
-    { day: 'T3', present: 120, total: 128 },
-    { day: 'T4', present: 109, total: 128 },
-    { day: 'T5', present: 118, total: 128 },
-    { day: 'T6', present: 112, total: 128 },
-    { day: 'T7', present: 45, total: 128 },
-    { day: 'CN', present: 20, total: 128 },
-]
+function formatTime(value?: string | null) {
+    if (!value) return '--'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value.slice(11, 16) || '--'
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+}
+
+function normalizeStatus(status?: string | null) {
+    const value = String(status ?? '').toUpperCase()
+    if (value === 'PRESENT') return 'present'
+    if (value === 'LATE' || value === 'LATE_AND_EARLY_LEAVE') return 'late'
+    if (value === 'ABSENT') return 'absent'
+    if (value === 'ON_LEAVE') return 'leave'
+    if (value === 'MISSING_CHECKOUT') return 'working'
+    return value ? value.toLowerCase() : 'absent'
+}
+
+const rows = computed(() => attendanceQuery.data.value ?? [])
+const presentCount = computed(() =>
+    rows.value.filter((row) => ['PRESENT', 'LATE', 'EARLY_LEAVE', 'LATE_AND_EARLY_LEAVE', 'MISSING_CHECKOUT'].includes(String(row.status))).length,
+)
+const lateCount = computed(() =>
+    rows.value.filter((row) => ['LATE', 'LATE_AND_EARLY_LEAVE'].includes(String(row.status))).length,
+)
+const absentCount = computed(() =>
+    rows.value.filter((row) => String(row.status).toUpperCase() === 'ABSENT').length,
+)
+const totalCount = computed(() => rows.value.length)
+const presentRate = computed(() => totalCount.value ? `${Math.round((presentCount.value / totalCount.value) * 100)}%` : '0%')
+
+const statCards = computed(() => [
+    { label: 'Tổng nhân viên', value: String(totalCount.value), change: 'Theo dữ liệu hôm nay', changeType: 'neutral' as const, icon: Users, color: 'indigo' as const },
+    { label: 'Có mặt hôm nay', value: String(presentCount.value), change: presentRate.value, changeType: 'positive' as const, icon: UserCheck, color: 'emerald' as const },
+    { label: 'Đi trễ', value: String(lateCount.value), change: 'Từ bảng công', changeType: lateCount.value ? 'negative' as const : 'positive' as const, icon: Clock, color: 'amber' as const },
+    { label: 'Vắng mặt', value: String(absentCount.value), change: 'Từ bảng công', changeType: absentCount.value ? 'negative' as const : 'positive' as const, icon: UserX, color: 'rose' as const },
+])
+
+const attendanceData = computed(() =>
+    rows.value.slice(0, 8).map((row) => ({
+        name: row.employee?.fullName ?? `NV #${row.employeeId ?? ''}`,
+        dept: row.employee?.departmentName ?? '--',
+        shift: row.shiftName ?? row.employee?.positionName ?? '--',
+        checkIn: formatTime(row.checkInTime),
+        checkOut: formatTime(row.checkOutTime),
+        status: normalizeStatus(row.status),
+    })),
+)
+
+const weeklyData = computed(() => {
+    const todayLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(now.value)
+    return [{ day: todayLabel, present: presentCount.value, total: Math.max(totalCount.value, 1) }]
+})
 </script>
 
 <template>

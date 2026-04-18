@@ -77,11 +77,8 @@ const calendarDays = computed(() => {
   
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const dateObj = new Date(currentYear.value, currentMonth.value, d)
-    // dow: 1 (Mon) - 7 (Sun) to match scheduleMapByDay
-    let dow = dateObj.getDay()
-    if (dow === 0) dow = 8 // Backend convention from templates or similar
-    // Actually, let's normalize: 2=T2, 3=T3 ... 8=CN matching ScheduleTemplatesView
-    const normalizedDow = dateObj.getDay() === 0 ? 8 : dateObj.getDay() + 1
+    // Backend quy ước: 1=Thứ 2 ... 7=Chủ nhật.
+    const normalizedDow = dateObj.getDay() === 0 ? 7 : dateObj.getDay()
 
     const key = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     days.push({

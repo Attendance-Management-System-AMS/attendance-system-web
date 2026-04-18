@@ -50,10 +50,43 @@ const stats = computed(() => [
   { label: 'Trạng thái', value: todayQuery.data.value?.status || 'Chưa có', icon: TrendingUp, status: 'Hôm nay' },
 ])
 
-const recentActivities = [
-  { id: 1, title: 'Cập nhật lịch trực tuần sau', time: 'Mới nhất', category: 'Hành chính' },
-  { id: 2, title: 'Thông báo nghỉ lễ', time: 'Gần đây', category: 'Nhân sự' },
-]
+const dailyBars = computed(() => {
+  const data = historyQuery.data.value?.content || []
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (6 - index))
+    const key = formatDateStr(date)
+    const label = new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(date)
+    const row = data.find((item) => item.workDate === key)
+    return {
+      label,
+      value: row?.checkInTime ? 100 : 0,
+    }
+  })
+  return days
+})
+
+const recentActivities = computed(() => {
+  const activities = []
+  if (todayQuery.data.value?.status) {
+    activities.push({
+      id: 'today',
+      title: `Chấm công hôm nay: ${todayQuery.data.value.status}`,
+      time: 'Hôm nay',
+      category: 'Chấm công',
+    })
+  }
+  const latestLeave = leavesQuery.data.value?.content?.[0]
+  if (latestLeave) {
+    activities.push({
+      id: `leave-${latestLeave.id}`,
+      title: `Đơn nghỉ ${latestLeave.status}`,
+      time: latestLeave.fromDate ? new Date(latestLeave.fromDate).toLocaleDateString('vi-VN') : 'Gần đây',
+      category: 'Đơn từ',
+    })
+  }
+  return activities
+})
 </script>
 
 <template>
@@ -113,7 +146,7 @@ const recentActivities = [
                 >Biểu đồ chuyên cần</CardTitle
               >
               <p class="mt-2 text-xs font-black text-slate-900 uppercase">
-                Dữ liệu mô phỏng 7 ngày
+                Dữ liệu chấm công 7 ngày gần nhất
               </p>
             </div>
           </div>
@@ -121,22 +154,22 @@ const recentActivities = [
         <CardContent class="p-4 sm:p-8">
           <div class="h-[200px] flex items-end justify-between gap-2 sm:gap-4 px-2">
             <div
-              v-for="(val, i) in [65, 85, 45, 95, 75, 40, 80]"
-              :key="i"
+              v-for="bar in dailyBars"
+              :key="bar.label"
               class="flex-1 flex flex-col items-center gap-4 group"
             >
               <div
                 class="w-full bg-slate-50 rounded-xl relative overflow-hidden h-full flex flex-col justify-end"
               >
                 <div
-                  class="bg-primary group-hover:bg-primary/80 transition-all rounded-t-xl"
-                  :style="{ height: `${val}%` }"
+                    class="bg-primary group-hover:bg-primary/80 transition-all rounded-t-xl"
+                    :style="{ height: `${bar.value}%` }"
                 >
                   <div class="absolute top-0 inset-x-0 h-1 bg-white/30"></div>
                 </div>
               </div>
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{{
-                ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i]
+                bar.label
               }}</span>
             </div>
           </div>

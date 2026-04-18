@@ -89,9 +89,20 @@ router.beforeEach(async (to) => {
 
       setUser(result)
     } catch {
-      clearAuthToken()
-      setUser(null)
-      if (!isLoginRoute) return { name: 'login' }
+      try {
+        const refreshResponse = await authApi.refresh()
+        const token = resolveAuthToken(refreshResponse.result)
+        if (!token) throw new Error('No token')
+        setAuthTokens(token, refreshResponse.result?.refreshToken)
+        const retryProfile = await authApi.getProfile()
+        if (retryProfile.result) {
+          setUser(retryProfile.result)
+        }
+      } catch {
+        clearAuthToken()
+        setUser(null)
+        if (!isLoginRoute) return { name: 'login' }
+      }
     }
   }
 

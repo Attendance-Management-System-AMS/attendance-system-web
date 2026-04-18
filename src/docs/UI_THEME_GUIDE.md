@@ -1,109 +1,184 @@
-# 🎨 Hướng dẫn Cấu hình Giao diện & Hệ màu Động (TimeMaster UI System)
+# 🎨 TimeMaster Design System — Dark Precision
 
-Tài liệu này cung cấp khung quy chuẩn (Framework) để duy trì phong cách thiết kế **"Neutral First - Primary Accents"** (Nền trung tính - Điểm nhấn thương hiệu) cho toàn bộ dự án TimeMaster.
+**Version 2.0** | Dark-first + Flexible Primary Accent
 
----
-
-## 💎 1. Nguyên tắc cốt lõi (Core Principles)
-
-*   **Sạch & Thoáng (Clean & Minimal)**: Tuyệt đối không sử dụng các mảng màu nền đậm hoặc màu thương hiệu cho các khối nội dung lớn. Chỉ dùng nền trắng (`bg-white`) hoặc xám cực nhạt (`bg-slate-50`).
-*   **Đồng bộ Typography (2 Font System)**:
-    *   **`font-heading` (Outfit)**: Chuyên dùng cho các tiêu đề (h1-h6), con số lớn, và các thành phần cần sự hiện đại, in đậm, in nghiêng.
-    *   **`font-body` (Inter)**: Chuyên dùng cho văn bản nội dung, nhãn (label), dữ liệu bảng, và các mô tả chi tiết.
-*   **Màu sắc động (Dynamic Semantic)**: Luôn dùng class **`primary`** để hệ thống có thể đổi màu theo cài đặt.
+This document defines the unified design language for the entire TimeMaster product. It combines the premium precision of Linear with TimeMaster’s core values: clarity, flexibility, and long-hour productivity.
 
 ---
 
-## 🛠 2. Các Class Tailwind tiêu chuẩn
+## 💎 1. Core Principles
 
-### A. Typography chuẩn
-*   **Tiêu đề (Heading Style)**: `font-heading font-black uppercase tracking-tight text-slate-900`
-*   **Nội dung (Body Style)**: `font-body font-medium text-slate-600`
-*   **Nhãn (Label Style)**: `font-body font-bold text-slate-400 uppercase tracking-widest text-[10px]`
-
-### B. Màu thương hiệu (Primary)
-*   `bg-primary`: Nền màu thương hiệu (cho nút bấm, icon).
-*   `text-primary`: Chữ màu thương hiệu (cho tiêu đề nhỏ, link).
-*   `border-primary`: Viền màu thương hiệu (khi hover hoặc active).
-*   `shadow-primary/20`: Bóng đổ có sắc màu thương hiệu (tạo chiều sâu).
-
-*   **Tiêu đề chính**: `text-slate-900 font-black uppercase tracking-tight`
-*   **Tiêu đề phụ/Label**: `text-slate-400 font-bold uppercase tracking-widest text-[10px]`
-*   **Nội dung**: `text-slate-600 font-medium`
+- **Dark-first**: Dark mode is the primary and most refined experience.
+- **Neutral First — Smart Accent**: Backgrounds and surfaces remain neutral. Primary color is used only for intentional highlights.
+- **Productivity-Oriented**: Optimized for long sessions, reduced eye strain, and deep focus.
+- **Precision & Premium Feel**: Every detail should feel engineered, modern, and professional.
+- **Flexibility**: Easy to change brand color via the theme system.
 
 ---
 
-## 📦 3. Khung Card Tiêu chuẩn (No-Background Style)
+## 🎨 2. Color Palette
 
-Sử dụng cấu trúc này cho các thẻ stats hoặc container:
+### Dark Mode (Default)
+
+| Role                    | Value                        | Usage                              |
+|-------------------------|------------------------------|------------------------------------|
+| **Canvas**              | `#0a0a0b`                    | Main app background                |
+| **Panel / Sidebar**     | `#111113`                    | Sidebars, modals, drawers          |
+| **Surface**             | `#1a1a1e`                    | Cards, tables, dropdowns           |
+| **Elevated Surface**    | `#212126`                    | Hover states, elevated panels      |
+| **Primary Text**        | `#f4f4f5`                    | Headings and main content          |
+| **Secondary Text**      | `#c9cdd6`                    | Body text and descriptions         |
+| **Tertiary Text**       | `#8b909a`                    | Labels, metadata, captions         |
+| **Muted Text**          | `#5f636d`                    | Placeholders, disabled states      |
+| **Border Subtle**       | `rgba(255,255,255,0.06)`     | Very light borders                 |
+| **Border Standard**     | `rgba(255,255,255,0.09)`     | Cards, inputs, dividers            |
+| **Border Prominent**    | `#2a2a32`                    | Strong separation                  |
+
+### Primary Accent (Flexible)
+
+- Powered by **OKLCH** color system via `useTheme`
+- Recommended default: **Indigo** `#6366f1` (hover: `#818cf8`)
+- Used for: Primary buttons, active states, progress bars, key icons
+
+### Light Mode (Supported)
+
+- Background: `#f8f9fa`
+- Surface: `#ffffff`
+- Border: `#e5e7eb`
+- Primary Text: `#111113`
+- Secondary Text: `#374151`
+
+---
+
+## 🖋️ 3. Typography
+
+**Primary Font**: `Inter Variable`  
+**Font Features** (mandatory): `font-feature-settings: "cv01", "ss03"`  
+**Signature Weight**: `500` → Use **510** as the default UI weight
+
+### Typography Scale
+
+| Role              | Size     | Weight | Letter Spacing    | Line Height | Usage                          |
+|-------------------|----------|--------|-------------------|-------------|--------------------------------|
+| Display           | 48px     | 590    | -1.2px            | 1.00        | Hero, main dashboard title     |
+| Heading 1         | 32px     | 590    | -0.7px            | 1.10        | Large section titles           |
+| Heading 2         | 24px     | 510    | -0.4px            | 1.25        | Card & panel titles            |
+| Heading 3         | 20px     | 510    | -0.2px            | 1.30        | Sub headers                    |
+| Body Large        | 17px     | 400    | -0.1px            | 1.60        | Long descriptions              |
+| Body              | 16px     | 510    | normal            | 1.55        | Default body text              |
+| Label / Caption   | 13px     | 510    | 0.2px             | 1.40        | Labels, badges, metadata       |
+| Timer / Big Number| 56px+    | 590    | -1.5px            | 1.00        | Timer, statistics, countdown   |
+| Monospace         | 14px     | 400    | normal            | 1.50        | Time codes, durations          |
+
+---
+
+## 📦 4. Card & Surface Style (Standard Pattern)
 
 ```vue
-<Card class="border-slate-100 bg-white shadow-none p-6 hover:bg-slate-50 transition-all group rounded-2xl">
-  <div class="flex flex-col gap-4">
-    <!-- Header của Card -->
-    <div class="flex items-center justify-between">
-      <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tiêu đề thẻ</span>
-      <!-- Icon Container: Chuyển màu khi hover vào card cha -->
-      <div class="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 
-                  group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
-        <component :is="YourIcon" class="h-5 w-5" />
-      </div>
-    </div>
-    
-    <!-- Nội dung chính: Đổi màu khi hover -->
-    <span class="text-2xl font-black text-slate-900 group-hover:text-primary transition-colors">
-      1,234.56
+<div class="bg-surface border border-border-standard rounded-2xl p-6 
+            hover:bg-elevated transition-all duration-300 group">
+  
+  <div class="flex items-center justify-between mb-6">
+    <span class="text-xs font-semibold uppercase tracking-widest text-tertiary">
+      FOCUS SESSION
     </span>
+    
+    <div class="h-9 w-9 rounded-2xl bg-white/5 border border-white/10 
+                flex items-center justify-center group-hover:border-primary/30 
+                group-hover:bg-primary/10 transition-all">
+      <Icon class="h-5 w-5 text-secondary group-hover:text-primary" />
+    </div>
   </div>
-</Card>
+
+  <div class="text-6xl font-semibold tracking-tighter text-primary-text">
+    2h 47m
+  </div>
+  <div class="text-sm text-tertiary">+18% from last week</div>
+</div>
 ```
 
+**Recommended classes**:
+- `bg-surface`
+- `border border-border-standard`
+- `hover:bg-elevated`
+- `rounded-2xl` / `rounded-3xl`
+
 ---
 
-## 📑 4. Cấu hình Input & Form
-
-Luôn để Input có nền trung tính, tránh dùng nền màu `primary/5` gây cảm giác "bẩn" màn hình:
+## 🔢 5. Input & Form Elements
 
 ```vue
-<!-- Select / Input standard -->
-<input 
-  class="h-10 px-4 rounded-xl border border-slate-100 bg-slate-50 
-         focus:ring-1 focus:ring-primary outline-none transition-all 
-         text-sm font-bold text-slate-800"
+<input
+  class="w-full bg-[#16161a] border border-border-standard rounded-2xl px-5 py-3.5
+         text-primary-text placeholder:text-muted
+         focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none
+         transition-all text-[15px] font-medium"
 />
 ```
 
 ---
 
-## 🔗 5. Tích hợp trong logic (Composables)
+## 🔘 6. Button Styles
 
-Để lấy màu hiện tại trong Javascript/Typescript code (nếu cần), hãy dùng `useTheme`:
+- **Primary Button**: `bg-primary text-white hover:brightness-110`
+- **Ghost Button**: `bg-white/5 border border-white/10 hover:bg-white/10`
+- **Subtle Button**: `hover:bg-white/5 text-secondary`
+- **Icon Button**: Circular, `bg-white/5 hover:bg-primary/10`
 
-```typescript
-import { useTheme } from '@/composables/useTheme'
-const { currentTheme } = useTheme()
+---
 
-// Lấy màu primary hiện tại dưới dạng OKLCH string
-console.log(currentTheme.value.primary) 
+## ⚙️ 7. Technical Implementation
+
+### Global Font Settings
+```css
+@layer base {
+  html {
+    font-feature-settings: "cv01", "ss03";
+  }
+}
+```
+
+### Theme System
+- Continue using existing `useTheme` composable
+- Add semantic color variables:
+  - `--surface`, `--elevated`, `--border-standard`
+  - `--primary-text`, `--secondary`, `--tertiary`, etc.
+
+### Recommended Tailwind Extensions
+```js
+theme: {
+  extend: {
+    colors: {
+      surface: '#1a1a1e',
+      elevated: '#212126',
+      'primary-text': '#f4f4f5',
+      secondary: '#c9cdd6',
+      tertiary: '#8b909a',
+      muted: '#5f636d',
+    }
+  }
+}
 ```
 
 ---
 
-## 🚀 6. Cách thêm màu mới vào hệ thống
+## ✅ 8. Do’s and Don’ts
 
-Nếu muốn thêm 1 bộ màu mới vào danh sách cài đặt, hãy cập nhật file `src/composables/useTheme.ts`:
+**Do**
+- Always use weight **510** for UI text and labels
+- Apply negative letter-spacing on large headings and timer numbers
+- Keep card backgrounds subtle and translucent
+- Use Primary Accent sparingly and purposefully
+- Test both Dark and Light modes
 
-1.  Truy cập [oklch.com](https://oklch.com).
-2.  Chọn màu bạn muốn và lấy thông số (ví dụ: `0.55 0.23 260`).
-3.  Thêm vào mảng `THEMES`:
-    ```typescript
-    { 
-      name: 'new-color', 
-      label: 'Tên hiển thị', 
-      primary: '0.XX 0.XX XXX', 
-      primaryForeground: '0.98 0.01 XXX' // Thường là màu trắng sáng
-    }
-    ```
+**Don’t**
+- Use solid primary-colored backgrounds for cards or panels
+- Overuse font-weight 700 (bold)
+- Use harsh solid borders
+- Use pure `#ffffff` as primary text (use `#f4f4f5` instead)
 
 ---
-> **Lưu ý**: Luôn kiểm tra giao diện ở cả **Light Mode** và **Dark Mode** để đảm bảo độ tương phản của màu `primary` bạn vừa cấu hình.
+
+This Design System gives TimeMaster a premium, modern, and highly professional appearance similar to Linear, while preserving full color flexibility and strong productivity focus.
+
+---

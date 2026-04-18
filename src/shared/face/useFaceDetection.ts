@@ -1,13 +1,16 @@
 import { ref } from 'vue'
-import * as faceapi from 'face-api.js'
 
 const MODELS_PATH = '/models'
-const detectorOptions = new faceapi.TinyFaceDetectorOptions({
-  inputSize: 320,
-  scoreThreshold: 0.35,
-})
-
 const DETECT_MAX_SIDE = 360
+type FaceApi = typeof import('face-api.js')
+let faceapiModule: FaceApi | null = null
+
+async function loadFaceApi() {
+  if (!faceapiModule) {
+    faceapiModule = await import('face-api.js')
+  }
+  return faceapiModule
+}
 
 export function useFaceDetection() {
   const isLoaded = ref(false)
@@ -17,6 +20,7 @@ export function useFaceDetection() {
 
   const loadModels = async () => {
     if (isLoaded.value) return
+    const faceapi = await loadFaceApi()
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH),
       faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS_PATH),
@@ -59,6 +63,11 @@ export function useFaceDetection() {
 
     detectInFlight = true
     try {
+      const faceapi = await loadFaceApi()
+      const detectorOptions = new faceapi.TinyFaceDetectorOptions({
+        inputSize: 320,
+        scoreThreshold: 0.35,
+      })
       ctx.drawImage(video, 0, 0, cw, ch)
       return await faceapi
         .detectSingleFace(detectCanvas, detectorOptions)
