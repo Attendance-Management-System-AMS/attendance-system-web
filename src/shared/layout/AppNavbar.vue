@@ -44,8 +44,22 @@ const userRoleLabel = computed(() => {
 const searchQuery = ref('')
 const isProfileOpen = ref(false)
 const profileRef = ref<HTMLElement | null>(null)
+const dropdownRef = ref<HTMLElement | null>(null)
+const dropdownPosition = ref({ top: 0, right: 0 })
 
-onClickOutside(profileRef, () => {
+const toggleProfile = (event: MouseEvent) => {
+  isProfileOpen.value = !isProfileOpen.value
+  if (isProfileOpen.value) {
+    const target = event.currentTarget as HTMLElement
+    const rect = target.getBoundingClientRect()
+    dropdownPosition.value = {
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    }
+  }
+}
+
+onClickOutside(dropdownRef, () => {
   isProfileOpen.value = false
 })
 
@@ -172,82 +186,87 @@ const handleLogout = () => {
       <div class="h-6 w-px bg-border"></div>
 
       <!-- Avatar dropdown -->
-      <div ref="profileRef" class="relative">
+      <div class="relative">
         <button
-          @click="isProfileOpen = !isProfileOpen"
-          class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
+          ref="profileRef"
+          @click="toggleProfile"
+          class="flex items-center gap-2 rounded-lg p-1.5 text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
+          aria-label="Tài khoản cá nhân"
         >
           <div
-            class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground"
+            class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground shrink-0"
           >
             {{ userInitials }}
           </div>
-          <span class="hidden md:block text-sm font-medium">{{ userDisplayName }}</span>
+          <span class="hidden md:block text-sm font-medium pr-1">{{ userDisplayName }}</span>
           <ChevronDown
-            :class="['h-4 w-4 transition-transform duration-200', isProfileOpen && 'rotate-180']"
+            :class="['h-4 w-4 transition-transform duration-200 hidden md:block', isProfileOpen && 'rotate-180']"
           />
         </button>
 
-        <!-- Dropdown menu -->
-        <Transition
-          enter-active-class="transition duration-150 ease-out"
-          enter-from-class="opacity-0 scale-95 translate-y-1"
-          enter-to-class="opacity-100 scale-100 translate-y-0"
-          leave-active-class="transition duration-100 ease-in"
-          leave-from-class="opacity-100 scale-100 translate-y-0"
-          leave-to-class="opacity-0 scale-95 translate-y-1"
-        >
-          <div
-            v-if="isProfileOpen"
-            class="absolute right-0 top-full mt-2 w-64 rounded-lg border border-border-standard bg-popover text-popover-foreground shadow-xl z-50 overflow-hidden"
+        <!-- Dropdown menu — Teleported to body to avoid overflow clipping -->
+        <Teleport to="body">
+          <Transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0 scale-95 -translate-y-1"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition duration-100 ease-in"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-95 -translate-y-1"
           >
-            <!-- User info header -->
-            <div class="px-4 py-3 border-b border-border">
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold"
-                >
-                  {{ userInitials }}
-                </div>
-                <div>
-                  <p class="text-sm font-semibold text-primary-text">
-                    {{ userDisplayName }}
-                  </p>
-                  <p class="text-[11px] font-medium text-primary" v-if="user?.positionName || user?.departmentName">
-                    {{ user?.positionName
-                    }}{{ user?.departmentName ? ' • ' + user?.departmentName : '' }}
-                  </p>
-                  <p class="text-[10px] text-tertiary-text">{{ userRoleLabel }} • {{ userEmail }}</p>
+            <div
+              v-if="isProfileOpen"
+              ref="dropdownRef"
+              :style="{ top: dropdownPosition.top + 'px', right: dropdownPosition.right + 'px' }"
+              class="fixed w-72 rounded-xl border border-border-standard bg-popover text-popover-foreground shadow-2xl z-[200] overflow-hidden"
+            >
+              <!-- User info header -->
+              <div class="px-4 py-3 border-b border-border">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground text-sm font-bold"
+                  >
+                    {{ userInitials }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-primary-text truncate">
+                      {{ userDisplayName }}
+                    </p>
+                    <p class="text-[11px] font-medium text-primary truncate" v-if="user?.positionName || user?.departmentName">
+                      {{ user?.positionName }}{{ user?.departmentName ? ' • ' + user?.departmentName : '' }}
+                    </p>
+                    <p class="text-[10px] text-tertiary-text truncate">{{ userRoleLabel }} • {{ userEmail }}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Menu items -->
-            <div class="p-1.5">
-              <RouterLink
-                v-for="item in menuItems"
-                :key="item.label"
-                :to="item.to"
-                @click="isProfileOpen = false"
-                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
-              >
-                <component :is="item.icon" class="h-4 w-4 text-tertiary-text" />
-                {{ item.label }}
-              </RouterLink>
-            </div>
+              <!-- Menu items -->
+              <div class="p-1.5">
+                <RouterLink
+                  v-for="item in menuItems"
+                  :key="item.label"
+                  :to="item.to"
+                  @click="isProfileOpen = false"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
+                >
+                  <component :is="item.icon" class="h-4 w-4 text-tertiary-text shrink-0" />
+                  {{ item.label }}
+                </RouterLink>
+              </div>
 
-            <!-- Logout -->
-            <div class="border-t border-border p-1.5">
-              <button
-                @click="handleLogout"
-                class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-rose-600 transition-colors hover:bg-rose-500/10"
-              >
-                <LogOut class="h-4 w-4" />
-                Đăng xuất
-              </button>
+              <!-- Logout -->
+              <div class="border-t border-border p-1.5">
+                <button
+                  @click="handleLogout"
+                  class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-rose-600 transition-colors hover:bg-rose-500/10"
+                >
+                  <LogOut class="h-4 w-4 shrink-0" />
+                  Đăng xuất
+                </button>
+              </div>
             </div>
-          </div>
-        </Transition>
+          </Transition>
+        </Teleport>
       </div>
     </div>
   </header>

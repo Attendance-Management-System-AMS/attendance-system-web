@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, RouterLink } from 'vue-router'
 import { Bell, Menu } from 'lucide-vue-next'
 import { useAuth } from '@/modules/auth/composables/useAuth'
 
@@ -44,12 +44,14 @@ const userInitials = computed(() => {
           <Menu class="h-6 w-6" />
         </button>
         
-        <div
+        <RouterLink
           v-else
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary"
+          to="/profile"
+          class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground active:scale-95 transition-transform"
+          aria-label="Hồ sơ cá nhân"
         >
           {{ userInitials }}
-        </div>
+        </RouterLink>
       </div>
 
       <!-- Center: Title -->

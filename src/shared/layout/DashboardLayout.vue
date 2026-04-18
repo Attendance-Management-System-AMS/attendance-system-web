@@ -16,7 +16,7 @@ watch(() => route.path, () => {
 })
 
 const isEmployeePortal = computed(() => {
-  return route.path.startsWith('/my')
+  return route.path.startsWith('/my') || route.path === '/profile'
 })
 
 const toggleSidebar = () => {
