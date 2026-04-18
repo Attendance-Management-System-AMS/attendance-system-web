@@ -20,7 +20,7 @@ const form = reactive({
   description: '',
   departmentId: '',
   level: 1,
-  status: 'active' as 'active' | 'inactive' | string,
+  status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | string,
 })
 
 function departmentIdForApi(v: string): string | number | undefined {
@@ -151,8 +151,8 @@ const handleSubmit = async () => {
                 Trạng thái <span class="text-rose-500">*</span>
               </label>
               <select v-model="form.status" :class="[inputClass, errors.status && 'border-rose-400']">
-                <option value="active">active</option>
-                <option value="inactive">inactive</option>
+                <option value="ACTIVE">Hoạt động</option>
+                <option value="INACTIVE">Vô hiệu</option>
               </select>
               <p v-if="errors.status" class="mt-1 text-xs text-rose-600">{{ errors.status }}</p>
             </div>

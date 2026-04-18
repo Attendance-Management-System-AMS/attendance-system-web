@@ -10,6 +10,8 @@ import { queryKeys } from '@/shared/lib/queryKeys'
 import { useEmployees } from '@/modules/employees/composables/useEmployees'
 import type { Employee, UpdateEmployee } from '@/modules/employees/types/employee.types'
 
+import { toast } from 'vue-sonner'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -70,13 +72,14 @@ watchEffect(() => {
   form.position = e.positionName ?? ''
   form.shift = e.shift ?? ''
 
-  form.isActive = (e.status ?? 'active').toLowerCase() === 'active'
+  form.isActive = (e.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE'
 })
 
 const handleSubmit = async () => {
   submitError.value = ''
 
   if (!form.fullName.trim() || !form.empCode.trim() || !form.email.trim()) {
+    toast.error('Vui lòng điền đầy đủ các thông tin bắt buộc.')
     submitError.value = 'Vui lòng điền đầy đủ họ tên, mã nhân viên và email.'
     return
   }
@@ -85,15 +88,19 @@ const handleSubmit = async () => {
     fullName: form.fullName.trim(),
     employeeCode: form.empCode.trim(),
     email: form.email.trim(),
-    status: form.isActive ? 'active' : 'inactive',
+    status: form.isActive ? 'ACTIVE' : 'INACTIVE',
     joinDate: form.joinDate || undefined,
   }
 
   try {
     await updateEmployee.mutateAsync({ id: employeeId.value, data: payload })
-    router.push(`/employees/${employeeId.value}`)
+    toast.success('Cập nhật nhân viên thành công')
+    setTimeout(() => {
+      router.push(`/employees/${employeeId.value}`)
+    }, 1500)
   } catch (err) {
     console.error('Update employee failed:', err)
+    toast.error('Lỗi khi cập nhật nhân viên. Vui lòng thử lại.')
     submitError.value = 'Cập nhật thất bại. Vui lòng thử lại.'
   }
 }
@@ -231,13 +238,13 @@ const handleSubmit = async () => {
             @click="handleSubmit"
             :disabled="updateEmployee.isPending.value"
             :class="[
-              'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-colors dark:shadow-none',
+              'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-colors dark:shadow-none',
               updateEmployee.isPending.value
-                ? 'bg-emerald-300 cursor-not-allowed'
-                : 'bg-emerald-600 hover:bg-emerald-700',
+                ? 'bg-primary/70 cursor-not-allowed'
+                : 'bg-primary hover:brightness-110',
             ]"
           >
-            <RefreshCw class="h-4 w-4" />
+            <RefreshCw :class="['h-4 w-4', { 'animate-spin': updateEmployee.isPending.value }]" />
             {{ updateEmployee.isPending.value ? 'Đang cập nhật...' : 'Cập nhật thay đổi' }}
           </button>
           <button

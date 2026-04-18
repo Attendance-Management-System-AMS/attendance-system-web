@@ -18,17 +18,17 @@ export function useMyAttendance(filters?: MaybeRefOrGetter<MyAttendanceFilters>)
 
   const historyQuery = useQuery({
     queryKey: computed(() => ['attendance', 'me', 'history', normalizedFilters.value] as const),
-    queryFn: () => attendanceApi.getMyHistory(normalizedFilters.value).then(res => res.data.result),
+    queryFn: () => attendanceApi.getMyHistory(normalizedFilters.value).then(res => res.data.result ?? null),
   })
 
   const todayQuery = useQuery({
     queryKey: ['attendance', 'me', 'today'],
-    queryFn: () => attendanceApi.getTodayMe().then(res => res.data.result),
+    queryFn: () => attendanceApi.getTodayMe().then(res => res.data.result ?? null),
   })
 
   const scheduleQuery = useQuery({
     queryKey: ['attendance', 'me', 'schedules'],
-    queryFn: () => attendanceApi.getMySchedules().then(res => res.data.result),
+    queryFn: () => attendanceApi.getMySchedules().then(res => res.data.result ?? null),
   })
 
   return {

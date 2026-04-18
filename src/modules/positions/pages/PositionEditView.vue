@@ -38,7 +38,7 @@ const form = reactive({
   description: '',
   departmentId: '',
   level: null as number | null,
-  status: 'active' as 'active' | 'inactive' | string,
+  status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | string,
 })
 
 type FieldName = 'name' | 'departmentId' | 'level' | 'status'
@@ -87,7 +87,7 @@ watchEffect(() => {
   form.description = p.description ?? ''
   form.departmentId = p.departmentId != null && p.departmentId !== '' ? String(p.departmentId) : ''
   form.level = typeof p.level === 'number' ? p.level : p.level ? Number(p.level) : null
-  form.status = p.status ?? 'active'
+  form.status = p.status ?? 'ACTIVE'
 })
 
 const positionErrorMessage = computed(() => {
@@ -207,8 +207,8 @@ const handleSubmit = async () => {
                   Trạng thái <span class="text-rose-500">*</span>
                 </label>
                 <select v-model="form.status" :class="[inputClass, errors.status && 'border-rose-400']">
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
+                  <option value="ACTIVE">Hoạt động</option>
+                  <option value="INACTIVE">Vô hiệu</option>
                 </select>
                 <p v-if="errors.status" class="mt-1 text-xs text-rose-600">{{ errors.status }}</p>
               </div>

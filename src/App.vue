@@ -7,7 +7,7 @@ import LoadingOverlay from '@/shared/ui/LoadingOverlay.vue'
 import { Toaster } from '@/shared/ui/sonner'
 
 const { isLoadingProfile } = useAuth()
-const { initTheme } = useTheme()
+const { initTheme, activeColorScheme } = useTheme()
 
 onMounted(() => {
   initTheme()
@@ -24,6 +24,6 @@ onMounted(() => {
     />
     
     <RouterView />
-    <Toaster position="top-right" rich-colors close-button />
+    <Toaster :theme="(activeColorScheme as any)" position="top-right" rich-colors close-button />
   </div>
 </template>
