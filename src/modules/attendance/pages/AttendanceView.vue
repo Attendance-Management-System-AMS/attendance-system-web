@@ -12,6 +12,7 @@ import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
 import DataTable from '@/shared/ui/DataTable.vue'
 import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
 import { toast } from 'vue-sonner'
+import { Monitor, X } from 'lucide-vue-next'
 
 const search = ref('')
 const filterDept = ref('')
@@ -99,11 +100,62 @@ const getInitials = (name?: string) => {
   }
   return (parts[0]?.charAt(0) || '?').toUpperCase()
 }
+
+// --- Kiosk Device Connection ---
+const showKioskDialog = ref(false)
+const kioskUrl = computed(() => `${window.location.origin}/kiosk`)
+const qrCodeUrl = computed(
+  () => `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(kioskUrl.value)}`
+)
+
 </script>
 
 <template>
     <div class="space-y-6">
-        <PageHeader title="Chấm công hôm nay" description="Theo dõi tình trạng điểm danh trong ngày" />
+        <PageHeader title="Chấm công hôm nay" description="Theo dõi tình trạng điểm danh trong ngày">
+            <template #actions>
+                <button
+                    @click="showKioskDialog = true"
+                    class="flex items-center gap-2 h-9 rounded-lg border border-border-standard bg-card px-3 text-sm font-medium text-secondary-text shadow-sm hover:bg-elevated hover:text-primary-text transition-colors"
+                >
+                    <Monitor class="h-4 w-4" />
+                    Kết nối thiết bị
+                </button>
+            </template>
+        </PageHeader>
+
+        <!-- Kiosk Connection Dialog -->
+        <Teleport to="body">
+            <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                <div v-if="showKioskDialog" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" @click.self="showKioskDialog = false">
+                    <div class="w-full max-w-sm rounded-2xl border border-border-standard bg-card shadow-2xl overflow-hidden">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-border">
+                            <div class="flex items-center gap-3">
+                                <div class="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <Monitor class="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-primary-text">Kết nối máy chấm công</p>
+                                    <p class="text-[10px] text-tertiary-text">Quét mã QR bằng thiết bị cần kết nối</p>
+                                </div>
+                            </div>
+                            <button @click="showKioskDialog = false" class="h-8 w-8 rounded-lg flex items-center justify-center text-tertiary-text hover:bg-elevated hover:text-primary-text transition-colors">
+                                <X class="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div class="flex flex-col items-center gap-4 p-6">
+                            <div class="rounded-xl border border-border-standard p-3 bg-white">
+                                <img :src="qrCodeUrl" alt="Máy chấm công QR" class="h-48 w-48" />
+                            </div>
+                            <p class="text-xs text-secondary-text text-center">Mở camera của thiết bị và quét mã QR để kết nối</p>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
 
         <SearchToolbar v-model="search" placeholder="Tìm theo tên, mã nhân viên...">
             <template #filters>
@@ -114,9 +166,9 @@ const getInitials = (name?: string) => {
         </SearchToolbar>
 
         <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
-            <DataTable 
-                :columns="columns" 
-                :rows="records || []" 
+            <DataTable
+                :columns="columns"
+                :rows="records || []"
                 :loading="isLoading"
             >
                 <template #cell-employee="{ row }">
@@ -151,7 +203,7 @@ const getInitials = (name?: string) => {
                 </template>
 
                 <template #cell-status="{ value }">
-                    <Badge 
+                    <Badge
                         :variant="value === 'Có mặt' ? 'default' : value === 'Đi muộn' ? 'outline' : 'secondary'"
                         class="px-2.5 py-0.5 text-[10px] font-bold  tracking-normal border-none"
                         :class="{
@@ -173,9 +225,9 @@ const getInitials = (name?: string) => {
             </DataTable>
         </div>
 
-        <DeleteConfirmDialog 
-            :open="isAlertOpen" 
-            title="Xác nhận xóa bản ghi" 
+        <DeleteConfirmDialog
+            :open="isAlertOpen"
+            title="Xác nhận xóa bản ghi"
             description="Lịch sử chấm công của ngày này sẽ bị gỡ bỏ khỏi hệ thống."
             :item-name="deleteTarget?.employee?.fullName"
             @confirm="confirmDelete"

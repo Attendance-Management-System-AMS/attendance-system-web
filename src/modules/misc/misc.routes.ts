@@ -53,7 +53,7 @@ export default [
     component: () => import('@/modules/attendance/components/AttendanceKiosk.vue'),
     meta: {
       hideLayout: true,
-      title: 'Kiosk Chấm công',
+      title: 'Máy chấm công',
     },
   },
   {

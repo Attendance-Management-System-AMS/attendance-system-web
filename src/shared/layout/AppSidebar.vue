@@ -158,14 +158,17 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
     <!-- Logo section -->
     <div
       :class="[
-        'flex items-center h-16 px-3 border-b border-border shrink-0',
-        props.collapsed ? 'justify-center' : 'gap-3',
+        'flex h-16 shrink-0 items-center border-b border-border',
+        props.collapsed ? 'justify-center px-2' : 'gap-3 px-3',
       ]"
     >
       <div
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary shadow-lg shadow-primary/20"
+        :class="[
+          'flex shrink-0 items-center justify-center rounded-md bg-primary shadow-lg shadow-primary/20',
+          props.collapsed ? 'h-8 w-8' : 'h-9 w-9',
+        ]"
       >
-        <Clock class="h-5 w-5 text-primary-foreground" />
+        <Clock :class="[props.collapsed ? 'h-4 w-4' : 'h-5 w-5', 'text-primary-foreground']" />
       </div>
       <Transition name="fade-slide">
         <div v-if="!props.collapsed" class="overflow-hidden">
@@ -285,12 +288,12 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
     </nav>
 
     <!-- User card footer -->
-    <div :class="['shrink-0 border-t border-border p-3']">
+    <div :class="['shrink-0 border-t border-border', props.collapsed ? 'p-2' : 'p-3']">
       <RouterLink
         to="/profile"
         :class="[
           'flex items-center rounded-lg border border-border-subtle bg-surface transition-colors hover:bg-elevated hover:border-primary/20',
-          props.collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2.5',
+          props.collapsed ? 'h-10 w-10 justify-center p-1' : 'gap-3 px-3 py-2.5',
         ]"
         :title="props.collapsed ? userDisplayName : undefined"
       >
