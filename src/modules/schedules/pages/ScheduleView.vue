@@ -29,10 +29,12 @@ import type { Shift } from '@/modules/schedules/types/shift.types'
 import type { Employee } from '@/modules/employees/types/employee.types'
 import type { Department } from '@/modules/departments/types/department.types'
 import type { Page } from '@/shared/types/api'
+import StatCard from '@/shared/ui/StatCard.vue'
 
 interface ScheduleWithShift extends Schedule {
   shift?: Shift
 }
+
 
 const { employeesQuery } = useEmployees()
 const { shiftsQuery } = useShifts()
@@ -229,33 +231,19 @@ const getShiftBadgeStyle = (shiftName?: string) => {
     </PageHeader>
     <!-- Stats Section -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-      <Card
+      <StatCard
         v-for="s in [
-          { label: 'Tổng số ca', value: 124, icon: CalendarDays },
-          { label: 'Nhân viên', value: 48, icon: Users },
-          { label: 'Giờ công', value: '1,024h', icon: Clock },
-          { label: 'Kế hoạch', value: 'đ 52M', icon: TrendingUp },
+          { label: 'Tổng số ca', value: 124, icon: CalendarDays, color: 'indigo' },
+          { label: 'Nhân viên', value: 48, icon: Users, color: 'emerald' },
+          { label: 'Giờ công', value: '1,024h', icon: Clock, color: 'amber' },
+          { label: 'Kế hoạch', value: 'đ 52M', icon: TrendingUp, color: 'rose' },
         ]"
         :key="s.label"
-        class="border-border shadow-none p-5 sm:p-6 hover:bg-secondary transition-all group rounded-lg bg-card"
-      >
-        <div class="flex flex-col gap-4">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-semibold text-tertiary-text  tracking-normal">{{
-              s.label
-            }}</span>
-            <div
-              class="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-tertiary-text border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
-            >
-              <component :is="s.icon" class="h-5 w-5" />
-            </div>
-          </div>
-          <span
-            class="text-2xl font-semibold text-primary-text tabular-nums group-hover:text-primary transition-colors"
-            >{{ s.value }}</span
-          >
-        </div>
-      </Card>
+        :label="s.label"
+        :value="s.value"
+        :icon="s.icon"
+        :color="(s.color as any)"
+      />
     </div>
 
     <!-- Filter & Search Bar -->
