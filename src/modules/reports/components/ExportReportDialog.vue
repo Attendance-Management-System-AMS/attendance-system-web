@@ -155,7 +155,7 @@ const handleExport = async () => {
             <input
               v-model="reportMonth"
               type="month"
-              class="h-10 w-full rounded-md border border-border-standard bg-card px-3 text-sm font-medium text-primary-text outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all dark:border-border dark:bg-background"
+              class="h-10 w-full rounded-md border border-border-standard bg-surface px-3 text-sm font-medium text-primary-text outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-all dark:bg-background"
             />
           </div>
 
@@ -163,12 +163,12 @@ const handleExport = async () => {
             <label class="text-xs font-bold uppercase tracking-wider text-tertiary-text">
               Phạm vi
             </label>
-            <div class="flex bg-surface dark:bg-card p-1 rounded-md border border-border-standard dark:border-border">
+            <div class="flex bg-surface dark:bg-background p-1 rounded-md border border-border-standard">
               <button 
                 @click="reportScope = 'company'"
                 :class="[
                   'flex-1 px-3 py-1.5 text-xs font-semibold rounded transition-all',
-                  reportScope === 'company' ? 'bg-white dark:bg-background shadow-sm text-primary-text' : 'text-secondary-text'
+                  reportScope === 'company' ? 'bg-card shadow-sm text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Công ty
@@ -177,7 +177,7 @@ const handleExport = async () => {
                 @click="reportScope = 'employee'"
                 :class="[
                   'flex-1 px-3 py-1.5 text-xs font-semibold rounded transition-all',
-                  reportScope === 'employee' ? 'bg-white dark:bg-background shadow-sm text-primary-text' : 'text-secondary-text'
+                  reportScope === 'employee' ? 'bg-card shadow-sm text-primary-text' : 'text-secondary-text'
                 ]"
               >
                 Cá nhân
@@ -193,7 +193,7 @@ const handleExport = async () => {
             </label>
             <select
               v-model="selectedDepartmentId"
-              class="h-10 w-full rounded-md border border-border-standard bg-card px-3 text-sm font-medium text-primary-text outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all dark:border-border dark:bg-background"
+              class="h-10 w-full rounded-md border border-border-standard bg-surface px-3 text-sm font-medium text-primary-text outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-all dark:bg-background"
             >
               <option value="">Tất cả phòng ban</option>
               <option v-for="dept in departments" :key="dept.id" :value="dept.id">
@@ -208,7 +208,7 @@ const handleExport = async () => {
             </label>
             <select
               v-model="selectedEmployeeId"
-              class="h-10 w-full rounded-md border border-border-standard bg-card px-3 text-sm font-medium text-primary-text outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all dark:border-border dark:bg-background"
+              class="h-10 w-full rounded-md border border-border-standard bg-surface px-3 text-sm font-medium text-primary-text outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition-all dark:bg-background"
             >
               <option value="">Chọn nhân viên</option>
               <option v-for="emp in employees" :key="emp.id" :value="emp.id">
@@ -217,9 +217,9 @@ const handleExport = async () => {
             </select>
           </div>
 
-          <div class="flex items-center gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900 rounded-lg">
+          <div class="flex items-center gap-3 p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg">
             <Info class="h-4 w-4 text-emerald-600 shrink-0" />
-            <p class="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300">
+            <p class="text-[11px] leading-relaxed text-secondary-text">
               {{ reportScope === 'company' 
                 ? 'Xuất dữ liệu tổng hợp công của tất cả nhân viên trong kỳ.' 
                 : 'Xuất chi tiết giờ vào/ra từng ngày của nhân viên được chọn.' 
@@ -228,8 +228,8 @@ const handleExport = async () => {
           </div>
         </div>
 
-        <div v-if="errorMessage" class="p-3 bg-rose-50 border border-rose-100 dark:bg-rose-950/20 dark:border-rose-900 rounded-lg">
-          <p class="text-xs font-medium text-rose-700 dark:text-rose-300">{{ errorMessage }}</p>
+        <div v-if="errorMessage" class="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <p class="text-xs font-medium text-destructive">{{ errorMessage }}</p>
         </div>
       </div>
 
@@ -239,12 +239,12 @@ const handleExport = async () => {
           <p class="text-xs font-semibold text-primary-text">{{ reportLabel }} • {{ scopeLabel }}</p>
         </div>
         <div class="flex gap-3 w-full sm:w-auto">
-          <Button variant="outline" @click="emit('update:open', false)" :disabled="isExporting" class="flex-1 sm:flex-none">
+          <Button variant="outline" @click="emit('update:open', false)" :disabled="isExporting" class="flex-1 sm:flex-none border-border-standard">
             Hủy bỏ
           </Button>
-          <Button @click="handleExport" :disabled="isExporting" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+          <Button @click="handleExport" :disabled="isExporting" class="flex-1 sm:flex-none bg-primary text-primary-foreground hover:brightness-110 gap-2 font-bold shadow-lg shadow-primary/20">
             <Download v-if="!isExporting" class="h-4 w-4" />
-            {{ isExporting ? 'Đang xuất...' : 'Tải xuống .xls' }}
+            {{ isExporting ? 'Đanh xuất...' : 'Tải xuống .xls' }}
           </Button>
         </div>
       </DialogFooter>

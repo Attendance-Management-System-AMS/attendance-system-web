@@ -56,7 +56,7 @@ const changeColorClass = computed(() => {
       <div v-if="loading" class="w-full">
         <SkeletonLoader width="40%" height="24px" rounded="lg" />
       </div>
-      <div v-else class="text-2xl font-semibold text-primary-text tabular-nums">{{ value }}</div>
+      <div v-else class="text-3xl font-semibold text-primary-text tabular-nums">{{ value }}</div>
 
       <SkeletonLoader v-if="loading" width="40px" height="40px" rounded="xl" className="shrink-0" />
       <div
