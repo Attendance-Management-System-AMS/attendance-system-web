@@ -28,19 +28,19 @@ defineEmits<{
         <Button
           variant="ghost"
           size="sm"
-          class="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          class="h-8 w-8 p-0 text-tertiary-text hover:text-primary-text"
         >
           <MoreHorizontal class="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" class="w-48">
         <DropdownMenuItem v-if="viewTo" @click="$router.push(viewTo)">
-          <Eye class="mr-2 h-4 w-4 text-slate-400" />
+          <Eye class="mr-2 h-4 w-4 text-tertiary-text" />
           <span>Xem chi tiết</span>
         </DropdownMenuItem>
         
         <DropdownMenuItem @click="itemId !== undefined && (editTo ? $router.push(editTo) : $emit('edit', itemId))">
-          <Pencil class="mr-2 h-4 w-4 text-slate-400" />
+          <Pencil class="mr-2 h-4 w-4 text-tertiary-text" />
           <span>Chỉnh sửa</span>
         </DropdownMenuItem>
 

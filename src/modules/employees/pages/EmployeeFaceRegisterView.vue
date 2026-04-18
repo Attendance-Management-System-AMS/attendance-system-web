@@ -211,7 +211,7 @@ onUnmounted(() => {
       <button
         type="button"
         @click="router.push(employee ? `/employees/${employee.id}` : '/employees')"
-        class="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+        class="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-secondary-text transition-colors hover:bg-muted hover:text-primary-text dark:text-tertiary-text dark:hover:bg-elevated dark:hover:text-white"
       >
         <ArrowLeft class="h-4 w-4" />
         Quay lại
@@ -220,40 +220,40 @@ onUnmounted(() => {
 
     <div
       v-if="employeeQuery.isLoading.value"
-      class="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900"
+      class="rounded-lg border border-border-standard bg-card p-8 text-center text-sm text-secondary-text dark:border-border dark:bg-card"
     >
-      <div class="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+      <div class="mx-auto mb-3 h-8 w-8 animate-pulse rounded-full bg-muted dark:bg-elevated" />
       Đang tải thông tin nhân viên...
     </div>
 
     <div
       v-else-if="employeeQuery.isError.value || !employee"
-      class="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
+      class="rounded-lg border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
     >
       Không tìm thấy nhân viên.
     </div>
 
     <template v-else>
       <!-- Tiêu đề + nhân viên -->
-      <header class="space-y-2 border-b border-slate-200/80 pb-8 dark:border-slate-800/80">
+      <header class="space-y-2 border-b border-border-standard/80 pb-8 dark:border-border/80">
         <p
-          class="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400"
+          class="text-[11px] font-semibold  tracking-normal text-primary dark:text-primary"
         >
           Chấm công nhận diện
         </p>
-        <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+        <h1 class="text-3xl font-bold tracking-normal text-primary-text dark:text-primary-text sm:text-4xl">
           Đăng ký khuôn mặt
         </h1>
         <div
           class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
         >
           <p
-            class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-lg text-slate-700 dark:text-slate-200"
+            class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-lg text-primary-text dark:text-primary-text"
           >
             <span class="font-semibold">{{ employee.fullName }}</span>
-            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+            <span class="text-tertiary-text dark:text-secondary-text" aria-hidden="true">·</span>
             <span
-              class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-sm font-medium text-indigo-700 dark:bg-slate-800 dark:text-indigo-300"
+              class="rounded-md bg-muted px-2 py-0.5 font-mono text-sm font-medium text-primary dark:bg-elevated dark:text-primary"
             >
               {{ employee.employeeCode }}
             </span>
@@ -274,7 +274,7 @@ onUnmounted(() => {
         <!-- Camera -->
         <div class="lg:col-span-7 xl:col-span-8">
           <div
-            class="relative overflow-hidden rounded-xl border border-slate-200/90 bg-linear-to-b from-slate-900 to-slate-950 shadow-xl ring-1 ring-black/5 dark:border-slate-700/80"
+            class="relative overflow-hidden rounded-lg border border-border-standard/90 bg-linear-to-b from-slate-900 to-slate-950 shadow-xl ring-1 ring-black/5 dark:border-border/80"
             :class="
               ui.busy
                 ? 'ring-2 ring-sky-400/60 shadow-sky-500/10'
@@ -316,9 +316,9 @@ onUnmounted(() => {
                 class="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/40 to-transparent px-4 pb-5 pt-16 sm:px-6"
               >
                 <div
-                  class="flex gap-3 rounded-xl border border-white/10 bg-black/45 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md"
+                  class="flex gap-3 rounded-lg border border-white/10 bg-black/45 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md"
                 >
-                  <ScanFace class="mt-0.5 h-5 w-5 shrink-0 text-indigo-300" />
+                  <ScanFace class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                   <p class="leading-relaxed">
                     {{ ui.hint }}
                   </p>
@@ -331,7 +331,7 @@ onUnmounted(() => {
         <!-- Cột phải -->
         <div class="flex flex-col gap-5 lg:col-span-5 xl:col-span-4">
           <div
-            class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            class="rounded-lg border border-border-standard bg-card p-6 shadow-sm dark:border-border dark:bg-card"
             :class="
               effectiveFaceRegistered
                 ? 'border-emerald-200/80 ring-1 ring-emerald-100 dark:border-emerald-900/40 dark:ring-emerald-900/30'
@@ -340,17 +340,17 @@ onUnmounted(() => {
           >
             <div class="flex items-start gap-3">
               <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/50"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/50"
               >
                 <ShieldCheck class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div class="min-w-0 flex-1">
                 <h2
-                  class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                  class="text-sm font-bold  tracking-normal text-secondary-text dark:text-tertiary-text"
                 >
                   Trạng thái
                 </h2>
-                <p class="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                <p class="mt-2 text-sm leading-relaxed text-primary-text dark:text-tertiary-text">
                   <template v-if="effectiveFaceRegistered">
                     Đã có khuôn mặt đăng ký — lần lưu tiếp theo sẽ
                     <strong class="font-semibold text-emerald-700 dark:text-emerald-400"
@@ -378,7 +378,7 @@ onUnmounted(() => {
               :class="
                 ui.faceReady
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100'
-                  : 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-300'
+                  : 'border-border-standard bg-surface text-primary-text dark:border-border dark:bg-background/40 dark:text-tertiary-text'
               "
             >
               <div class="flex items-start gap-2">
@@ -401,7 +401,7 @@ onUnmounted(() => {
               :class="
                 ui.faceReady || ui.busy
                   ? 'bg-emerald-600 hover:bg-emerald-700'
-                  : 'bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600'
+                  : 'bg-elevated hover:bg-card dark:bg-elevated dark:hover:bg-elevated'
               "
               :disabled="ui.busy || !isLoaded"
               @click="handleSaveFace"
@@ -414,7 +414,7 @@ onUnmounted(() => {
 
             <div
               v-if="ui.feedback.status === 'success'"
-              class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-100"
+              class="mt-5 rounded-lg border border-emerald-200 bg-emerald-50/90 p-4 text-sm text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-100"
               role="status"
               aria-live="assertive"
             >
@@ -443,7 +443,7 @@ onUnmounted(() => {
             </div>
             <div
               v-if="ui.feedback.status === 'error'"
-              class="mt-5 rounded-xl border border-rose-200 bg-rose-50/90 p-4 text-sm text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100"
+              class="mt-5 rounded-lg border border-rose-200 bg-rose-50/90 p-4 text-sm text-rose-900 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-100"
             >
               <div class="flex items-start gap-3">
                 <XCircle class="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />

@@ -17,13 +17,13 @@ defineEmits<{
     <!-- Search input -->
     <div class="relative flex-1 max-w-sm">
       <Search
-        class="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400"
+        class="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-tertiary-text"
       />
       <Input
         :model-value="modelValue"
         type="text"
         :placeholder="placeholder ?? 'Tìm kiếm...'"
-        class="pl-10 h-10 rounded-xl bg-slate-50 focus:bg-white dark:bg-slate-800 transition-all"
+        class="h-10 rounded-lg bg-surface pl-10 transition-colors focus:bg-background"
         @update:model-value="(val) => $emit('update:modelValue', val as string)"
       />
     </div>

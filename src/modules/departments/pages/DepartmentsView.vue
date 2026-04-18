@@ -113,7 +113,7 @@ const columns = [
   <div class="space-y-6">
     <PageHeader title="Phòng ban" description="Quản lý các phòng ban trong tổ chức">
       <template #actions>
-        <Button @click="isCreateModalOpen = true" class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+        <Button @click="isCreateModalOpen = true" class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <Plus class="h-4 w-4" />
           Thêm phòng ban
         </Button>
@@ -122,7 +122,7 @@ const columns = [
 
     <SearchToolbar v-model="search" placeholder="Tìm kiếm phòng ban, trưởng phòng..." />
 
-    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <DataTable 
         :columns="columns" 
         :rows="filteredDepartments" 
@@ -130,23 +130,23 @@ const columns = [
       >
         <template #cell-name="{ value }">
           <div class="flex items-center gap-3">
-            <Avatar class="size-8 h-8 w-8 border border-indigo-50">
-              <AvatarFallback class="bg-indigo-50 text-indigo-600 text-[10px] font-bold">
+            <Avatar class="size-8 h-8 w-8 border border-primary/20">
+              <AvatarFallback class="bg-primary/10 text-primary text-[10px] font-bold">
                 {{ String(value).charAt(0) }}
               </AvatarFallback>
             </Avatar>
-            <span class="font-bold text-slate-700 dark:text-slate-200">{{ value }}</span>
+            <span class="font-bold text-primary-text dark:text-primary-text">{{ value }}</span>
           </div>
         </template>
 
         <template #cell-description="{ value }">
-          <p class="max-w-[250px] truncate text-sm text-slate-500 dark:text-slate-400 font-medium" :title="String(value)">
+          <p class="max-w-[250px] truncate text-sm text-secondary-text dark:text-tertiary-text font-medium" :title="String(value)">
             {{ value || '—' }}
           </p>
         </template>
 
         <template #cell-totalEmployees="{ value }">
-          <Badge variant="secondary" class="font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <Badge variant="secondary" class="font-bold bg-muted dark:bg-elevated text-secondary-text dark:text-tertiary-text">
             {{ value }} nhân viên
           </Badge>
         </template>
@@ -199,7 +199,7 @@ const columns = [
         <AlertDialogHeader>
           <AlertDialogTitle>Xác nhận xóa phòng ban</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa phòng ban <span class="font-bold text-slate-900 dark:text-white">{{ deleteTarget?.name }}</span>? 
+            Bạn có chắc chắn muốn xóa phòng ban <span class="font-bold text-primary-text dark:text-primary-text">{{ deleteTarget?.name }}</span>? 
             Hành động này không thể hoàn tác và có thể ảnh hưởng đến nhân sự trong phòng.
           </AlertDialogDescription>
         </AlertDialogHeader>

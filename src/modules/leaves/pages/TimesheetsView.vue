@@ -94,7 +94,7 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
       description="Phê duyệt và theo dõi đơn từ nhân viên"
     >
       <template #actions>
-        <Button @click="isCreateModalOpen = true" class="h-9 px-4 bg-primary hover:bg-primary/90 font-black text-[10px] tracking-widest gap-2 shadow-lg shadow-primary/20 rounded">
+        <Button @click="isCreateModalOpen = true" class="h-9 px-4 bg-primary hover:bg-primary/90 font-semibold text-[10px] tracking-normal gap-2 shadow-lg shadow-primary/20 rounded">
           <Plus class="h-3.5 w-3.5" /> Tạo đơn mới
         </Button>
       </template>
@@ -106,13 +106,13 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
         class="border-border shadow-none p-4 sm:p-5 hover:bg-muted transition-all group rounded bg-card">
         <div class="flex flex-col">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ stat.label }}</span>
-            <div class="h-7 w-7 rounded bg-muted flex items-center justify-center text-slate-400 border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
+            <span class="text-[10px] font-semibold text-tertiary-text  tracking-normal">{{ stat.label }}</span>
+            <div class="h-7 w-7 rounded bg-muted flex items-center justify-center text-tertiary-text border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
                 <component :is="stat.icon" class="h-3.5 w-3.5" />
             </div>
           </div>
           <div class="mt-3">
-            <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums leading-none group-hover:text-primary transition-colors">
+            <span class="text-2xl sm:text-3xl font-semibold text-primary-text tabular-nums leading-none group-hover:text-primary transition-colors">
               {{ stat.value }}
             </span>
           </div>
@@ -131,42 +131,42 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
       <DataTable :columns="columns" :rows="filteredLeaves" :loading="isLoading" class="text-[11px] sm:text-sm">
         <template #cell-employee="{ row }">
            <div class="py-1">
-              <p class="font-black text-indigo-950 leading-tight">{{ row.employeeName }}</p>
-              <p class="text-[9px] font-mono text-indigo-300 font-bold tracking-tight">{{ row.employeeCode || '—' }}</p>
+              <p class="font-semibold text-primary-text leading-tight">{{ row.employeeName }}</p>
+              <p class="text-[9px] font-mono text-primary font-bold tracking-normal">{{ row.employeeCode || '—' }}</p>
            </div>
         </template>
 
         <template #cell-type="{ row }">
-            <Badge variant="outline" class="bg-indigo-50/50 text-indigo-600 border-indigo-100 font-bold text-[9px] px-1.5 uppercase">
+            <Badge variant="outline" class="bg-primary/10/50 text-primary border-primary/20 font-bold text-[9px] px-1.5 ">
                 {{ (row.leaveType && typeof row.leaveType === 'object') ? row.leaveType.name : (row.leaveType || 'Nghỉ phép') }}
             </Badge>
         </template>
 
         <template #cell-dateRange="{ row }">
-            <div class="text-[10px] sm:text-[11px] font-medium text-indigo-900/60 flex flex-col gap-0.5">
+            <div class="text-[10px] sm:text-[11px] font-medium text-secondary-text flex flex-col gap-0.5">
                 <span>{{ row.fromDate || row.startDate }}</span>
-                <span class="text-[8px] font-bold text-indigo-200">đến</span>
+                <span class="text-[8px] font-bold text-tertiary-text">đến</span>
                 <span>{{ row.toDate || row.endDate }}</span>
             </div>
         </template>
 
         <template #cell-status="{ value }">
            <Badge variant="outline"
-                class="px-2 py-0.5 text-[9px] font-bold border-indigo-100 bg-indigo-50/30 text-indigo-500 uppercase">
+                class="px-2 py-0.5 text-[9px] font-bold border-primary/20 bg-primary/10 text-primary ">
                 {{ normalizeLeaveStatus(value) === 'approved' ? 'Đã duyệt' : normalizeLeaveStatus(value) === 'rejected' ? 'Từ chối' : 'Chờ duyệt' }}
            </Badge>
         </template>
 
         <template #cell-actions="{ row }">
             <div v-if="isPendingLeave(row.status)" class="flex justify-end gap-1.5">
-                <Button size="icon" variant="outline" class="h-8 w-8 text-indigo-600 border-indigo-100 hover:bg-indigo-50" @click="handleApprove(row.id)">
+                <Button size="icon" variant="outline" class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10" @click="handleApprove(row.id)">
                     <Check class="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="outline" class="h-8 w-8 text-indigo-400 border-indigo-50 hover:bg-indigo-50" @click="handleReject(row.id)">
+                <Button size="icon" variant="outline" class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10" @click="handleReject(row.id)">
                     <X class="h-4 w-4" />
                 </Button>
             </div>
-            <span v-else class="text-[10px] font-black uppercase tracking-tighter text-indigo-200 mr-2">Hoàn thành</span>
+            <span v-else class="text-[10px] font-semibold  tracking-normal text-tertiary-text mr-2">Hoàn thành</span>
         </template>
       </DataTable>
     </div>

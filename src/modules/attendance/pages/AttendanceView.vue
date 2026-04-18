@@ -113,7 +113,7 @@ const getInitials = (name?: string) => {
             </template>
         </SearchToolbar>
 
-        <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
             <DataTable 
                 :columns="columns" 
                 :rows="records || []" 
@@ -121,17 +121,17 @@ const getInitials = (name?: string) => {
             >
                 <template #cell-employee="{ row }">
                     <div class="flex items-center gap-3">
-                        <Avatar class="size-9 h-9 w-9 border border-indigo-50 dark:border-indigo-950">
+                        <Avatar class="size-9 h-9 w-9 border border-primary/20 dark:border-primary/20">
                             <AvatarImage :src="`/api/avatar/${row.employee?.id}`" />
-                            <AvatarFallback class="bg-indigo-50 text-indigo-600 text-[10px] font-bold">
+                            <AvatarFallback class="bg-primary/10 text-primary text-[10px] font-bold">
                                 {{ getInitials(row.employee?.fullName) }}
                             </AvatarFallback>
                         </Avatar>
                         <div>
-                            <p class="text-sm font-bold text-slate-700 dark:text-slate-200">
+                            <p class="text-sm font-bold text-primary-text dark:text-primary-text">
                                 {{ row.employee?.fullName ?? '—' }}
                             </p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                            <p class="text-[10px] text-tertiary-text font-bold  tracking-normal">
                                 {{ row.employee?.departmentName ?? '—' }}
                             </p>
                         </div>
@@ -139,13 +139,13 @@ const getInitials = (name?: string) => {
                 </template>
 
                 <template #cell-checkIn="{ value }">
-                    <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                    <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
                         {{ value || '—:—' }}
                     </code>
                 </template>
 
                 <template #cell-checkOut="{ value }">
-                    <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                    <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
                         {{ value || '—:—' }}
                     </code>
                 </template>
@@ -153,13 +153,13 @@ const getInitials = (name?: string) => {
                 <template #cell-status="{ value }">
                     <Badge 
                         :variant="value === 'Có mặt' ? 'default' : value === 'Đi muộn' ? 'outline' : 'secondary'"
-                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border-none"
+                        class="px-2.5 py-0.5 text-[10px] font-bold  tracking-normal border-none"
                         :class="{
                             'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30': value === 'Có mặt',
                             'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn' || value === 'Muộn + về sớm',
-                            'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/30': value === 'Về sớm',
+                            'bg-primary/10 text-primary hover:bg-primary/10 dark:bg-primary/10': value === 'Về sớm',
                             'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt' || value === 'Thiếu checkout',
-                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800': value === 'Chưa chấm công' || value === 'Nghỉ phép' || value === 'Ngày lễ'
+                            'bg-muted text-secondary-text hover:bg-muted dark:bg-elevated': value === 'Chưa chấm công' || value === 'Nghỉ phép' || value === 'Ngày lễ'
                         }"
                     >
                         {{ value }}
@@ -168,7 +168,7 @@ const getInitials = (name?: string) => {
 
                 <template #cell-actions="{ row }">
                     <ActionDropdown v-if="row.isRecorded" :item-id="row.id" @delete="handleDelete" />
-                    <span v-else class="text-xs text-slate-400">—</span>
+                    <span v-else class="text-xs text-tertiary-text">—</span>
                 </template>
             </DataTable>
         </div>

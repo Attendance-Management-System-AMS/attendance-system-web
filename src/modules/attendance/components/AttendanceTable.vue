@@ -44,10 +44,10 @@ const badgeVariantByStatus: Record<Attendance['status'], 'success' | 'warning' |
               </AvatarFallback>
             </Avatar>
             <div>
-              <p class="text-sm font-medium text-slate-900">
+              <p class="text-sm font-medium text-primary-text">
                 {{ record.employee?.fullName ?? '—' }}
               </p>
-              <p class="text-xs text-slate-500">
+              <p class="text-xs text-secondary-text">
                 {{ record.employee?.departmentName ?? '—' }} · {{ record.employee?.positionName ?? '—' }}
               </p>
             </div>

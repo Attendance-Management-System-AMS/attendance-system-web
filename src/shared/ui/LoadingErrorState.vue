@@ -39,21 +39,21 @@ const resolvedErrorText = computed(() => {
 <template>
   <!-- Loading -->
   <tr v-if="mode === 'row' && isLoading">
-    <td :colspan="colspan" class="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+    <td :colspan="colspan" class="px-4 py-12 text-center text-secondary-text">
       {{ loadingText }}
     </td>
   </tr>
 
-  <div v-else-if="mode === 'block' && isLoading" class="py-12 text-center text-slate-500 dark:text-slate-400">
+  <div v-else-if="mode === 'block' && isLoading" class="py-12 text-center text-secondary-text">
     {{ loadingText }}
   </div>
 
   <!-- Error -->
   <tr v-else-if="mode === 'row' && isError">
-    <td :colspan="colspan" class="px-4 py-12 text-center text-red-600 dark:text-red-400">
+    <td :colspan="colspan" class="px-4 py-12 text-center text-destructive">
       <div class="mb-2">{{ resolvedErrorText }}</div>
       <button
-        class="text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400"
+        class="font-medium text-primary underline hover:brightness-110"
         type="button"
         @click="emit('retry')"
       >
@@ -62,10 +62,10 @@ const resolvedErrorText = computed(() => {
     </td>
   </tr>
 
-  <div v-else-if="mode === 'block' && isError" class="py-12 text-center text-red-600 dark:text-red-400">
+  <div v-else-if="mode === 'block' && isError" class="py-12 text-center text-destructive">
     <div class="mb-2">{{ resolvedErrorText }}</div>
     <button
-      class="text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400"
+      class="font-medium text-primary underline hover:brightness-110"
       type="button"
       @click="emit('retry')"
     >
@@ -73,4 +73,3 @@ const resolvedErrorText = computed(() => {
     </button>
   </div>
 </template>
-

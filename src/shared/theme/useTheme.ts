@@ -43,6 +43,18 @@ export const THEMES: ThemeConfig[] = [
 ]
 
 const activeThemeName = useStorage('ams-active-theme', 'indigo')
+const activeColorScheme = useStorage<'light' | 'dark' | 'system'>('ams-color-scheme', 'dark')
+
+function applyColorScheme(scheme: 'light' | 'dark' | 'system') {
+  const root = document.documentElement
+  if (scheme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    root.classList.toggle('dark', prefersDark)
+  } else {
+    root.classList.toggle('dark', scheme === 'dark')
+  }
+  activeColorScheme.value = scheme
+}
 
 export function useTheme() {
   const applyTheme = (themeName: string) => {
@@ -59,12 +71,15 @@ export function useTheme() {
 
   const initTheme = () => {
     applyTheme(activeThemeName.value)
+    applyColorScheme(activeColorScheme.value)
   }
 
   return {
     activeThemeName,
+    activeColorScheme,
     THEMES,
     applyTheme,
+    applyColorScheme,
     initTheme
   }
 }

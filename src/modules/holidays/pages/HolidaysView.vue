@@ -55,7 +55,7 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Ngày nghỉ" description="Quản lý ngày nghỉ lễ và nghỉ hưởng lương">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/holidays/new">
             <Plus class="h-4 w-4" />
             Tạo mới
@@ -64,7 +64,7 @@ const confirmDelete = () => {
       </template>
     </PageHeader>
 
-    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <DataTable 
         :columns="columns" 
         :rows="holidays" 
@@ -73,21 +73,21 @@ const confirmDelete = () => {
         <!-- Custom Name Column -->
         <template #cell-holidayName="{ row }">
           <div class="flex items-center gap-3">
-             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary">
               <CalendarDays class="h-4 w-4" />
             </div>
-            <span class="font-bold text-slate-700 dark:text-slate-200">{{ row.holidayName }}</span>
+            <span class="font-bold text-primary-text dark:text-primary-text">{{ row.holidayName }}</span>
           </div>
         </template>
 
         <!-- Custom Date Range Column -->
         <template #cell-dateRange="{ row }">
           <div class="flex items-center gap-2">
-            <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+            <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
               {{ row.fromDate || '—' }}
             </code>
-            <span v-if="row.toDate" class="text-slate-400 text-[10px]">→</span>
-            <code v-if="row.toDate" class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+            <span v-if="row.toDate" class="text-tertiary-text text-[10px]">→</span>
+            <code v-if="row.toDate" class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
               {{ row.toDate }}
             </code>
           </div>
@@ -126,7 +126,7 @@ const confirmDelete = () => {
         <AlertDialogHeader>
           <AlertDialogTitle>Xác nhận xóa ngày nghỉ</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa ngày nghỉ <span class="font-bold text-slate-900 dark:text-white">"{{ deleteTarget?.holidayName }}"</span>? 
+            Bạn có chắc chắn muốn xóa ngày nghỉ <span class="font-bold text-primary-text dark:text-primary-text">"{{ deleteTarget?.holidayName }}"</span>? 
             Hành động này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>

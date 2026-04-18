@@ -31,8 +31,8 @@ const roleLabel = computed(() => {
 })
 
 const inputClass =
-  'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
-const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
+  'h-10 w-full rounded-lg border border-border-standard bg-surface px-3 text-sm text-primary-text focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/40 dark:border-border dark:bg-elevated dark:text-primary-text'
+const labelClass = 'block text-xs font-bold  tracking-normal text-secondary-text mb-1.5'
 
 const notifyEmail = ref(true)
 const notifyPush = ref(false)
@@ -48,25 +48,25 @@ const notifyPush = ref(false)
     <div class="grid gap-6 lg:grid-cols-3">
       <div class="lg:col-span-1 space-y-4">
         <div
-          class="rounded-xl border border-slate-200 bg-linear-to-b from-white to-indigo-50/40 p-6 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-indigo-950/30"
+          class="rounded-lg border border-border-standard bg-linear-to-b from-white to-indigo-50/40 p-6 shadow-sm dark:border-border dark:from-slate-900 dark:to-indigo-950/30"
         >
           <div class="flex flex-col items-center text-center">
             <div class="relative">
               <div
-                class="flex h-24 w-24 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-700 text-2xl font-bold text-white shadow-lg shadow-indigo-500/30"
+                class="flex h-24 w-24 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-indigo-700 text-2xl font-bold text-white shadow-lg shadow-primary/20"
               >
                 {{ initials }}
               </div>
               <button
                 type="button"
-                class="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-xl border border-white bg-white text-slate-600 shadow-md hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                class="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-lg border border-white bg-card text-secondary-text shadow-md hover:bg-surface dark:border-border dark:bg-elevated dark:text-tertiary-text"
                 title="Đổi ảnh đại diện"
               >
                 <Camera class="h-4 w-4" />
               </button>
             </div>
-            <h2 class="mt-4 text-lg font-bold text-slate-900 dark:text-white">{{ displayName }}</h2>
-            <p class="text-sm text-slate-500">{{ roleLabel }} · TimeMaster</p>
+            <h2 class="mt-4 text-lg font-bold text-primary-text dark:text-primary-text">{{ displayName }}</h2>
+            <p class="text-sm text-secondary-text">{{ roleLabel }} · TimeMaster</p>
             <div class="mt-4 flex flex-wrap justify-center gap-2">
               <span
                 class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
@@ -74,7 +74,7 @@ const notifyPush = ref(false)
                 Đang hoạt động
               </span>
               <span
-                class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300"
+                class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary dark:bg-primary/10 dark:text-primary"
               >
                 MFA đã bật
               </span>
@@ -83,16 +83,16 @@ const notifyPush = ref(false)
         </div>
 
         <div
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          class="rounded-lg border border-border-standard bg-card p-5 shadow-sm dark:border-border dark:bg-card"
         >
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Liên hệ nhanh</h3>
+          <h3 class="text-xs font-bold  tracking-normal text-tertiary-text">Liên hệ nhanh</h3>
           <ul class="mt-3 space-y-3 text-sm">
-            <li class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-              <Mail class="h-4 w-4 shrink-0 text-indigo-500" />
+            <li class="flex items-center gap-3 text-secondary-text dark:text-tertiary-text">
+              <Mail class="h-4 w-4 shrink-0 text-primary" />
               {{ email }}
             </li>
-            <li class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-              <Phone class="h-4 w-4 shrink-0 text-indigo-500" />
+            <li class="flex items-center gap-3 text-secondary-text dark:text-tertiary-text">
+              <Phone class="h-4 w-4 shrink-0 text-primary" />
               Chưa cập nhật SĐT
             </li>
           </ul>
@@ -125,46 +125,46 @@ const notifyPush = ref(false)
         <FormCard title="Thông báo" :icon="Bell">
           <div class="space-y-4">
             <label
-              class="flex cursor-pointer items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50"
+              class="flex cursor-pointer items-center justify-between rounded-lg border border-border-subtle bg-surface/80 px-4 py-3 dark:border-border dark:bg-elevated/50"
             >
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200"
+              <span class="text-sm font-medium text-primary-text dark:text-primary-text"
                 >Email khi có đơn nghỉ / duyệt</span
               >
               <input
                 v-model="notifyEmail"
                 type="checkbox"
-                class="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                class="h-4 w-4 rounded border-border-standard text-primary"
               />
             </label>
             <label
-              class="flex cursor-pointer items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/50"
+              class="flex cursor-pointer items-center justify-between rounded-lg border border-border-subtle bg-surface/80 px-4 py-3 dark:border-border dark:bg-elevated/50"
             >
-              <span class="text-sm font-medium text-slate-800 dark:text-slate-200"
+              <span class="text-sm font-medium text-primary-text dark:text-primary-text"
                 >Thông báo đẩy trên trình duyệt</span
               >
               <input
                 v-model="notifyPush"
                 type="checkbox"
-                class="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                class="h-4 w-4 rounded border-border-standard text-primary"
               />
             </label>
           </div>
         </FormCard>
 
         <FormCard title="Bảo mật" :icon="Shield">
-          <p class="mb-4 text-sm text-slate-600 dark:text-slate-400">
+          <p class="mb-4 text-sm text-secondary-text dark:text-tertiary-text">
             Đổi mật khẩu định kỳ và kiểm tra thiết bị đăng nhập gần đây.
           </p>
           <div class="flex flex-wrap gap-3">
             <button
               type="button"
-              class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-indigo-700"
+              class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary"
             >
               Đổi mật khẩu
             </button>
             <button
               type="button"
-              class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              class="rounded-lg border border-border-standard bg-card px-4 py-2.5 text-sm font-medium text-primary-text hover:bg-surface dark:border-border dark:bg-elevated dark:text-primary-text"
             >
               Phiên đăng nhập
             </button>

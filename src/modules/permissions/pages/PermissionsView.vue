@@ -71,33 +71,33 @@ function getPermissionState(v: boolean | 'partial') {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="border-b bg-slate-50/50 dark:bg-slate-900/50">
-              <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 min-w-[200px]">
+            <tr class="border-b bg-surface/50 dark:bg-card/50">
+              <th class="px-6 py-4 text-left text-[10px] font-semibold  tracking-normal text-tertiary-text min-w-[200px]">
                 Vai trò & Mô tả
               </th>
               <th
                 v-for="key in moduleKeys"
                 :key="key"
-                class="px-3 py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400"
+                class="px-3 py-4 text-center text-[10px] font-semibold  tracking-normal text-tertiary-text"
               >
                 {{ moduleLabels[key] }}
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody class="divide-y divide-border dark:divide-border">
             <tr
               v-for="row in rows"
               :key="row.role"
-              class="hover:bg-indigo-50/10 dark:hover:bg-indigo-950/10 transition-colors"
+              class="hover:bg-primary/10/10 dark:hover:bg-primary/10/10 transition-colors"
             >
               <td class="px-6 py-5">
                 <div class="flex items-center gap-3">
-                    <div class="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-600">
+                    <div class="h-8 w-8 rounded-lg bg-primary/10 dark:bg-primary/10 flex items-center justify-center text-primary">
                         <ShieldCheck class="h-4 w-4" />
                     </div>
                     <div>
-                        <p class="font-black text-slate-900 dark:text-white leading-tight">{{ row.role }}</p>
-                        <p class="text-[11px] font-medium text-slate-400 mt-0.5">{{ row.desc }}</p>
+                        <p class="font-semibold text-primary-text dark:text-primary-text leading-tight">{{ row.role }}</p>
+                        <p class="text-[11px] font-medium text-tertiary-text mt-0.5">{{ row.desc }}</p>
                     </div>
                 </div>
               </td>
@@ -116,7 +116,7 @@ function getPermissionState(v: boolean | 'partial') {
                     >
                     <Minus class="h-3.5 w-3.5" />
                     </span>
-                    <span v-else class="h-7 w-7 flex items-center justify-center rounded-full bg-slate-50 text-slate-300 dark:bg-slate-900 dark:text-slate-700">
+                    <span v-else class="h-7 w-7 flex items-center justify-center rounded-full bg-surface text-tertiary-text dark:bg-card dark:text-primary-text">
                         <Check class="h-3.5 w-3.5 opacity-0" />
                     </span>
                 </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { TrendingUp, TrendingDown } from 'lucide-vue-next'
-import SkeletonLoader from './SkeletonLoader.vue';
+import SkeletonLoader from './SkeletonLoader.vue'
 
 const props = defineProps<{
   label: string
@@ -15,11 +15,11 @@ const props = defineProps<{
 
 const colorConfig = computed(() => {
   const configs = {
-    indigo: { bg: 'bg-indigo-50', icon: 'text-indigo-600', dark: 'dark:bg-indigo-950' },
-    emerald: { bg: 'bg-emerald-50', icon: 'text-emerald-600', dark: 'dark:bg-emerald-950' },
-    amber: { bg: 'bg-amber-50', icon: 'text-amber-600', dark: 'dark:bg-amber-950' },
-    rose: { bg: 'bg-rose-50', icon: 'text-rose-600', dark: 'dark:bg-rose-950' },
-    slate: { bg: 'bg-slate-100', icon: 'text-slate-600', dark: 'dark:bg-slate-800' },
+    indigo: { bg: 'bg-primary/10', icon: 'text-primary' },
+    emerald: { bg: 'bg-emerald-500/10', icon: 'text-emerald-500' },
+    amber: { bg: 'bg-amber-500/10', icon: 'text-amber-500' },
+    rose: { bg: 'bg-rose-500/10', icon: 'text-rose-500' },
+    slate: { bg: 'bg-muted', icon: 'text-tertiary-text' },
   }
   return configs[props.color ?? 'indigo']
 })
@@ -27,17 +27,17 @@ const colorConfig = computed(() => {
 const changeColorClass = computed(() => {
   if (props.changeType === 'positive') return 'text-emerald-500'
   if (props.changeType === 'negative') return 'text-rose-500'
-  return 'text-slate-400'
+  return 'text-tertiary-text'
 })
 </script>
 
 <template>
   <div
-    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow dark:border-slate-800 dark:bg-slate-900"
+    class="rounded-lg border border-border-standard bg-card p-5 text-card-foreground shadow-sm transition-colors hover:bg-elevated"
   >
     <div class="mb-3 flex items-center justify-between">
       <SkeletonLoader v-if="loading" width="60%" height="10px" rounded="full" />
-      <span v-else class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+      <span v-else class="text-xs font-medium tracking-normal text-tertiary-text">
         {{ label }}
       </span>
 
@@ -56,15 +56,14 @@ const changeColorClass = computed(() => {
       <div v-if="loading" class="w-full">
         <SkeletonLoader width="40%" height="24px" rounded="lg" />
       </div>
-      <div v-else class="text-2xl font-black text-slate-900 dark:text-white">{{ value }}</div>
+      <div v-else class="text-2xl font-semibold text-primary-text tabular-nums">{{ value }}</div>
 
       <SkeletonLoader v-if="loading" width="40px" height="40px" rounded="xl" className="shrink-0" />
       <div
         v-else
         :class="[
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
           colorConfig.bg,
-          colorConfig.dark,
         ]"
       >
         <component :is="icon" :class="['h-5 w-5', colorConfig.icon]" />

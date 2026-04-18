@@ -94,7 +94,7 @@ const formatDateRange = (from?: string, to?: string) => {
       <template #actions>
         <Button
           @click="handleCreateRequest"
-          class="bg-primary hover:bg-primary/90 h-8 px-3 text-[10px] font-bold uppercase tracking-widest gap-2 rounded shadow-none"
+          class="bg-primary hover:bg-primary/90 h-8 px-3 text-[10px] font-bold  tracking-normal gap-2 rounded shadow-none"
         >
           <Plus class="h-3.5 w-3.5" />
           Tạo đơn
@@ -106,9 +106,9 @@ const formatDateRange = (from?: string, to?: string) => {
        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
 
-    <div v-else-if="leaves.length === 0" class="text-center py-20 bg-slate-50/50 rounded-xl border-2 border-dashed border-slate-100">
-       <FileText class="h-10 w-10 text-slate-200 mx-auto mb-3" />
-       <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Bạn chưa có đơn từ nào</p>
+    <div v-else-if="leaves.length === 0" class="text-center py-20 bg-surface/50 rounded-lg border-2 border-dashed border-border-subtle">
+       <FileText class="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+       <p class="text-xs font-bold text-tertiary-text  tracking-normal">Bạn chưa có đơn từ nào</p>
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
@@ -122,12 +122,12 @@ const formatDateRange = (from?: string, to?: string) => {
               </div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1.5">
-                  <h3 class="text-[11px] sm:text-sm font-black text-slate-900 truncate uppercase leading-none">
+                  <h3 class="text-[11px] sm:text-sm font-semibold text-primary-text truncate  leading-none">
                     {{ typeof request.leaveType === 'string' ? request.leaveType : request.leaveType?.name || 'Đơn nghỉ' }}
                   </h3>
                   <Badge variant="outline" 
                     :class="[
-                       'text-[7px] sm:text-[8px] font-bold uppercase px-1 h-3.5 border-none shrink-0',
+                       'text-[7px] sm:text-[8px] font-bold  px-1 h-3.5 border-none shrink-0',
                        String(request.status).toLowerCase() === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
                        String(request.status).toLowerCase() === 'rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
                     ]"
@@ -136,19 +136,19 @@ const formatDateRange = (from?: string, to?: string) => {
                   </Badge>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1">
-                  <span class="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-tight">
+                  <span class="text-[8px] sm:text-[9px] text-tertiary-text font-bold  tracking-normal">
                     {{ formatDateRange(request.fromDate || request.startDate, request.toDate || request.endDate) }}
                   </span>
                 </div>
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" class="h-7 w-7 text-slate-200">
+            <Button variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground/40">
                <ChevronRight class="h-4 w-4" />
             </Button>
           </div>
           <div class="mt-1 pl-10">
-            <p class="text-[9px] sm:text-[10px] text-slate-500 line-clamp-1 font-medium tracking-tight italic">"{{ request.reason }}"</p>
+            <p class="text-[9px] sm:text-[10px] text-secondary-text line-clamp-1 font-medium tracking-normal italic">"{{ request.reason }}"</p>
           </div>
         </CardContent>
       </Card>
@@ -156,27 +156,27 @@ const formatDateRange = (from?: string, to?: string) => {
 
     <!-- Create Request Dialog -->
     <Dialog :open="isCreateModalOpen" @update:open="isCreateModalOpen = $event">
-      <DialogContent class="max-w-[calc(100vw-32px)] sm:max-w-[450px] rounded-xl p-0 overflow-hidden border-none shadow-2xl">
-        <DialogHeader class="p-4 sm:p-6 bg-white border-b border-primary/10">
+      <DialogContent class="max-w-[calc(100vw-32px)] sm:max-w-[450px] rounded-lg p-0 overflow-hidden border-none shadow-2xl">
+        <DialogHeader class="p-4 sm:p-6 bg-card border-b border-primary/10">
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
               <Plus class="h-5 w-5 text-primary" />
             </div>
             <div>
-              <DialogTitle class="text-lg font-black uppercase tracking-tight text-slate-900">Tạo đơn mới</DialogTitle>
-              <DialogDescription class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-0.5">Vui lòng điền đầy đủ thông tin</DialogDescription>
+              <DialogTitle class="text-lg font-semibold  tracking-normal text-primary-text">Tạo đơn mới</DialogTitle>
+              <DialogDescription class="text-[10px] text-tertiary-text  font-bold tracking-normal mt-0.5">Vui lòng điền đầy đủ thông tin</DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div class="p-4 sm:p-6 space-y-4 bg-white">
+        <div class="p-4 sm:p-6 space-y-4 bg-card">
           <div class="space-y-1.5">
-            <Label class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-0.5">
+            <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
               <Info class="h-3 w-3 text-primary/50" />
               Loại đơn từ
             </Label>
             <Select v-model="newRequest.leaveTypeCode">
-              <SelectTrigger class="h-10 rounded-lg border-primary/10 bg-primary/5 shadow-none focus:ring-1 focus:ring-primary text-slate-900 font-bold">
+              <SelectTrigger class="h-10 rounded-lg border-primary/10 bg-primary/5 shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold">
                 <SelectValue placeholder="Chọn loại đơn" />
               </SelectTrigger>
               <SelectContent>
@@ -189,33 +189,33 @@ const formatDateRange = (from?: string, to?: string) => {
 
           <div class="grid grid-cols-2 gap-4">
             <div class="space-y-1.5">
-              <Label class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-0.5">
-                <Calendar class="h-3 w-3 text-slate-400" />
+              <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
+                <Calendar class="h-3 w-3 text-tertiary-text" />
                 Từ ngày
               </Label>
-              <Input type="date" v-model="newRequest.fromDate" class="h-10 rounded-xl border-slate-100 bg-slate-50 shadow-none focus:ring-1 focus:ring-primary text-slate-800 font-bold" />
+              <Input type="date" v-model="newRequest.fromDate" class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold" />
             </div>
             <div class="space-y-1.5">
-              <Label class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-0.5">
-                <Calendar class="h-3 w-3 text-slate-400" />
+              <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
+                <Calendar class="h-3 w-3 text-tertiary-text" />
                 Đến ngày
               </Label>
-              <Input type="date" v-model="newRequest.toDate" class="h-10 rounded-xl border-slate-100 bg-slate-50 shadow-none focus:ring-1 focus:ring-primary text-slate-800 font-bold" />
+              <Input type="date" v-model="newRequest.toDate" class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold" />
             </div>
           </div>
 
           <div class="space-y-1.5">
-            <Label class="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-0.5">
-              <FileText class="h-3 w-3 text-slate-400" />
+            <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
+              <FileText class="h-3 w-3 text-tertiary-text" />
               Lý do chi tiết
             </Label>
-            <Textarea v-model="newRequest.reason" placeholder="Nhập lý do cụ thể..." class="min-h-[80px] rounded-xl border-slate-100 bg-slate-50 shadow-none resize-none focus:ring-1 focus:ring-primary text-slate-800 font-medium" />
+            <Textarea v-model="newRequest.reason" placeholder="Nhập lý do cụ thể..." class="min-h-[80px] rounded-lg border-border-subtle bg-surface shadow-none resize-none focus:ring-1 focus:ring-primary text-primary-text font-medium" />
           </div>
         </div>
 
-        <DialogFooter class="p-5 bg-white border-t border-slate-50 flex flex-col sm:flex-row gap-3">
-          <Button variant="ghost" @click="isCreateModalOpen = false" class="flex-1 h-11 rounded-xl font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50">Hủy bỏ</Button>
-          <Button @click="handleSubmit" :disabled="createMe.isPending.value" class="flex-1 h-11 rounded-xl bg-primary font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+        <DialogFooter class="p-5 bg-card border-t border-border-subtle flex flex-col sm:flex-row gap-3">
+          <Button variant="ghost" @click="isCreateModalOpen = false" class="flex-1 h-11 rounded-lg font-semibold  tracking-normal text-tertiary-text hover:bg-surface">Hủy bỏ</Button>
+          <Button @click="handleSubmit" :disabled="createMe.isPending.value" class="flex-1 h-11 rounded-lg bg-primary font-semibold  tracking-normal text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
             <span v-if="createMe.isPending.value">Đang gửi...</span>
             <span v-else>Gửi ngay</span>
           </Button>

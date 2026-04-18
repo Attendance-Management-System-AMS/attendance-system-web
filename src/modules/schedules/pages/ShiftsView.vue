@@ -57,7 +57,7 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
   <div class="space-y-6">
     <PageHeader title="Ca làm việc" description="Quản lý danh mục ca làm việc">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/shifts/new">
             <Plus class="h-4 w-4" />
             Tạo mới
@@ -66,7 +66,7 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
       </template>
     </PageHeader>
 
-    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <DataTable 
         :columns="columns" 
         :rows="shifts" 
@@ -75,21 +75,21 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
         <!-- Custom Name Column -->
         <template #cell-name="{ row }">
           <div class="flex items-center gap-3">
-             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary">
               <Timer class="h-4 w-4" />
             </div>
-            <span class="font-bold text-slate-700 dark:text-slate-200">{{ row.name }}</span>
+            <span class="font-bold text-primary-text dark:text-primary-text">{{ row.name }}</span>
           </div>
         </template>
 
         <!-- Custom Time Column -->
         <template #cell-time="{ row }">
           <div class="flex items-center gap-2">
-            <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+            <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
               {{ fmtTime(row.startTime) }}
             </code>
-            <span class="text-slate-400 text-[10px]">→</span>
-            <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+            <span class="text-tertiary-text text-[10px]">→</span>
+            <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
               {{ fmtTime(row.endTime) }}
             </code>
           </div>
@@ -97,7 +97,7 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
 
         <!-- Custom Grace Period Column -->
         <template #cell-gracePeriod="{ row }">
-          <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <span class="text-sm font-semibold text-primary-text dark:text-primary-text">
              {{ typeof row.gracePeriod === 'number' ? `${row.gracePeriod} phút` : '—' }}
           </span>
         </template>
@@ -130,7 +130,7 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
         <AlertDialogHeader>
           <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa ca làm việc <span class="font-bold text-slate-900 dark:text-white">"{{ deleteTarget?.name }}"</span>? 
+            Bạn có chắc chắn muốn xóa ca làm việc <span class="font-bold text-primary-text dark:text-primary-text">"{{ deleteTarget?.name }}"</span>? 
             Hành động này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>

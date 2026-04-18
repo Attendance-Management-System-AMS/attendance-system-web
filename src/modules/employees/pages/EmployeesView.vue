@@ -126,7 +126,7 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Danh sách nhân viên" description="Quản lý toàn bộ nhân viên trong hệ thống">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/employees/new">
             <Plus class="h-4 w-4" />
             Thêm nhân viên
@@ -143,7 +143,7 @@ const confirmDelete = () => {
       </template>
     </SearchToolbar>
 
-    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <DataTable 
         :columns="columns" 
         :rows="filteredEmployees" 
@@ -152,30 +152,30 @@ const confirmDelete = () => {
         <!-- Employee Column -->
         <template #cell-employee="{ row }">
           <div class="flex items-center gap-3">
-            <Avatar class="size-9 h-9 w-9 border border-indigo-50 dark:border-indigo-900/50">
+            <Avatar class="size-9 h-9 w-9 border border-primary/20 dark:border-primary/20/50">
               <AvatarImage :src="`/api/avatar/${row.id}`" />
-              <AvatarFallback class="bg-indigo-50 text-indigo-600 text-[10px] font-bold">
+              <AvatarFallback class="bg-primary/10 text-primary text-[10px] font-bold">
                 {{ getInitials(row.fullName) }}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ row.fullName }}</p>
-              <p class="text-[10px] text-slate-400 font-medium">{{ row.email }}</p>
+              <p class="text-sm font-bold text-primary-text dark:text-primary-text">{{ row.fullName }}</p>
+              <p class="text-[10px] text-tertiary-text font-medium">{{ row.email }}</p>
             </div>
           </div>
         </template>
 
         <!-- Code Column -->
         <template #cell-employeeCode="{ value }">
-          <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+          <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
             {{ value }}
           </code>
         </template>
 
         <!-- Department/Position Column -->
         <template #cell-department="{ row }">
-          <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ row.departmentName || '—' }}</p>
-          <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{{ row.positionName || '—' }}</p>
+          <p class="text-sm font-semibold text-primary-text dark:text-tertiary-text">{{ row.departmentName || '—' }}</p>
+          <p class="text-[10px] text-tertiary-text  font-bold tracking-normal">{{ row.positionName || '—' }}</p>
         </template>
 
         <!-- Status Column -->

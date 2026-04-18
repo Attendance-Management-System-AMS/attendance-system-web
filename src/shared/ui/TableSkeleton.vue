@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   <div class="w-full overflow-hidden">
     <table class="w-full">
       <thead>
-        <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <tr class="border-b border-border bg-muted/60">
           <th v-if="props.hasAvatarColumn" class="px-4 py-3 text-left w-12">
              <SkeletonLoader width="24px" height="12px" rounded="full" />
           </th>
@@ -32,8 +32,8 @@ const props = withDefaults(defineProps<Props>(), {
           </th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-        <tr v-for="r in props.rows" :key="r" class="bg-white dark:bg-slate-900">
+      <tbody class="divide-y divide-border">
+        <tr v-for="r in props.rows" :key="r" class="bg-card">
           <!-- Avatar column -->
           <td v-if="props.hasAvatarColumn" class="px-4 py-3">
             <SkeletonLoader width="32px" height="32px" rounded="full" />

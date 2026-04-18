@@ -56,7 +56,7 @@ const infoRows = computed(() => {
       <template #actions>
         <button
           @click="router.back()"
-          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors"
+          class="flex items-center gap-2 h-10 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-secondary-text shadow-sm hover:bg-surface transition-colors"
         >
           <ArrowLeft class="h-4 w-4" />
           Quay lại
@@ -64,7 +64,7 @@ const infoRows = computed(() => {
         <button
           v-if="employee"
           @click="router.push(`/employees/${employee.id}/register-face`)"
-          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          class="flex items-center gap-2 h-10 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-primary-text shadow-sm hover:bg-surface transition-colors dark:border-border dark:bg-card dark:text-primary-text dark:hover:bg-elevated"
         >
           <ScanFace class="h-4 w-4" />
           Khuôn mặt
@@ -72,7 +72,7 @@ const infoRows = computed(() => {
         <button
           v-if="employee"
           @click="router.push(`/employees/${employee.id}/edit`)"
-          class="flex items-center gap-2 h-10 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-colors dark:shadow-none"
+          class="flex items-center gap-2 h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:bg-primary transition-colors dark:shadow-none"
         >
           <Pencil class="h-4 w-4" />
           Chỉnh sửa
@@ -82,18 +82,18 @@ const infoRows = computed(() => {
 
     <div
       v-if="employeeQuery.isLoading.value"
-      class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900"
+      class="rounded-lg border border-border-standard bg-card p-6 text-sm text-secondary-text dark:border-border dark:bg-card"
     >
       Đang tải thông tin nhân viên...
     </div>
 
     <div
       v-else-if="employeeQuery.isError.value"
-      class="rounded-xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
+      class="rounded-lg border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300"
     >
       <p>Không thể tải chi tiết nhân viên.</p>
       <button
-        class="mt-3 text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400"
+        class="mt-3 text-primary underline hover:text-primary dark:text-primary"
         @click="employeeQuery.refetch()"
       >
         Thử lại
@@ -102,11 +102,11 @@ const infoRows = computed(() => {
 
     <div
       v-else-if="employee"
-      class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden"
+      class="rounded-lg border border-border-standard bg-card shadow-sm dark:border-border dark:bg-card overflow-hidden"
     >
-      <div class="border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-        <p class="text-xs uppercase tracking-wider text-slate-400">Nhân viên</p>
-        <p class="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
+      <div class="border-b border-border-subtle px-6 py-4 dark:border-border">
+        <p class="text-xs  tracking-normal text-tertiary-text">Nhân viên</p>
+        <p class="mt-1 text-lg font-semibold text-primary-text dark:text-primary-text">
           {{ employee.fullName }}
         </p>
       </div>
@@ -115,12 +115,12 @@ const infoRows = computed(() => {
         <div
           v-for="row in infoRows"
           :key="row.label"
-          class="border-b border-slate-100 px-6 py-4 odd:bg-slate-50/50 dark:border-slate-800 dark:odd:bg-slate-800/30"
+          class="border-b border-border-subtle px-6 py-4 odd:bg-surface/50 dark:border-border dark:odd:bg-elevated/30"
         >
-          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <p class="text-[11px] font-bold  tracking-normal text-tertiary-text">
             {{ row.label }}
           </p>
-          <p class="mt-1 text-sm text-slate-700 dark:text-slate-200">{{ row.value }}</p>
+          <p class="mt-1 text-sm text-primary-text dark:text-primary-text">{{ row.value }}</p>
         </div>
       </div>
     </div>

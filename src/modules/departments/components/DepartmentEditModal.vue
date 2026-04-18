@@ -73,37 +73,37 @@ const handleClose = () => {
                 class="fixed inset-0 bg-black/40 backdrop-blur-sm data-[state=open]:animate-overlayShow data-[state=closed]:animate-overlayHide" />
 
             <DialogContent
-                class="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-112.5 -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl focus:outline-none data-[state=open]:animate-contentShow data-[state=closed]:animate-contentHide dark:bg-slate-900">
-                <DialogTitle class="m-0 text-lg font-medium text-slate-900 dark:text-white">
+                class="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-112.5 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-card p-6 shadow-2xl focus:outline-none data-[state=open]:animate-contentShow data-[state=closed]:animate-contentHide dark:bg-card">
+                <DialogTitle class="m-0 text-lg font-medium text-primary-text dark:text-primary-text">
                     Sửa phòng ban
                 </DialogTitle>
-                <DialogDescription class="mb-5 mt-2 leading-normal text-slate-600 dark:text-slate-400">
+                <DialogDescription class="mb-5 mt-2 leading-normal text-secondary-text dark:text-tertiary-text">
                     Cập nhật thông tin phòng ban. Nhấn "Cập nhật" khi hoàn tất.
                 </DialogDescription>
 
                 <form @submit.prevent="handleSubmit" class="space-y-5">
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <label class="mb-1 block text-sm font-medium text-primary-text dark:text-tertiary-text">
                             Tên phòng ban <span class="text-red-500">*</span>
                         </label>
                         <input v-model="name" required
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-500"
+                            class="w-full rounded-lg border border-border-standard px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring/40 dark:border-border dark:bg-elevated dark:text-primary-text dark:focus:border-primary"
                             placeholder="Ví dụ: Marketing" />
                     </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Mô tả</label>
+                        <label class="mb-1 block text-sm font-medium text-primary-text dark:text-tertiary-text">Mô tả</label>
                         <textarea v-model="description" rows="3"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-500"
+                            class="w-full rounded-lg border border-border-standard px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring/40 dark:border-border dark:bg-elevated dark:text-primary-text dark:focus:border-primary"
                             placeholder="Mô tả ngắn về chức năng phòng ban..."></textarea>
                     </div>
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <label class="mb-1 block text-sm font-medium text-primary-text dark:text-tertiary-text">
                             Trạng thái <span class="text-red-500">*</span>
                         </label>
                         <select v-model="status"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-500">
+                            class="w-full rounded-lg border border-border-standard px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-ring/40 dark:border-border dark:bg-elevated dark:text-primary-text dark:focus:border-primary">
                             <option value="ACTIVE">Hoạt động</option>
                             <option value="INACTIVE">Ngừng hoạt động</option>
                         </select>
@@ -114,14 +114,14 @@ const handleClose = () => {
                     <div class="mt-6 flex justify-end gap-3">
                         <DialogClose as-child>
                             <button type="button"
-                                class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                                class="rounded-lg border border-border-standard px-4 py-2 text-sm font-medium text-primary-text hover:bg-surface dark:border-border dark:text-tertiary-text dark:hover:bg-elevated"
                                 :disabled="loading">
                                 Hủy
                             </button>
                         </DialogClose>
 
                         <button type="submit"
-                            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                            class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary disabled:opacity-50"
                             :disabled="loading">
                             {{ loading ? 'Đang cập nhật...' : 'Cập nhật' }}
                         </button>

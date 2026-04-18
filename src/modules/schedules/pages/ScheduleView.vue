@@ -167,11 +167,11 @@ const getSchedulesForEmployeeDate = (employee: Employee, date: string): Schedule
 
 const getShiftBadgeStyle = (shiftName?: string) => {
   const name = (shiftName ?? '').toLowerCase()
-  if (name.includes('hành chính')) return 'bg-indigo-50 text-indigo-600 border-indigo-100'
+  if (name.includes('hành chính')) return 'bg-primary/10 text-primary border-primary/20'
   if (name.includes('sáng')) return 'bg-emerald-50 text-emerald-600 border-emerald-100'
   if (name.includes('chiều')) return 'bg-amber-50 text-amber-600 border-amber-100'
   if (name.includes('đêm')) return 'bg-violet-50 text-violet-600 border-violet-100'
-  return 'bg-slate-50 text-slate-500 border-slate-100'
+  return 'bg-surface text-secondary-text border-border-subtle'
 }
 </script>
 
@@ -184,23 +184,23 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       <template #actions>
         <div class="flex flex-wrap items-center gap-4">
           <!-- Date Navigator -->
-          <div class="flex items-center bg-card rounded-xl border border-border p-1 shadow-none dark:bg-slate-900 dark:border-slate-800">
+          <div class="flex items-center bg-card rounded-lg border border-border p-1 shadow-none dark:bg-card dark:border-border">
             <Button
               variant="ghost"
               size="icon"
               @click="movePeriod(-1)"
-              class="h-9 w-9 hover:bg-muted dark:hover:bg-slate-800"
+              class="h-9 w-9 hover:bg-muted dark:hover:bg-elevated"
             >
               <ChevronLeft class="h-4 w-4" />
             </Button>
 
-            <div class="px-6 flex flex-col items-center min-w-[180px] border-x border-border dark:border-slate-800">
-              <span class="text-sm font-black text-primary tabular-nums tracking-tight">{{
+            <div class="px-6 flex flex-col items-center min-w-[180px] border-x border-border dark:border-border">
+              <span class="text-sm font-semibold text-primary tabular-nums tracking-normal">{{
                 weekRangeLabel
               }}</span>
               <button
                 @click="currentDate = new Date()"
-                class="text-[9px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-colors"
+                class="text-[9px] font-bold  tracking-normal text-tertiary-text hover:text-primary transition-colors"
               >
                 Tuần hiện tại
               </button>
@@ -210,7 +210,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
               variant="ghost"
               size="icon"
               @click="movePeriod(1)"
-              class="h-9 w-9 hover:bg-slate-50 dark:hover:bg-slate-800"
+              class="h-9 w-9 hover:bg-surface dark:hover:bg-elevated"
             >
               <ChevronRight class="h-4 w-4" />
             </Button>
@@ -218,7 +218,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
 
           <Button
             as-child
-            class="h-11 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-black tracking-widest text-[11px] rounded-xl gap-2 text-primary-foreground"
+            class="h-11 px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-semibold tracking-normal text-[11px] rounded-lg gap-2 text-primary-foreground"
           >
             <RouterLink to="/schedule/assignments">
               <Plus class="h-4 w-4" /> Phân công ca
@@ -241,17 +241,17 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       >
         <div class="flex flex-col gap-4">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{
+            <span class="text-[10px] font-semibold text-tertiary-text  tracking-normal">{{
               s.label
             }}</span>
             <div
-              class="h-9 w-9 rounded-xl bg-muted flex items-center justify-center text-slate-400 border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
+              class="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-tertiary-text border border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
             >
               <component :is="s.icon" class="h-5 w-5" />
             </div>
           </div>
           <span
-            class="text-2xl font-black text-slate-900 tabular-nums group-hover:text-primary transition-colors"
+            class="text-2xl font-semibold text-primary-text tabular-nums group-hover:text-primary transition-colors"
             >{{ s.value }}</span
           >
         </div>
@@ -265,17 +265,17 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       <div class="flex flex-wrap items-center gap-4">
         <div class="relative group w-full sm:w-64">
           <Search
-            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors"
+            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tertiary-text group-focus-within:text-primary transition-colors"
           />
           <input
             v-model="searchQuery"
             placeholder="Tìm tên hoặc mã nhân viên..."
-            class="h-10 pl-10 pr-4 rounded-xl border border-slate-100 bg-white text-xs font-bold text-slate-700 outline-none focus:ring-1 focus:ring-primary transition-all w-full"
+            class="h-10 pl-10 pr-4 rounded-lg border border-border-subtle bg-card text-xs font-bold text-primary-text outline-none focus:ring-1 focus:ring-primary transition-all w-full"
           />
         </div>
         <select
           v-model="filterDepartment"
-          class="h-10 rounded-xl border border-slate-100 bg-white px-4 text-xs font-bold text-slate-700 outline-none focus:ring-1 focus:ring-primary transition-all"
+          class="h-10 rounded-lg border border-border-subtle bg-card px-4 text-xs font-bold text-primary-text outline-none focus:ring-1 focus:ring-primary transition-all"
         >
           <option value="">Tất cả phòng ban</option>
           <option v-for="d in departments" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
@@ -292,7 +292,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
               <th
                 class="sticky left-0 z-20 w-64 bg-card border-r border-border px-6 py-5 text-left"
               >
-                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400"
+                <span class="text-[10px] font-semibold  tracking-normal text-tertiary-text"
                   >Nhân viên</span
                 >
               </th>
@@ -306,13 +306,13 @@ const getShiftBadgeStyle = (shiftName?: string) => {
               >
                 <div class="flex flex-col items-center">
                   <span
-                    class="text-[10px] font-black uppercase tracking-widest"
-                    :class="day.isToday ? 'text-primary' : 'text-slate-400'"
+                    class="text-[10px] font-semibold  tracking-normal"
+                    :class="day.isToday ? 'text-primary' : 'text-tertiary-text'"
                     >{{ day.dayLabel }}</span
                   >
                   <span
-                    class="text-xl font-black mt-1"
-                    :class="day.isToday ? 'text-primary' : 'text-slate-800'"
+                    class="text-xl font-semibold mt-1"
+                    :class="day.isToday ? 'text-primary' : 'text-primary-text'"
                     >{{ day.dayNumber }}</span
                   >
                 </div>
@@ -323,14 +323,14 @@ const getShiftBadgeStyle = (shiftName?: string) => {
             <tr
               v-for="employee in paginatedEmployees"
               :key="employee.id"
-              class="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+              class="group hover:bg-surface/50 transition-colors cursor-pointer"
               @click="selectedEmployeeId = employee.id"
             >
               <td class="sticky left-0 z-10 bg-card border-r border-border px-6 py-5">
                 <div class="flex items-center gap-4">
-                  <Avatar class="h-10 w-10 border border-slate-100 shadow-sm">
+                  <Avatar class="h-10 w-10 border border-border-subtle shadow-sm">
                     <AvatarImage :src="`/api/avatar/${employee.id}`" />
-                    <AvatarFallback class="bg-slate-50 text-slate-400 text-[11px] font-black">
+                    <AvatarFallback class="bg-surface text-tertiary-text text-[11px] font-semibold">
                       {{
                         employee.fullName
                           .split(' ')
@@ -343,11 +343,11 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                   </Avatar>
                   <div class="min-w-0">
                     <p
-                      class="text-sm font-black text-slate-800 truncate group-hover:text-primary transition-colors leading-none"
+                      class="text-sm font-semibold text-primary-text truncate group-hover:text-primary transition-colors leading-none"
                     >
                       {{ employee.fullName }}
                     </p>
-                    <p class="text-[10px] text-slate-400 font-medium leading-relaxed">
+                    <p class="text-[10px] text-tertiary-text font-medium leading-relaxed">
                       {{ employee.departmentName || 'Phòng ban tự do' }}
                     </p>
                   </div>
@@ -365,10 +365,10 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                   <div
                     v-for="s in getSchedulesForEmployeeDate(employee, day.ymd)"
                     :key="s.id"
-                    class="w-full text-[10px] font-black p-2.5 rounded-xl border text-center transition-all shadow-sm group-hover:shadow-md"
+                    class="w-full text-[10px] font-semibold p-2.5 rounded-lg border text-center transition-all shadow-sm group-hover:shadow-md"
                     :class="getShiftBadgeStyle(s.shift?.name)"
                   >
-                    <p class="uppercase tracking-tight leading-none mb-1.5">{{ s.shift?.name }}</p>
+                    <p class=" tracking-normal leading-none mb-1.5">{{ s.shift?.name }}</p>
                     <p class="font-mono text-[9px] opacity-70">
                       {{ s.shift?.startTime?.slice(0, 5) }} - {{ s.shift?.endTime?.slice(0, 5) }}
                     </p>
@@ -386,7 +386,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       v-if="totalPagesCount > 1"
       class="flex justify-between items-center bg-card p-5 rounded-lg border border-border shadow-none"
     >
-      <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+      <span class="text-[10px] font-semibold text-tertiary-text  tracking-normal"
         >Trang {{ currentPage }} / {{ totalPagesCount }}</span
       >
       <div class="flex gap-3">
@@ -395,7 +395,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           size="sm"
           :disabled="currentPage === 1"
           @click="currentPage--"
-          class="h-10 px-6 rounded-xl font-black uppercase text-[10px]"
+          class="h-10 px-6 rounded-lg font-semibold  text-[10px]"
           >Trước</Button
         >
         <Button
@@ -403,7 +403,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           size="sm"
           :disabled="currentPage === totalPagesCount"
           @click="currentPage++"
-          class="h-10 px-6 rounded-xl font-black uppercase text-[10px]"
+          class="h-10 px-6 rounded-lg font-semibold  text-[10px]"
           >Sau</Button
         >
       </div>
@@ -430,10 +430,10 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 <CalendarIcon class="h-6 w-6" />
               </div>
               <div>
-                <h3 class="text-lg font-black text-slate-900 tracking-tight uppercase">
+                <h3 class="text-lg font-semibold text-primary-text tracking-normal ">
                   Chi tiết lịch biểu
                 </h3>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                <p class="text-[10px] font-bold text-tertiary-text  tracking-normal mt-0.5">
                   Thời gian thực • {{ weekRangeLabel }}
                 </p>
               </div>
@@ -444,7 +444,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
               @click="selectedEmployeeId = null"
               class="h-9 w-9 rounded-full bg-muted hover:bg-emphasis transition-colors"
             >
-              <X class="h-5 w-5 text-slate-500" />
+              <X class="h-5 w-5 text-secondary-text" />
             </Button>
           </div>
 
@@ -452,10 +452,10 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-card">
             <!-- Profile Info -->
             <div
-              class="flex flex-col items-center text-center p-8 rounded-xl border border-border bg-card shadow-none"
+              class="flex flex-col items-center text-center p-8 rounded-lg border border-border bg-card shadow-none"
             >
               <Avatar class="h-24 w-24 border-4 border-white shadow-2xl mb-6">
-                <AvatarFallback class="bg-primary text-primary-foreground text-2xl font-black">
+                <AvatarFallback class="bg-primary text-primary-foreground text-2xl font-semibold">
                   {{
                     selectedEmployee.fullName
                       .split(' ')
@@ -467,23 +467,23 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 </AvatarFallback>
               </Avatar>
               <h4
-                class="text-2xl font-black text-slate-900 uppercase tracking-tight leading-none"
+                class="text-2xl font-semibold text-primary-text  tracking-normal leading-none"
               >
                 {{ selectedEmployee.fullName }}
               </h4>
               <Badge
                 variant="secondary"
-                class="mt-3 bg-primary/10 text-primary border-none font-black tabular-nums h-7 px-4 rounded-full uppercase text-[10px] tracking-widest"
+                class="mt-3 bg-primary/10 text-primary border-none font-semibold tabular-nums h-7 px-4 rounded-full  text-[10px] tracking-normal"
                 >{{ selectedEmployee.employeeCode }}</Badge
               >
-              <p class="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <p class="mt-4 text-[10px] font-bold text-tertiary-text  tracking-normal">
                 {{ selectedEmployee.departmentName || 'Công ty CP TimeMaster' }}
               </p>
             </div>
 
             <!-- Week Schedule Detail -->
             <div class="space-y-5">
-              <h5 class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 pl-2">
+              <h5 class="text-[11px] font-semibold  tracking-normal text-secondary-text pl-2">
                 Lịch làm việc trong tuần
               </h5>
               <div class="space-y-3">
@@ -494,14 +494,14 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 >
                   <div class="w-14 text-center border-r border-border pr-5 shrink-0">
                     <p
-                      class="text-[10px] font-black uppercase tracking-widest"
-                      :class="day.isToday ? 'text-primary' : 'text-slate-400'"
+                      class="text-[10px] font-semibold  tracking-normal"
+                      :class="day.isToday ? 'text-primary' : 'text-tertiary-text'"
                     >
                       {{ day.dayLabel }}
                     </p>
                     <p
-                      class="text-xl font-black mt-1 leading-none"
-                      :class="day.isToday ? 'text-primary' : 'text-slate-800'"
+                      class="text-xl font-semibold mt-1 leading-none"
+                      :class="day.isToday ? 'text-primary' : 'text-primary-text'"
                     >
                       {{ day.dayNumber }}
                     </p>
@@ -516,18 +516,18 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                         :key="s.id"
                         class="flex items-center justify-between"
                       >
-                        <span class="text-xs font-black text-slate-800 uppercase tracking-tight">{{
+                        <span class="text-xs font-semibold text-primary-text  tracking-normal">{{
                           s.shift?.name
                         }}</span>
                         <Badge
                           variant="outline"
-                          class="text-[10px] font-mono border-slate-100 text-slate-500 bg-slate-50"
+                          class="text-[10px] font-mono border-border-subtle text-secondary-text bg-surface"
                           >{{ s.shift?.startTime?.slice(0, 5) }} —
                           {{ s.shift?.endTime?.slice(0, 5) }}</Badge
                         >
                       </div>
                     </div>
-                    <p v-else class="text-[11px] font-bold text-slate-300 tracking-tight">
+                    <p v-else class="text-[11px] font-bold text-tertiary-text tracking-normal">
                       Nghỉ ca / Chưa phân bổ
                     </p>
                   </div>
@@ -537,15 +537,15 @@ const getShiftBadgeStyle = (shiftName?: string) => {
           </div>
 
           <!-- Side Footer -->
-          <div class="p-6 border-t border-slate-100 bg-white grid grid-cols-2 gap-4">
+          <div class="p-6 border-t border-border-subtle bg-card grid grid-cols-2 gap-4">
             <Button
-              class="h-12 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[11px] text-primary-foreground gap-2 rounded-lg shadow-lg shadow-primary/20"
+              class="h-12 bg-primary hover:bg-primary/90 font-semibold  tracking-normal text-[11px] text-primary-foreground gap-2 rounded-lg shadow-lg shadow-primary/20"
             >
               <Edit3 class="h-4 w-4" /> Chỉnh sửa
             </Button>
             <Button
               variant="outline"
-              class="h-12 font-black uppercase tracking-widest text-[11px] text-slate-500 gap-2 rounded-lg border-slate-100 hover:bg-slate-50 transition-all"
+              class="h-12 font-semibold  tracking-normal text-[11px] text-secondary-text gap-2 rounded-lg border-border-subtle hover:bg-surface transition-all"
             >
               <Eye class="h-4 w-4" /> Lịch sử
             </Button>

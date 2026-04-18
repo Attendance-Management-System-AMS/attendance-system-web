@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   Clock,
   ClipboardList,
-  Download,
   LayoutDashboard,
   Lock,
   Settings,
@@ -104,8 +103,7 @@ const navGroups: NavGroup[] = [
     label: 'Báo cáo',
     roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
     items: [
-      { label: 'Phân tích', to: '/reports', icon: BarChart3 },
-      { label: 'Xuất báo cáo', to: '/export', icon: Download, roles: ['ROLE_ADMIN', 'ROLE_HR'] },
+      { label: 'Phân tích & Báo cáo', to: '/reports', icon: BarChart3 },
     ],
   },
   {
@@ -153,34 +151,33 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
 <template>
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-30 flex flex-col bg-white border-r border-slate-200 transition-all duration-300 ease-in-out',
-      'dark:bg-slate-950 dark:border-slate-800',
+      'fixed inset-y-0 left-0 z-30 flex flex-col border-r border-border bg-card text-card-foreground transition-all duration-300 ease-in-out',
       props.collapsed ? 'w-14' : 'w-60',
     ]"
   >
     <!-- Logo section -->
     <div
       :class="[
-        'flex items-center h-16 px-3 border-b border-slate-100 dark:border-slate-800 shrink-0',
+        'flex items-center h-16 px-3 border-b border-border shrink-0',
         props.collapsed ? 'justify-center' : 'gap-3',
       ]"
     >
       <div
         class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary shadow-lg shadow-primary/20"
       >
-        <Clock class="h-5 w-5 text-white" />
+        <Clock class="h-5 w-5 text-primary-foreground" />
       </div>
       <Transition name="fade-slide">
         <div v-if="!props.collapsed" class="overflow-hidden">
-          <p class="text-sm font-bold text-slate-900 dark:text-white leading-none">TimeMaster</p>
-          <p class="text-[10px] font-medium text-slate-400 leading-none mt-0.5">AMS Pro</p>
+          <p class="text-sm font-semibold text-primary-text leading-none">TimeMaster</p>
+          <p class="text-[10px] font-medium text-tertiary-text leading-none mt-0.5">AMS Pro</p>
         </div>
       </Transition>
       <Transition name="fade-slide">
         <button
           v-if="!props.collapsed"
           @click="emit('toggle')"
-          class="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          class="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-tertiary-text hover:bg-elevated hover:text-primary-text transition-colors"
         >
           <ChevronLeft class="h-4 w-4" />
         </button>
@@ -190,14 +187,14 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
     <!-- Online chip -->
     <Transition name="fade-slide">
       <div v-if="!props.collapsed" class="px-3 py-2 shrink-0">
-        <div class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5">
+        <div class="flex items-center gap-2 rounded-full border border-border-subtle bg-surface px-3 py-1.5">
           <span class="relative flex h-2 w-2">
             <span
               class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
             ></span>
             <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
           </span>
-          <span class="text-[10px] font-bold text-emerald-600">Hệ thống · Online</span>
+          <span class="text-[10px] font-medium text-emerald-500">Hệ thống · Online</span>
         </div>
       </div>
     </Transition>
@@ -209,13 +206,13 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
         <Transition name="fade-slide">
           <p
             v-if="!props.collapsed"
-            class="px-2 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 select-none"
+            class="px-2 pt-4 pb-1 text-xs font-medium text-tertiary-text select-none"
           >
             {{ group.label }}
           </p>
         </Transition>
         <div v-if="props.collapsed" class="py-1">
-          <div class="border-t border-slate-100 dark:border-slate-800"></div>
+          <div class="border-t border-border"></div>
         </div>
 
         <!-- Nav items -->
@@ -227,8 +224,8 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
               'relative flex items-center rounded-md transition-all duration-150 group mb-1',
               props.collapsed ? 'h-10 w-10 mx-auto justify-center' : 'gap-3 px-3 py-2',
               isActive(item.to)
-                ? 'bg-primary/10 text-primary font-black dark:bg-primary/20'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
+                ? 'bg-primary/10 text-primary font-semibold'
+                : 'text-secondary-text hover:bg-elevated hover:text-primary-text',
             ]"
           >
             <!-- Active indicator -->
@@ -253,7 +250,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
             <!-- Tooltip for collapsed mode -->
             <div
               v-if="props.collapsed"
-              class="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl"
+              class="pointer-events-none absolute left-full ml-2 whitespace-nowrap rounded-lg border border-border-standard bg-popover px-2.5 py-1.5 text-xs font-medium text-popover-foreground opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl"
             >
               {{ item.label }}
             </div>
@@ -267,17 +264,17 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
               :to="child.to"
               :class="[
                 'flex items-center gap-3 pl-10 pr-3 py-1.5 text-xs rounded-lg transition-all duration-150 group mb-1',
-                route.path === child.to
-                  ? 'text-primary font-black bg-primary/5 dark:bg-primary/10'
-                  : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-slate-800',
+                 route.path === child.to
+                  ? 'text-primary font-semibold bg-primary/5'
+                  : 'text-tertiary-text hover:text-primary-text hover:bg-elevated',
               ]"
             >
               <div
                 :class="[
                   'h-1.5 w-1.5 rounded-full',
                   route.path === child.to
-                    ? 'bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]'
-                    : 'bg-slate-300 dark:bg-slate-700',
+                    ? 'bg-primary'
+                    : 'bg-border-standard',
                 ]"
               ></div>
               <span>{{ child.label }}</span>
@@ -288,30 +285,30 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
     </nav>
 
     <!-- User card footer -->
-    <div :class="['shrink-0 border-t border-slate-100 dark:border-slate-800 p-3']">
+    <div :class="['shrink-0 border-t border-border p-3']">
       <div
         :class="[
-          'flex items-center rounded-xl bg-slate-50 dark:bg-slate-900 transition-colors',
+          'flex items-center rounded-lg border border-border-subtle bg-surface transition-colors',
           props.collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2.5',
         ]"
       >
         <div
-          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white text-xs font-bold"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground"
         >
           {{ userInitials }}
         </div>
         <Transition name="fade-slide">
           <div v-if="!props.collapsed" class="overflow-hidden">
-            <p class="text-xs font-semibold text-slate-900 dark:text-white truncate">
+            <p class="text-xs font-semibold text-primary-text truncate">
               {{ userDisplayName }}
             </p>
             <p
               v-if="user?.departmentName || user?.positionName"
-              class="text-[10px] text-slate-500 font-medium truncate"
+              class="text-[10px] text-secondary-text font-medium truncate"
             >
               {{ user?.positionName }}{{ user?.departmentName ? ' • ' + user?.departmentName : '' }}
             </p>
-            <p class="text-[9px] text-slate-400 truncate uppercase tracking-tighter">
+            <p class="text-[9px] text-tertiary-text truncate">
               {{ userRoleName }}
             </p>
           </div>
@@ -322,7 +319,7 @@ const isActive = (path: string) => route.path === path || route.path.startsWith(
       <button
         v-if="props.collapsed"
         @click="emit('toggle')"
-        class="mt-2 flex h-8 w-8 mx-auto items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+        class="mt-2 flex h-8 w-8 mx-auto items-center justify-center rounded-lg text-tertiary-text hover:bg-elevated hover:text-primary-text transition-colors"
         title="Mở rộng sidebar"
       >
         <ChevronLeft class="h-4 w-4 rotate-180" />

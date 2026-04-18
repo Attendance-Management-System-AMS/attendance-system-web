@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
-import { Bell, ChevronDown, Home, LogOut, Menu, Search, Settings, User } from 'lucide-vue-next'
+import { Bell, ChevronDown, Home, LogOut, Menu, Moon, Search, Settings, Sun, User } from 'lucide-vue-next'
 import { onClickOutside } from '@vueuse/core'
 import { clearAuthToken } from '@/shared/auth/token'
 import { useAuth } from '@/modules/auth/composables/useAuth'
+import { useTheme } from '@/shared/theme/useTheme'
 
 const emit = defineEmits<{
   (e: 'toggleSidebar'): void
@@ -13,6 +14,12 @@ const emit = defineEmits<{
 const { user, setUser } = useAuth()
 const route = useRoute()
 const router = useRouter()
+const { activeColorScheme, applyColorScheme } = useTheme()
+
+const toggleColorScheme = () => {
+  const newScheme = activeColorScheme.value === 'dark' ? 'light' : 'dark'
+  applyColorScheme(newScheme)
+}
 
 const userDisplayName = computed(() => user.value?.fullName || 'Người dùng')
 const userEmail = computed(() => user.value?.email || '')
@@ -86,14 +93,14 @@ const handleLogout = () => {
 
 <template>
   <header
-    class="sticky top-0 z-40 flex h-16 items-center gap-4 bg-primary px-4 shadow-lg shadow-primary/20 dark:bg-slate-900"
+    class="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-card/95 px-4 text-card-foreground shadow-sm backdrop-blur"
   >
     <!-- Left: Menu toggle + Breadcrumb -->
     <div class="flex flex-1 items-center gap-3 min-w-0">
       <!-- Hamburger -->
       <button
         @click="emit('toggleSidebar')"
-        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
       >
         <Menu class="h-5 w-5" />
       </button>
@@ -101,18 +108,18 @@ const handleLogout = () => {
       <!-- Breadcrumb -->
       <nav class="hidden md:flex items-center gap-1 text-sm min-w-0">
         <template v-for="(crumb, idx) in breadcrumbs" :key="crumb.to">
-          <span v-if="idx > 0" class="text-white/40 mx-1">/</span>
+          <span v-if="idx > 0" class="text-tertiary-text mx-1">/</span>
           <RouterLink
             v-if="idx < breadcrumbs.length - 1"
             :to="crumb.to"
-            class="flex items-center gap-1 text-white/70 hover:text-white transition-colors"
+            class="flex items-center gap-1 text-secondary-text hover:text-primary-text transition-colors"
           >
             <Home v-if="idx === 0" class="h-3.5 w-3.5" />
             <span v-else class="truncate max-w-30">{{ crumb.label }}</span>
           </RouterLink>
           <span
             v-else
-            class="font-black text-white truncate max-w-37.5 uppercase tracking-tight"
+            class="font-semibold text-primary-text truncate max-w-37.5"
           >
             {{ crumb.label }}
           </span>
@@ -123,13 +130,13 @@ const handleLogout = () => {
       <div class="hidden lg:flex flex-1 max-w-xs ml-2">
         <div class="relative w-full">
           <Search
-            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50"
+            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary-text"
           />
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Tìm kiếm nhân viên, phòng ban..."
-            class="h-9 w-full rounded-full bg-white/10 pl-9 pr-4 text-sm text-white placeholder:text-white/40 border border-white/10 focus:border-white/30 focus:outline-none focus:ring-0 transition-colors"
+            class="h-9 w-full rounded-lg border border-border-standard bg-surface pl-9 pr-4 text-sm text-primary-text placeholder:text-tertiary-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 transition-colors"
           />
         </div>
       </div>
@@ -137,17 +144,19 @@ const handleLogout = () => {
 
     <!-- Right: Actions -->
     <div class="flex items-center gap-2 shrink-0">
-      <!-- Announcement chip -->
-      <div
-        class="hidden md:flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-indigo-100"
+      <!-- Theme toggle -->
+      <button
+        @click="toggleColorScheme"
+        class="flex h-9 w-9 items-center justify-center rounded-lg text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
+        title="Đổi giao diện"
       >
-        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-        Phiên bản 2.0
-      </div>
+        <Sun v-if="activeColorScheme === 'dark'" class="h-5 w-5" />
+        <Moon v-else class="h-5 w-5" />
+      </button>
 
       <!-- Bell notification -->
       <button
-        class="relative flex h-9 w-9 items-center justify-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+        class="relative flex h-9 w-9 items-center justify-center rounded-lg text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
       >
         <Bell class="h-5 w-5" />
         <span
@@ -160,16 +169,16 @@ const handleLogout = () => {
       </button>
 
       <!-- Divider -->
-      <div class="h-6 w-px bg-white/20"></div>
+      <div class="h-6 w-px bg-border"></div>
 
       <!-- Avatar dropdown -->
       <div ref="profileRef" class="relative">
         <button
           @click="isProfileOpen = !isProfileOpen"
-          class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
         >
           <div
-            class="flex h-8 w-8 items-center justify-center rounded-md bg-white/20 text-xs font-bold text-white"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs font-semibold text-primary-foreground"
           >
             {{ userInitials }}
           </div>
@@ -190,28 +199,25 @@ const handleLogout = () => {
         >
           <div
             v-if="isProfileOpen"
-            class="absolute right-0 top-full mt-2 w-64 rounded-md border border-slate-200 bg-white shadow-xl shadow-slate-200/60 z-50 overflow-hidden dark:bg-slate-900 dark:border-slate-800"
+            class="absolute right-0 top-full mt-2 w-64 rounded-lg border border-border-standard bg-popover text-popover-foreground shadow-xl z-50 overflow-hidden"
           >
             <!-- User info header -->
-            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="px-4 py-3 border-b border-border">
               <div class="flex items-center gap-3">
                 <div
-                  class="flex h-10 w-10 items-center justify-center rounded-md bg-indigo-600 text-white text-sm font-bold"
+                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold"
                 >
                   {{ userInitials }}
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                  <p class="text-sm font-semibold text-primary-text">
                     {{ userDisplayName }}
                   </p>
-                  <p
-                    class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400"
-                    v-if="user?.positionName || user?.departmentName"
-                  >
+                  <p class="text-[11px] font-medium text-primary" v-if="user?.positionName || user?.departmentName">
                     {{ user?.positionName
                     }}{{ user?.departmentName ? ' • ' + user?.departmentName : '' }}
                   </p>
-                  <p class="text-[10px] text-slate-500">{{ userRoleLabel }} • {{ userEmail }}</p>
+                  <p class="text-[10px] text-tertiary-text">{{ userRoleLabel }} • {{ userEmail }}</p>
                 </div>
               </div>
             </div>
@@ -223,18 +229,18 @@ const handleLogout = () => {
                 :key="item.label"
                 :to="item.to"
                 @click="isProfileOpen = false"
-                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-secondary-text hover:bg-elevated hover:text-primary-text transition-colors"
               >
-                <component :is="item.icon" class="h-4 w-4 text-slate-400" />
+                <component :is="item.icon" class="h-4 w-4 text-tertiary-text" />
                 {{ item.label }}
               </RouterLink>
             </div>
 
             <!-- Logout -->
-            <div class="border-t border-slate-100 dark:border-slate-800 p-1.5">
+            <div class="border-t border-border p-1.5">
               <button
                 @click="handleLogout"
-                class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-rose-600 transition-colors hover:bg-rose-500/10"
               >
                 <LogOut class="h-4 w-4" />
                 Đăng xuất

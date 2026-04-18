@@ -9,19 +9,19 @@ defineProps<{
 
 <template>
   <div
-    class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    class="rounded-lg border border-border-standard bg-card p-6 text-card-foreground shadow-sm"
   >
     <div
       v-if="title"
-      class="mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-4 dark:border-slate-800"
+      class="mb-5 flex items-center gap-2.5 border-b border-border pb-4"
     >
       <div
         v-if="icon"
-        class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950"
+        class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10"
       >
-        <component :is="icon" class="h-4 w-4 text-indigo-600" />
+        <component :is="icon" class="h-4 w-4 text-primary" />
       </div>
-      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+      <h3 class="text-sm font-semibold tracking-normal text-primary-text">
         {{ title }}
       </h3>
     </div>

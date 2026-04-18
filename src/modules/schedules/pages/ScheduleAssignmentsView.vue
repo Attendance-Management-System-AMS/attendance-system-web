@@ -361,14 +361,14 @@ const confirmDeleteSchedule = async () => {
         <div class="flex items-center gap-3">
           <button
             @click="isAssignDialogOpen = true"
-            class="h-10 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-black uppercase text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all dark:shadow-none"
+            class="h-10 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold  text-white shadow-lg shadow-primary/20 hover:bg-primary transition-all dark:shadow-none"
           >
             <CalendarRange class="h-4 w-4" />
             Gán lịch mới
           </button>
           <RouterLink
             to="/schedule"
-            class="h-10 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-black uppercase text-slate-700 transition-colors hover:bg-muted dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            class="h-10 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold  text-primary-text transition-colors hover:bg-muted dark:border-border dark:bg-card dark:text-tertiary-text dark:hover:bg-elevated"
           >
             <ArrowLeft class="h-4 w-4" />
             Quay lại
@@ -382,11 +382,11 @@ const confirmDeleteSchedule = async () => {
           v-model="scheduleSearch"
           type="text"
           placeholder="Tìm tên nhân viên, ca làm..."
-          class="h-10 w-full rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
+          class="h-10 w-full rounded-lg border border-border bg-muted/30 px-3 text-sm text-primary-text focus:ring-1 focus:ring-primary dark:border-border dark:bg-elevated dark:text-primary-text font-bold"
         />
         <select
           v-model="scheduleEmployeeFilter"
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
+          class="h-10 rounded-lg border border-border bg-muted/30 px-3 text-sm text-primary-text focus:ring-1 focus:ring-primary dark:border-border dark:bg-elevated dark:text-primary-text font-bold"
         >
           <option value="">Tất cả nhân viên</option>
           <option v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
@@ -395,7 +395,7 @@ const confirmDeleteSchedule = async () => {
         </select>
         <select
           v-model="scheduleShiftFilter"
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
+          class="h-10 rounded-lg border border-border bg-muted/30 px-3 text-sm text-primary-text focus:ring-1 focus:ring-primary dark:border-border dark:bg-elevated dark:text-primary-text font-bold"
         >
           <option value="">Tất cả ca</option>
           <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
@@ -404,7 +404,7 @@ const confirmDeleteSchedule = async () => {
         </select>
         <select
           v-model="scheduleDayFilter"
-          class="h-10 rounded-xl border border-border bg-muted/30 px-3 text-sm text-slate-900 focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white font-bold"
+          class="h-10 rounded-lg border border-border bg-muted/30 px-3 text-sm text-primary-text focus:ring-1 focus:ring-primary dark:border-border dark:bg-elevated dark:text-primary-text font-bold"
         >
           <option value="">Tất cả thứ</option>
           <option v-for="option in dayOfWeekOptions" :key="option.value" :value="String(option.value)">
@@ -413,52 +413,52 @@ const confirmDeleteSchedule = async () => {
         </select>
       </div>
 
-      <div class="mt-5 overflow-x-auto rounded-xl border border-border dark:border-slate-700">
+      <div class="mt-5 overflow-x-auto rounded-lg border border-border dark:border-border">
         <table class="min-w-full divide-y divide-border dark:divide-slate-700">
-          <thead class="bg-muted/50 dark:bg-slate-900">
+          <thead class="bg-muted/50 dark:bg-card">
             <tr>
-              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Nhân viên</th>
-              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Ca làm việc</th>
-              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Thứ</th>
-              <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest text-slate-500">Hiệu lực</th>
-              <th class="px-4 py-3 text-center text-[11px] font-black uppercase tracking-widest text-slate-500">Trạng thái</th>
-              <th class="px-4 py-3 text-right text-[11px] font-black uppercase tracking-widest text-slate-500">Thao tác</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Nhân viên</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Ca làm việc</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Thứ</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Hiệu lực</th>
+              <th class="px-4 py-3 text-center text-[11px] font-semibold  tracking-normal text-secondary-text">Trạng thái</th>
+              <th class="px-4 py-3 text-right text-[11px] font-semibold  tracking-normal text-secondary-text">Thao tác</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-border bg-card dark:divide-slate-700 dark:bg-slate-900">
+          <tbody class="divide-y divide-border bg-card dark:divide-slate-700 dark:bg-card">
             <tr v-if="assignedSchedulesQuery.isLoading.value">
-              <td colspan="6" class="px-4 py-10 text-center text-sm font-bold text-slate-500 uppercase">Đang tải dữ liệu...</td>
+              <td colspan="6" class="px-4 py-10 text-center text-sm font-bold text-secondary-text ">Đang tải dữ liệu...</td>
             </tr>
             <tr v-else-if="filteredSchedules.length === 0">
-              <td colspan="6" class="px-4 py-10 text-center text-sm font-bold text-slate-500 uppercase">Không tìm thấy dữ liệu.</td>
+              <td colspan="6" class="px-4 py-10 text-center text-sm font-bold text-secondary-text ">Không tìm thấy dữ liệu.</td>
             </tr>
-            <tr v-else v-for="schedule in filteredSchedules" :key="schedule.id" class="hover:bg-slate-50/50 transition-colors">
+            <tr v-else v-for="schedule in filteredSchedules" :key="schedule.id" class="hover:bg-surface/50 transition-colors">
               <td class="px-4 py-3">
-                <div class="text-sm font-black text-slate-900 uppercase leading-none">{{ getEmployeeName(schedule.employeeId) }}</div>
-                <div class="text-[10px] font-black text-slate-400 uppercase mt-1">ID: {{ schedule.employeeId }}</div>
+                <div class="text-sm font-semibold text-primary-text  leading-none">{{ getEmployeeName(schedule.employeeId) }}</div>
+                <div class="text-[10px] font-semibold text-tertiary-text  mt-1">ID: {{ schedule.employeeId }}</div>
               </td>
               <td class="px-4 py-3">
-                <div class="text-sm font-black text-indigo-600 uppercase leading-none">{{ getShiftName(schedule.shiftId) }}</div>
-                <div v-if="schedule.shift" class="text-[10px] font-bold text-slate-400 mt-1 uppercase">
+                <div class="text-sm font-semibold text-primary  leading-none">{{ getShiftName(schedule.shiftId) }}</div>
+                <div v-if="schedule.shift" class="text-[10px] font-bold text-tertiary-text mt-1 ">
                   {{ fmtTime(schedule.shift.startTime) }} — {{ fmtTime(schedule.shift.endTime) }}
                 </div>
               </td>
               <td class="px-4 py-3">
-                <Badge variant="outline" class="h-6 px-2 text-[10px] font-black border-indigo-100 bg-indigo-50 text-indigo-600 rounded uppercase">
+                <Badge variant="outline" class="h-6 px-2 text-[10px] font-semibold border-primary/20 bg-primary/10 text-primary rounded ">
                   {{ formatDayOfWeekLabel(schedule.dayOfWeek) }}
                 </Badge>
               </td>
-              <td class="px-4 py-3 text-xs font-black text-slate-500 uppercase">{{ fmtDateInput(schedule.effectiveFrom) }}</td>
+              <td class="px-4 py-3 text-xs font-semibold text-secondary-text ">{{ fmtDateInput(schedule.effectiveFrom) }}</td>
               <td class="px-4 py-3 text-center">
                 <span :class="[
-                  'inline-flex h-6 items-center rounded px-2 text-[9px] font-black uppercase tracking-widest',
-                  schedule.isActive === false ? 'bg-slate-100 text-slate-400' : 'bg-emerald-50 text-emerald-600'
+                  'inline-flex h-6 items-center rounded px-2 text-[9px] font-semibold  tracking-normal',
+                  schedule.isActive === false ? 'bg-muted text-tertiary-text' : 'bg-emerald-50 text-emerald-600'
                 ]">
                   {{ schedule.isActive === false ? 'OFF' : 'ACTIVE' }}
                 </span>
               </td>
               <td class="px-4 py-3 text-right">
-                <button @click="requestDeleteSchedule(schedule)" class="h-9 w-9 inline-flex items-center justify-center rounded-xl text-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                <button @click="requestDeleteSchedule(schedule)" class="h-9 w-9 inline-flex items-center justify-center rounded-lg text-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
                   <Trash2 class="h-5 w-5" />
                 </button>
               </td>
@@ -468,12 +468,12 @@ const confirmDeleteSchedule = async () => {
       </div>
 
       <div class="mt-4 flex items-center justify-between">
-        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+        <div class="text-[10px] font-semibold text-tertiary-text  tracking-normal">
           Trang {{ assignedPageLabel }} / {{ assignedTotalPages }}
         </div>
         <div class="flex items-center gap-2">
-          <Button variant="ghost" size="sm" :disabled="assignedPage <= 1" @click="assignedPage--" class="h-9 rounded-xl font-black uppercase text-[10px]">Trước</Button>
-          <Button variant="ghost" size="sm" :disabled="assignedPage >= assignedTotalPages" @click="assignedPage++" class="h-9 rounded-xl font-black uppercase text-[10px]">Sau</Button>
+          <Button variant="ghost" size="sm" :disabled="assignedPage <= 1" @click="assignedPage--" class="h-9 rounded-lg font-semibold  text-[10px]">Trước</Button>
+          <Button variant="ghost" size="sm" :disabled="assignedPage >= assignedTotalPages" @click="assignedPage++" class="h-9 rounded-lg font-semibold  text-[10px]">Sau</Button>
         </div>
       </div>
     </FormCard>
@@ -497,25 +497,25 @@ const confirmDeleteSchedule = async () => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="isAssignDialogOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px]">
+        <div v-if="isAssignDialogOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/40 backdrop-blur-[2px]">
           <Transition
             enter-active-class="transition duration-300 ease-out"
             enter-from-class="opacity-0 scale-95 translate-y-4"
             enter-to-class="opacity-100 scale-100 translate-y-0"
           >
-            <div v-if="isAssignDialogOpen" class="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+            <div v-if="isAssignDialogOpen" class="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-lg border border-border-standard bg-card shadow-2xl overflow-hidden">
               <!-- Header -->
-              <div class="flex items-center justify-between border-b border-slate-50 p-5 bg-white shrink-0">
+              <div class="flex items-center justify-between border-b border-border-subtle p-5 bg-card shrink-0">
                 <div class="flex items-center gap-4">
-                  <div class="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                  <div class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                     <CalendarRange class="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Thiết lập lịch làm việc mới</h3>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Phân công ca làm chi tiết theo từng thứ trong tuần</p>
+                    <h3 class="text-lg font-semibold text-primary-text  tracking-normal">Thiết lập lịch làm việc mới</h3>
+                    <p class="text-[10px] font-semibold text-tertiary-text  tracking-normal mt-0.5">Phân công ca làm chi tiết theo từng thứ trong tuần</p>
                   </div>
                 </div>
-                <button @click="isAssignDialogOpen = false" class="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-50 transition-all">
+                <button @click="isAssignDialogOpen = false" class="h-8 w-8 flex items-center justify-center rounded-lg text-tertiary-text hover:text-secondary-text hover:bg-surface transition-all">
                   <X class="h-5 w-5" />
                 </button>
               </div>
@@ -526,50 +526,50 @@ const confirmDeleteSchedule = async () => {
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <div class="lg:col-span-1 space-y-6">
                     <div>
-                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3 block">1. Phương thức gán</label>
-                      <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
+                      <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text mb-3 block">1. Phương thức gán</label>
+                      <div class="grid grid-cols-2 p-1 bg-muted rounded-lg">
                         <button @click="assignmentForm.mode = 'bulk'" 
                           :class="[
-                            'py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                            assignmentForm.mode === 'bulk' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                            'py-2.5 text-[10px] font-semibold  tracking-normal rounded-lg transition-all',
+                            assignmentForm.mode === 'bulk' ? 'bg-card text-primary shadow-sm' : 'text-tertiary-text hover:text-secondary-text'
                           ]">Tùy chỉnh tuần</button>
                         <button @click="assignmentForm.mode = 'template'" 
                           :class="[
-                            'py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                            assignmentForm.mode === 'template' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                            'py-2.5 text-[10px] font-semibold  tracking-normal rounded-lg transition-all',
+                            assignmentForm.mode === 'template' ? 'bg-card text-primary shadow-sm' : 'text-tertiary-text hover:text-secondary-text'
                           ]">Theo mẫu lịch</button>
                       </div>
                     </div>
 
                     <div class="space-y-3">
-                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 block">2. Ngày hiệu lực</label>
+                      <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text block">2. Ngày hiệu lực</label>
                       <div class="relative">
-                        <CalendarIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                        <CalendarIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tertiary-text" />
                         <input v-model="assignmentForm.effectiveFrom" type="date"
-                          class="h-11 w-full pl-10 rounded-xl border border-slate-100 bg-slate-50 text-sm font-black text-slate-900 focus:ring-1 focus:ring-primary outline-none" />
+                          class="h-11 w-full pl-10 rounded-lg border border-border-subtle bg-surface text-sm font-semibold text-primary-text focus:ring-1 focus:ring-primary outline-none" />
                       </div>
                     </div>
                   </div>
 
                   <div class="lg:col-span-2 space-y-4">
                     <div class="flex items-center justify-between">
-                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">3. Chọn nhân viên ({{ assignmentForm.employeeIds.length }} đã chọn)</label>
-                      <button v-if="assignmentForm.employeeIds.length > 0" @click="assignmentForm.employeeIds = []" class="text-[10px] font-black text-rose-500 uppercase hover:underline tracking-widest">Bỏ chọn tất cả</button>
+                      <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text">3. Chọn nhân viên ({{ assignmentForm.employeeIds.length }} đã chọn)</label>
+                      <button v-if="assignmentForm.employeeIds.length > 0" @click="assignmentForm.employeeIds = []" class="text-[10px] font-semibold text-rose-500  hover:underline tracking-normal">Bỏ chọn tất cả</button>
                     </div>
                     <div class="relative">
                       <input v-model="employeeSearch" type="text" placeholder="Tìm tên hoặc mã nhân viên..."
-                        class="h-11 w-full rounded-xl border border-slate-100 bg-slate-50 px-4 text-sm font-black text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-primary outline-none" />
+                        class="h-11 w-full rounded-lg border border-border-subtle bg-surface px-4 text-sm font-semibold text-primary-text placeholder:text-tertiary-text focus:ring-1 focus:ring-primary outline-none" />
                       
-                      <div class="mt-3 flex flex-wrap gap-2 max-h-48 overflow-y-auto p-4 border border-slate-50 rounded-xl bg-slate-50/50">
+                      <div class="mt-3 flex flex-wrap gap-2 max-h-48 overflow-y-auto p-4 border border-border-subtle rounded-lg bg-surface/50">
                         <div v-if="filteredEmployees.length === 0" class="w-full text-center py-6">
-                           <p class="text-xs font-black text-slate-300 uppercase tracking-widest">Không tìm thấy dữ liệu</p>
+                           <p class="text-xs font-semibold text-tertiary-text  tracking-normal">Không tìm thấy dữ liệu</p>
                         </div>
                         <button v-for="emp in filteredEmployees" :key="emp.id" @click="toggleEmployee(emp.id)"
                           :class="[
-                            'px-3 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border flex items-center gap-2',
+                            'px-3 py-2.5 rounded-lg text-[10px] font-semibold  tracking-normal transition-all border flex items-center gap-2',
                             assignmentForm.employeeIds.includes(emp.id)
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100'
-                              : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-200'
+                              ? 'bg-primary border-primary text-white shadow-xl shadow-primary/20'
+                              : 'bg-card border-border-subtle text-secondary-text hover:border-primary/20'
                           ]">
                           <Check v-if="assignmentForm.employeeIds.includes(emp.id)" class="h-3 w-3" />
                           {{ emp.fullName }} ({{ emp.employeeCode || emp.id }})
@@ -580,31 +580,31 @@ const confirmDeleteSchedule = async () => {
                 </div>
 
                 <!-- Step 2: Shift Configuration -->
-                <div v-if="assignmentForm.mode === 'bulk'" class="space-y-6 pt-6 border-t border-slate-50">
+                <div v-if="assignmentForm.mode === 'bulk'" class="space-y-6 pt-6 border-t border-border-subtle">
                    <div class="flex items-center justify-between">
-                      <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">4. Thiết lập ca làm việc hàng tuần</label>
+                      <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text">4. Thiết lập ca làm việc hàng tuần</label>
                       <div class="flex gap-2">
                          <Button variant="outline" size="sm" @click="setQuickShifts([1,2,3,4,5], assignmentForm.shiftId)" 
-                           class="h-8 text-[10px] font-black uppercase tracking-widest rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 px-3"
+                           class="h-8 text-[10px] font-semibold  tracking-normal rounded-lg border-primary/20 text-primary hover:bg-primary/10 px-3"
                            v-if="assignmentForm.shiftId">Gán T2-T6</Button>
                          <Button variant="outline" size="sm" @click="setQuickShifts([1,2,3,4,5,6,7], assignmentForm.shiftId)" 
-                           class="h-8 text-[10px] font-black uppercase tracking-widest rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 px-3"
+                           class="h-8 text-[10px] font-semibold  tracking-normal rounded-lg border-primary/20 text-primary hover:bg-primary/10 px-3"
                            v-if="assignmentForm.shiftId">Gán cả tuần</Button>
                       </div>
                    </div>
 
                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                       <div v-for="day in dayOfWeekOptions" :key="day.value" 
-                        class="p-4 rounded-2xl border transition-all"
-                        :class="assignmentForm.shiftsPerDay[day.value] ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-50 bg-slate-50/20'">
+                        class="p-4 rounded-lg border transition-all"
+                        :class="assignmentForm.shiftsPerDay[day.value] ? 'border-primary/20 bg-primary/10' : 'border-border-subtle bg-surface/20'">
                         <div class="flex items-center justify-between mb-3">
-                           <span class="text-xs font-black text-slate-800 uppercase tracking-tight">{{ day.label }}</span>
-                           <div v-if="assignmentForm.shiftsPerDay[day.value]" class="h-4 w-4 rounded-full bg-indigo-600 flex items-center justify-center">
+                           <span class="text-xs font-semibold text-primary-text  tracking-normal">{{ day.label }}</span>
+                           <div v-if="assignmentForm.shiftsPerDay[day.value]" class="h-4 w-4 rounded-full bg-primary flex items-center justify-center">
                               <Check class="h-2.5 w-2.5 text-white" />
                            </div>
                         </div>
                         <select v-model="assignmentForm.shiftsPerDay[day.value]"
-                          class="w-full bg-white rounded-xl border border-slate-100 p-2 text-xs font-black text-slate-700 outline-none focus:ring-1 focus:ring-primary uppercase">
+                          class="w-full bg-card rounded-lg border border-border-subtle p-2 text-xs font-semibold text-primary-text outline-none focus:ring-1 focus:ring-primary ">
                           <option value="">Nghỉ</option>
                           <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">
                             {{ shift.name }}
@@ -613,15 +613,15 @@ const confirmDeleteSchedule = async () => {
                       </div>
                    </div>
                    
-                   <div class="flex items-center gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-100/50">
-                      <div class="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm shrink-0">
+                   <div class="flex items-center gap-4 p-5 bg-surface rounded-lg border border-border-subtle/50">
+                      <div class="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-tertiary-text border border-border-subtle shadow-sm shrink-0">
                         <Info class="h-5 w-5" />
                       </div>
                       <div class="flex-1">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 leading-none">Mẹo gán nhanh hàng tuần</p>
+                        <p class="text-[10px] font-semibold text-secondary-text  tracking-normal mb-1.5 leading-none">Mẹo gán nhanh hàng tuần</p>
                         <div class="flex items-center gap-3">
-                          <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Chọn ca mẫu:</p>
-                          <select v-model="assignmentForm.shiftId" class="h-8 rounded-lg border-slate-100 text-[10px] font-black px-3 outline-none bg-white uppercase tracking-tight">
+                          <p class="text-[10px] font-semibold text-tertiary-text  tracking-normal">Chọn ca mẫu:</p>
+                          <select v-model="assignmentForm.shiftId" class="h-8 rounded-lg border-border-subtle text-[10px] font-semibold px-3 outline-none bg-card  tracking-normal">
                             <option value="">Khung giờ mẫu</option>
                             <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">{{ shift.name }}</option>
                           </select>
@@ -630,35 +630,35 @@ const confirmDeleteSchedule = async () => {
                    </div>
                 </div>
 
-                <div v-else class="space-y-4 pt-6 border-t border-slate-50">
-                  <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 block">4. Chọn mẫu lịch chuẩn</label>
+                <div v-else class="space-y-4 pt-6 border-t border-border-subtle">
+                  <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text block">4. Chọn mẫu lịch chuẩn</label>
                   <select v-model="assignmentForm.templateId"
-                    class="h-12 w-full rounded-xl border border-slate-100 bg-slate-50 px-4 text-sm font-black text-slate-900 focus:ring-1 focus:ring-primary outline-none uppercase tracking-tight">
+                    class="h-12 w-full rounded-lg border border-border-subtle bg-surface px-4 text-sm font-semibold text-primary-text focus:ring-1 focus:ring-primary outline-none  tracking-normal">
                     <option value="">Chọn mẫu từ danh sách lưu sẵn</option>
                     <option v-for="tpl in templatesQuery.data.value" :key="tpl.id" :value="String(tpl.id)">
                       {{ tpl.name }} ({{ tpl.items.length }} ngày phân ca)
                     </option>
                   </select>
-                  <div v-if="assignmentForm.templateId" class="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-4">
-                    <div class="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
+                  <div v-if="assignmentForm.templateId" class="p-5 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center gap-4">
+                    <div class="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
                       <Star class="h-5 w-5 fill-emerald-600" />
                     </div>
                     <div>
-                      <p class="text-sm font-black text-emerald-900 uppercase">Đã kích hoạt chế độ áp dụng mẫu lịch</p>
-                      <p class="text-[10px] font-black text-emerald-600/70 uppercase tracking-widest mt-1">Lịch biểu sẽ tự động đồng bộ theo cấu hình chuyên gia.</p>
+                      <p class="text-sm font-semibold text-emerald-900 ">Đã kích hoạt chế độ áp dụng mẫu lịch</p>
+                      <p class="text-[10px] font-semibold text-emerald-600/70  tracking-normal mt-1">Lịch biểu sẽ tự động đồng bộ theo cấu hình chuyên gia.</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- Footer -->
-              <div class="border-t border-slate-50 p-6 bg-white shrink-0 flex items-center justify-end gap-4">
+              <div class="border-t border-border-subtle p-6 bg-card shrink-0 flex items-center justify-end gap-4">
                 <Button variant="ghost" @click="isAssignDialogOpen = false"
-                  class="h-11 px-8 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">Hủy bỏ</Button>
+                  class="h-11 px-8 rounded-lg text-[11px] font-semibold  tracking-normal text-tertiary-text hover:bg-surface hover:text-secondary-text transition-all">Hủy bỏ</Button>
                 
                 <Button @click="submitAssignment" 
                   :disabled="bulkAssign.isPending.value || applyTemplate.isPending.value"
-                  class="h-12 px-12 rounded-xl bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
+                  class="h-12 px-12 rounded-lg bg-primary text-white text-[11px] font-semibold  tracking-normal shadow-2xl shadow-primary/20 hover:bg-primary hover:-translate-y-0.5 transition-all">
                   {{ bulkAssign.isPending.value || applyTemplate.isPending.value ? 'Đang thực thi...' : 'Xác nhận thiết lập' }}
                 </Button>
               </div>

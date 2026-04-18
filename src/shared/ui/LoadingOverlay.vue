@@ -32,20 +32,20 @@ const props = withDefaults(defineProps<Props>(), {
       :class="[
         props.fullScreen ? 'fixed inset-0 z-100' : 'absolute inset-0 z-50 rounded-inherit',
         props.blur ? 'backdrop-blur-sm' : '',
-        props.transparent ? 'bg-white/40 dark:bg-slate-900/40' : 'bg-white/80 dark:bg-slate-950/80',
+        props.transparent ? 'bg-background/40' : 'bg-background/80',
         'flex flex-col items-center justify-center p-4 text-center'
       ]"
     >
       <div class="relative flex flex-col items-center gap-4">
         <!-- Spinner with a soft glowing background -->
         <div class="relative">
-          <div class="absolute inset-0 scale-150 rounded-full bg-indigo-500/10 blur-2xl animate-pulse"></div>
+          <div class="absolute inset-0 scale-150 animate-pulse rounded-full bg-primary/10 blur-2xl"></div>
           <LoadingSpinner size="lg" />
         </div>
         
         <p 
           v-if="props.text"
-          class="text-sm font-bold tracking-wide text-slate-600 dark:text-slate-300 animate-pulse"
+          class="animate-pulse text-sm font-medium tracking-normal text-secondary-text"
         >
           {{ props.text }}
         </p>

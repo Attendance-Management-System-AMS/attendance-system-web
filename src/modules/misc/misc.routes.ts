@@ -34,12 +34,7 @@ export default [
     component: () => import('@/modules/schedules/pages/ScheduleTemplatesView.vue'),
     meta: { title: 'Mẫu lịch làm việc', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
   },
-  {
-    path: '/export',
-    name: 'export',
-    component: () => import('@/modules/reports/pages/ExportView.vue'),
-    meta: { title: 'Xuất báo cáo', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
-  },
+
   {
     path: '/settings',
     name: 'settings',

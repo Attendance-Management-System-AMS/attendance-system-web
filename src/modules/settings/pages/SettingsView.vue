@@ -19,11 +19,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
 import ThemeColorPicker from '@/shared/ui/ThemeColorPicker.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
+import { useTheme } from '@/shared/theme/useTheme'
 
 const activeTab = ref('appearance')
 const lang = ref<'vi' | 'en'>('vi')
-const theme = ref<'light' | 'dark' | 'system'>('system')
 const compactTables = ref(false)
+const { activeColorScheme, applyColorScheme } = useTheme()
 
 const tabs = [
   { id: 'appearance', name: 'Giao diện & Trải nghiệm', icon: Palette },
@@ -32,16 +33,7 @@ const tabs = [
 ]
 
 const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
-  theme.value = t
-  const root = document.documentElement
-  if (t === 'dark') {
-    root.classList.add('dark')
-  } else if (t === 'light') {
-    root.classList.remove('dark')
-  } else {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    root.classList.toggle('dark', prefersDark)
-  }
+  applyColorScheme(t)
 }
 </script>
 
@@ -52,7 +44,7 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
       description="Quản lý cấu hình cá nhân, bảo mật và trải nghiệm người dùng chuyên sâu."
     >
       <template #actions>
-        <Button class="h-10 px-6 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] gap-2 rounded-lg shadow-lg shadow-primary/20">
+        <Button class="h-10 gap-2 rounded-lg bg-primary px-6 text-[10px] font-semibold tracking-normal shadow-lg shadow-primary/20 hover:brightness-110">
           <Save class="h-4 w-4" /> Lưu tất cả
         </Button>
       </template>
@@ -60,7 +52,7 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
 
     <div class="space-y-8">
       <!-- Horizontal Navigation Tabs -->
-      <div class="flex items-center gap-1 p-1 bg-muted/50 border border-border/50 rounded-xl w-fit">
+      <div class="flex w-fit items-center gap-1 rounded-lg border border-border/50 bg-muted/50 p-1">
         <button
           v-for="tab in tabs"
           :key="tab.id"
@@ -69,15 +61,15 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
           :class="[
             activeTab === tab.id
               ? 'bg-card text-primary shadow-sm border border-border/50'
-              : 'text-slate-500 hover:text-slate-900 font-bold'
+              : 'font-semibold text-secondary-text hover:text-primary-text'
           ]"
         >
           <component
             :is="tab.icon"
             class="h-4 w-4 shrink-0 transition-colors"
-            :class="activeTab === tab.id ? 'text-primary' : 'text-slate-400 group-hover:text-primary'"
+            :class="activeTab === tab.id ? 'text-primary' : 'text-tertiary-text group-hover:text-primary'"
           />
-          <span class="text-[10px] font-black uppercase tracking-widest">{{ tab.name }}</span>
+          <span class="text-[10px] font-semibold tracking-normal">{{ tab.name }}</span>
         </button>
       </div>
 
@@ -88,20 +80,20 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
           <div v-if="activeTab === 'appearance'" class="space-y-6">
             <Card class="border-border shadow-none rounded-lg overflow-hidden bg-card text-card-foreground">
               <CardHeader class="p-8 pb-4 border-b border-border/50">
-                <CardTitle class="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                <CardTitle class="flex items-center gap-2 text-[10px] font-semibold tracking-normal text-primary">
                     <Palette class="h-3 w-3" /> Màu sắc & Chủ đề
                 </CardTitle>
               </CardHeader>
               <CardContent class="p-8 space-y-10">
                 <div class="space-y-6">
-                  <p class="text-[11px] font-bold text-slate-400 uppercase tracking-tight px-1 flex items-center gap-2">
+                  <p class="flex items-center gap-2 px-1 text-[11px] font-medium tracking-normal text-tertiary-text">
                     <Sparkles class="h-3 w-3" /> Chọn tông màu chủ đạo cho hệ thống
                   </p>
                   <ThemeColorPicker />
                 </div>
 
                 <div class="pt-8 border-t border-border/50 space-y-6">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-tight px-1 flex items-center gap-2">
+                    <p class="flex items-center gap-2 px-1 text-[11px] font-medium tracking-normal text-tertiary-text">
                         <Monitor class="h-3 w-3" /> Chế độ hiển thị màn hình
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -110,11 +102,11 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
                             @click="applyDarkMode('light')"
                             :class="[
                                 'h-auto flex-col gap-3 py-6 rounded-lg border-2 transition-all',
-                                theme === 'light' ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5' : 'border-border bg-muted/20 text-slate-400 hover:border-primary/30',
+                                activeColorScheme === 'light' ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5' : 'border-border bg-muted/20 text-muted-foreground hover:border-primary/30',
                             ]"
                         >
                             <Sun class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-widest">Light Mode</span>
+                            <span class="text-[10px] font-semibold tracking-normal">Light Mode</span>
                         </Button>
 
                         <Button
@@ -122,11 +114,11 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
                             @click="applyDarkMode('dark')"
                             :class="[
                                 'h-auto flex-col gap-3 py-6 rounded-lg border-2 transition-all',
-                                theme === 'dark' ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5' : 'border-border bg-muted/20 text-slate-400 hover:border-primary/30',
+                                activeColorScheme === 'dark' ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5' : 'border-border bg-muted/20 text-muted-foreground hover:border-primary/30',
                             ]"
                         >
                             <Moon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-widest">Dark Mode</span>
+                            <span class="text-[10px] font-semibold tracking-normal">Dark Mode</span>
                         </Button>
 
                         <Button
@@ -134,31 +126,31 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
                             @click="applyDarkMode('system')"
                             :class="[
                                 'h-auto flex-col gap-3 py-6 rounded-lg border-2 transition-all',
-                                theme === 'system' ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5' : 'border-border bg-muted/20 text-slate-400 hover:border-primary/30',
+                                activeColorScheme === 'system' ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/5' : 'border-border bg-muted/20 text-muted-foreground hover:border-primary/30',
                             ]"
                         >
                             <Monitor class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-widest">System</span>
+                            <span class="text-[10px] font-semibold tracking-normal">System</span>
                         </Button>
                     </div>
                 </div>
 
                 <div class="pt-8 border-t border-border/50 grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-4">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-[10px] font-medium tracking-normal text-tertiary-text">
                             <Globe class="h-3 w-3" /> Ngôn ngữ vùng
                         </label>
-                        <select v-model="lang" class="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm font-bold text-slate-700 focus:ring-1 focus:ring-primary outline-none">
+                        <select v-model="lang" class="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm font-semibold text-primary-text outline-none focus:ring-1 focus:ring-primary">
                             <option value="vi">Tiếng Việt (Vietnam)</option>
                             <option value="en">English (United States)</option>
                         </select>
                     </div>
                     <div class="space-y-4">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-[10px] font-medium tracking-normal text-tertiary-text">
                             <LayoutPanelLeft class="h-3 w-3" /> Độ dày dữ liệu
                         </label>
                         <label class="flex items-center justify-between h-12 px-4 rounded-lg border border-border bg-muted/30 cursor-pointer hover:bg-muted transition-colors">
-                            <span class="text-xs font-bold text-slate-600">Chế độ Compact (Bảng gọn)</span>
+                            <span class="text-xs font-semibold text-secondary-text">Chế độ Compact (Bảng gọn)</span>
                             <input v-model="compactTables" type="checkbox" class="h-5 w-5 rounded border-border text-primary focus:ring-primary" />
                         </label>
                     </div>
@@ -171,40 +163,40 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
           <div v-else-if="activeTab === 'attendance'" class="space-y-6">
             <Card class="border-border shadow-none rounded-lg overflow-hidden bg-card">
               <CardHeader class="p-8 pb-4 border-b border-border/50">
-                <CardTitle class="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                <CardTitle class="flex items-center gap-2 text-[10px] font-semibold tracking-normal text-primary">
                     <ShieldCheck class="h-3 w-3" /> Cấu hình bảo mật chấm công
                 </CardTitle>
               </CardHeader>
               <CardContent class="p-8 space-y-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-4 p-6 rounded-lg bg-muted/30 border border-border/50">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-[10px] font-medium tracking-normal text-tertiary-text">
                             <MapPin class="h-3 w-3" /> Bán kính tối đa (m)
                         </label>
-                        <input type="number" value="50" class="h-12 w-full px-4 rounded-lg border border-border bg-card text-sm font-black text-primary focus:ring-1 focus:ring-primary outline-none" />
-                        <p class="text-[10px] font-medium text-slate-400 italic">Áp dụng cho chấm công qua định vị GPS trên Web/Mobile</p>
+                        <input type="number" value="50" class="h-12 w-full rounded-lg border border-border bg-card px-4 text-sm font-semibold text-primary outline-none focus:ring-1 focus:ring-primary" />
+                        <p class="text-[10px] font-medium italic text-tertiary-text">Áp dụng cho chấm công qua định vị GPS trên Web/Mobile</p>
                     </div>
                     <div class="space-y-4 p-6 rounded-lg bg-muted/30 border border-border/50">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <label class="flex items-center gap-2 text-[10px] font-medium tracking-normal text-tertiary-text">
                             <Laptop class="h-3 w-3" /> Danh sách IP cho phép
                         </label>
-                        <textarea class="w-full p-4 rounded-lg border border-border bg-card text-sm font-mono font-bold text-slate-700 min-h-[50px] focus:ring-1 focus:ring-primary outline-none" placeholder="192.168.1.1, 10.0.0.*"></textarea>
-                        <p class="text-[10px] font-medium text-slate-400 italic">Mỗi IP/Dải IP cách nhau bởi dấu phẩy</p>
+                        <textarea class="min-h-[50px] w-full rounded-lg border border-border bg-card p-4 font-mono text-sm font-semibold text-primary-text outline-none focus:ring-1 focus:ring-primary" placeholder="192.168.1.1, 10.0.0.*"></textarea>
+                        <p class="text-[10px] font-medium italic text-tertiary-text">Mỗi IP/Dải IP cách nhau bởi dấu phẩy</p>
                     </div>
                 </div>
 
                 <div class="space-y-4">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label class="flex items-center gap-2 text-[10px] font-medium tracking-normal text-tertiary-text">
                         <Clock class="h-3 w-3" /> Quy tắc thời gian
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <div class="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
-                            <span class="text-xs font-bold text-slate-600">Cho phép đi muộn (phút)</span>
-                            <input type="number" value="15" class="w-16 h-8 text-center bg-muted/50 border-none rounded-lg text-sm font-black text-primary" />
+                            <span class="text-xs font-semibold text-secondary-text">Cho phép đi muộn (phút)</span>
+                            <input type="number" value="15" class="h-8 w-16 rounded-lg border-none bg-muted/50 text-center text-sm font-semibold text-primary" />
                          </div>
                          <div class="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
-                            <span class="text-xs font-bold text-slate-600">Cho phép về sớm (phút)</span>
-                            <input type="number" value="15" class="w-16 h-8 text-center bg-muted/50 border-none rounded-lg text-sm font-black text-primary" />
+                            <span class="text-xs font-semibold text-secondary-text">Cho phép về sớm (phút)</span>
+                            <input type="number" value="15" class="h-8 w-16 rounded-lg border-none bg-muted/50 text-center text-sm font-semibold text-primary" />
                          </div>
                     </div>
                 </div>
@@ -217,7 +209,7 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
           <div v-else-if="activeTab === 'notifications'" class="space-y-6">
             <Card class="border-border shadow-none rounded-lg overflow-hidden bg-card">
               <CardHeader class="p-8 pb-4 border-b border-border/50">
-                <CardTitle class="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                <CardTitle class="flex items-center gap-2 text-[10px] font-semibold tracking-normal text-primary">
                     <Bell class="h-3 w-3" /> Thông báo & Tin nhắn
                 </CardTitle>
               </CardHeader>
@@ -230,12 +222,12 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
                         { id: 'mobile', name: 'Thông báo Mobile', desc: 'Gửi thông báo đẩy về ứng dụng di động', icon: Laptop }
                     ]" :key="notif.id"
                     class="p-6 rounded-lg border border-border bg-card hover:bg-muted/30 transition-all flex items-start gap-4">
-                        <div class="h-10 w-10 rounded-lg bg-muted flex items-center justify-center text-slate-400">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-tertiary-text">
                             <component :is="notif.icon" class="h-5 w-5" />
                         </div>
                         <div class="flex-1 space-y-1">
-                            <p class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ notif.name }}</p>
-                            <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">{{ notif.desc }}</p>
+                            <p class="text-sm font-semibold tracking-normal text-primary-text">{{ notif.name }}</p>
+                            <p class="text-[10px] font-medium tracking-normal text-tertiary-text">{{ notif.desc }}</p>
                         </div>
                         <input type="checkbox" checked class="h-5 w-5 rounded border-border text-primary focus:ring-primary" />
                     </div>

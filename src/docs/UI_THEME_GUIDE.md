@@ -1,184 +1,257 @@
-# 🎨 TimeMaster Design System — Dark Precision
+# TimeMaster UI Theme Guide
 
-**Version 2.0** | Dark-first + Flexible Primary Accent
+Tai lieu nay mo ta cach ap dung giao dien "dark-first, neutral surface, primary accent" cho TimeMaster theo dung stack hien tai: Vue 3, Tailwind CSS v4, shadcn-vue/Reka UI va he bien CSS trong `src/assets/main.css`.
 
-This document defines the unified design language for the entire TimeMaster product. It combines the premium precision of Linear with TimeMaster’s core values: clarity, flexibility, and long-hour productivity.
-
----
-
-## 💎 1. Core Principles
-
-- **Dark-first**: Dark mode is the primary and most refined experience.
-- **Neutral First — Smart Accent**: Backgrounds and surfaces remain neutral. Primary color is used only for intentional highlights.
-- **Productivity-Oriented**: Optimized for long sessions, reduced eye strain, and deep focus.
-- **Precision & Premium Feel**: Every detail should feel engineered, modern, and professional.
-- **Flexibility**: Easy to change brand color via the theme system.
+Muc tieu la dong bo giao dien ma khong pha vo cac component hien co.
 
 ---
 
-## 🎨 2. Color Palette
+## 1. Nguyen Tac
 
-### Dark Mode (Default)
-
-| Role                    | Value                        | Usage                              |
-|-------------------------|------------------------------|------------------------------------|
-| **Canvas**              | `#0a0a0b`                    | Main app background                |
-| **Panel / Sidebar**     | `#111113`                    | Sidebars, modals, drawers          |
-| **Surface**             | `#1a1a1e`                    | Cards, tables, dropdowns           |
-| **Elevated Surface**    | `#212126`                    | Hover states, elevated panels      |
-| **Primary Text**        | `#f4f4f5`                    | Headings and main content          |
-| **Secondary Text**      | `#c9cdd6`                    | Body text and descriptions         |
-| **Tertiary Text**       | `#8b909a`                    | Labels, metadata, captions         |
-| **Muted Text**          | `#5f636d`                    | Placeholders, disabled states      |
-| **Border Subtle**       | `rgba(255,255,255,0.06)`     | Very light borders                 |
-| **Border Standard**     | `rgba(255,255,255,0.09)`     | Cards, inputs, dividers            |
-| **Border Prominent**    | `#2a2a32`                    | Strong separation                  |
-
-### Primary Accent (Flexible)
-
-- Powered by **OKLCH** color system via `useTheme`
-- Recommended default: **Indigo** `#6366f1` (hover: `#818cf8`)
-- Used for: Primary buttons, active states, progress bars, key icons
-
-### Light Mode (Supported)
-
-- Background: `#f8f9fa`
-- Surface: `#ffffff`
-- Border: `#e5e7eb`
-- Primary Text: `#111113`
-- Secondary Text: `#374151`
+- **Dark-first, light-supported**: Dark mode la trai nghiem chinh, nhung light mode van phai doc duoc va dung token.
+- **Neutral surface truoc, accent sau**: Nen, card, table, dialog dung mau trung tinh. Mau `primary` chi dung cho CTA, active state, link quan trong, progress va icon nhan manh.
+- **Khong hard-code mau moi khi khong can**: Uu tien token semantic nhu `bg-background`, `bg-card`, `bg-surface`, `text-foreground`, `text-muted-foreground`, `border-border`.
+- **Khong de so lieu gia trong UI van hanh**: Neu chua co API, hien empty state hoac note "chua co API tong hop".
+- **Kiosk la ngoai le**: Man hinh camera/kiosk co the full-screen va khong can ep theo card pattern cua dashboard.
 
 ---
 
-## 🖋️ 3. Typography
+## 2. Token Mau Dang Dung
 
-**Primary Font**: `Inter Variable`  
-**Font Features** (mandatory): `font-feature-settings: "cv01", "ss03"`  
-**Signature Weight**: `500` → Use **510** as the default UI weight
+Project dang dung Tailwind CSS v4 voi `@theme inline` trong:
 
-### Typography Scale
+`src/assets/main.css`
 
-| Role              | Size     | Weight | Letter Spacing    | Line Height | Usage                          |
-|-------------------|----------|--------|-------------------|-------------|--------------------------------|
-| Display           | 48px     | 590    | -1.2px            | 1.00        | Hero, main dashboard title     |
-| Heading 1         | 32px     | 590    | -0.7px            | 1.10        | Large section titles           |
-| Heading 2         | 24px     | 510    | -0.4px            | 1.25        | Card & panel titles            |
-| Heading 3         | 20px     | 510    | -0.2px            | 1.30        | Sub headers                    |
-| Body Large        | 17px     | 400    | -0.1px            | 1.60        | Long descriptions              |
-| Body              | 16px     | 510    | normal            | 1.55        | Default body text              |
-| Label / Caption   | 13px     | 510    | 0.2px             | 1.40        | Labels, badges, metadata       |
-| Timer / Big Number| 56px+    | 590    | -1.5px            | 1.00        | Timer, statistics, countdown   |
-| Monospace         | 14px     | 400    | normal            | 1.50        | Time codes, durations          |
+Token nen tiep tuc dung:
+
+| Vai tro | Class | Ghi chu |
+| --- | --- | --- |
+| Nen app | `bg-background` | Nen chinh cua layout |
+| Chu mac dinh | `text-foreground` | Text chinh theo theme |
+| Card / panel | `bg-card text-card-foreground` | Dung cho Card component |
+| Border mac dinh | `border-border` | Border chung |
+| Muted section | `bg-muted text-muted-foreground` | Empty state, subtitle, disabled-like content |
+| Primary accent | `bg-primary text-primary-foreground` | CTA, active state |
+| Input border | `border-input` | Input/select/textarea |
+| Focus ring | `ring-ring` | Focus visible |
+
+Token bo sung cho huong dark precision:
+
+| Vai tro | Class | Ghi chu |
+| --- | --- | --- |
+| Surface trung tinh | `bg-surface` | Panel lon, dashboard band |
+| Surface hover/elevated | `bg-elevated` | Hover row/card, popover nang nhe |
+| Text chinh trong surface | `text-primary-text` | Khi can mau text rieng cho dark surface |
+| Text phu | `text-secondary-text` | Mo ta, body phu |
+| Text tertiary | `text-tertiary-text` | Label, metadata |
+| Border nhe | `border-border-subtle` | Divider rat nhe |
+| Border surface | `border-border-standard` | Card/dialog/table surface |
+
+Khong dung ten `text-secondary` cho mau chu phu vi `secondary` da la token semantic hien co cua shadcn-style UI.
 
 ---
 
-## 📦 4. Card & Surface Style (Standard Pattern)
+## 3. Bang Mau
 
-```vue
-<div class="bg-surface border border-border-standard rounded-2xl p-6 
-            hover:bg-elevated transition-all duration-300 group">
-  
-  <div class="flex items-center justify-between mb-6">
-    <span class="text-xs font-semibold uppercase tracking-widest text-tertiary">
-      FOCUS SESSION
-    </span>
-    
-    <div class="h-9 w-9 rounded-2xl bg-white/5 border border-white/10 
-                flex items-center justify-center group-hover:border-primary/30 
-                group-hover:bg-primary/10 transition-all">
-      <Icon class="h-5 w-5 text-secondary group-hover:text-primary" />
-    </div>
-  </div>
+### Dark Mode
 
-  <div class="text-6xl font-semibold tracking-tighter text-primary-text">
-    2h 47m
-  </div>
-  <div class="text-sm text-tertiary">+18% from last week</div>
-</div>
+| Token | Gia tri tham chieu | Dung cho |
+| --- | --- | --- |
+| `--background` | gan `#0a0a0b` | Nen app |
+| `--card` | gan `#111113` | Card/dialog/sidebar |
+| `--surface` | gan `#1a1a1e` | Panel va table surface |
+| `--elevated` | gan `#212126` | Hover/elevated panel |
+| `--primary-text` | gan `#f4f4f5` | Heading/text chinh |
+| `--secondary-text` | gan `#c9cdd6` | Body phu |
+| `--tertiary-text` | gan `#8b909a` | Label/metadata |
+| `--border-standard` | `rgba(255,255,255,0.09)` | Border card/input |
+
+### Light Mode
+
+Light mode nen giu style sach va de doc:
+
+| Token | Gia tri tham chieu |
+| --- | --- |
+| `--background` | gan `#f8f9fa` |
+| `--card` | `#ffffff` |
+| `--surface` | `#ffffff` |
+| `--elevated` | `#f3f4f6` |
+| `--primary-text` | `#111113` |
+| `--secondary-text` | `#374151` |
+| `--tertiary-text` | `#6b7280` |
+
+### Primary Accent
+
+Mau primary tiep tuc duoc doi bang `useTheme.ts`.
+
+`useTheme.ts` chi nen dieu khien:
+
+- `--primary`
+- `--primary-foreground`
+- `--ring`
+
+Khong nen de theme picker doi `surface`, `background`, `foreground`, vi nhu vay moi theme se lam UI mat tinh nhat quan.
+
+---
+
+## 4. Typography
+
+Project hien dung:
+
+```css
+--font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+--font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 ```
 
-**Recommended classes**:
-- `bg-surface`
-- `border border-border-standard`
-- `hover:bg-elevated`
-- `rounded-2xl` / `rounded-3xl`
+Quy uoc nen dung:
+
+| Vai tro | Class goi y | Ghi chu |
+| --- | --- | --- |
+| Page title | `text-2xl font-semibold tracking-normal` | Khong ep uppercase toan bo |
+| Section title | `text-lg font-semibold tracking-normal` | Dung cho card/panel |
+| Body | `text-sm font-medium leading-6` | Noi dung UI |
+| Label | `text-xs font-medium text-tertiary-text` | Metadata, form label |
+| Number/KPI | `text-3xl font-semibold tabular-nums` | So lieu dashboard |
+| Time/code | `font-mono tabular-nums` | Gio vao/ra, duration |
+
+Khong nen ap dung negative letter-spacing rong rai. Tieng Viet co dau de bi chat chu, dac biet tren mobile.
 
 ---
 
-## 🔢 5. Input & Form Elements
+## 5. Card Va Surface
+
+Dung component `Card` hien co khi phu hop. Neu can viet surface truc tiep:
+
+```vue
+<section class="rounded-lg border border-border-standard bg-surface p-5 text-primary-text">
+  <div class="mb-4 flex items-center justify-between">
+    <p class="text-xs font-medium text-tertiary-text">Tong quan</p>
+    <Icon class="h-4 w-4 text-secondary-text" />
+  </div>
+
+  <p class="text-3xl font-semibold tabular-nums">128</p>
+  <p class="mt-1 text-sm text-secondary-text">Nhan vien dang hoat dong</p>
+</section>
+```
+
+Nen:
+
+- `rounded-lg` cho card/form/table wrapper
+- `rounded-xl` cho panel lon hoac kiosk overlay
+- `border-border-standard` cho surface tren dark mode
+- `hover:bg-elevated` cho row/card co interaction
+
+Khong nen:
+
+- Dung `rounded-2xl/3xl` dai tra
+- Dung card trong card neu khong co ly do ro
+- Dung nen primary cho ca card/panel
+
+---
+
+## 6. Form Va Input
+
+Uu tien shared UI component neu co. Khi can viet input native:
 
 ```vue
 <input
-  class="w-full bg-[#16161a] border border-border-standard rounded-2xl px-5 py-3.5
-         text-primary-text placeholder:text-muted
-         focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none
-         transition-all text-[15px] font-medium"
+  class="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground
+         placeholder:text-muted-foreground outline-none transition
+         focus:border-primary focus:ring-2 focus:ring-ring/40"
+/>
+```
+
+Voi dark surface rieng:
+
+```vue
+<input
+  class="h-10 w-full rounded-lg border border-border-standard bg-surface px-3 text-sm
+         text-primary-text placeholder:text-tertiary-text outline-none
+         focus:border-primary focus:ring-2 focus:ring-ring/40"
 />
 ```
 
 ---
 
-## 🔘 6. Button Styles
+## 7. Button
 
-- **Primary Button**: `bg-primary text-white hover:brightness-110`
-- **Ghost Button**: `bg-white/5 border border-white/10 hover:bg-white/10`
-- **Subtle Button**: `hover:bg-white/5 text-secondary`
-- **Icon Button**: Circular, `bg-white/5 hover:bg-primary/10`
+Dung shared `Button` truoc. Neu can class truc tiep:
 
----
+| Kieu | Class goi y |
+| --- | --- |
+| Primary | `bg-primary text-primary-foreground hover:brightness-110` |
+| Secondary | `bg-secondary text-secondary-foreground hover:bg-secondary/80` |
+| Ghost | `hover:bg-accent hover:text-accent-foreground` |
+| Outline | `border border-border bg-background hover:bg-accent` |
+| Danger | `bg-destructive text-destructive-foreground hover:brightness-110` |
 
-## ⚙️ 7. Technical Implementation
-
-### Global Font Settings
-```css
-@layer base {
-  html {
-    font-feature-settings: "cv01", "ss03";
-  }
-}
-```
-
-### Theme System
-- Continue using existing `useTheme` composable
-- Add semantic color variables:
-  - `--surface`, `--elevated`, `--border-standard`
-  - `--primary-text`, `--secondary`, `--tertiary`, etc.
-
-### Recommended Tailwind Extensions
-```js
-theme: {
-  extend: {
-    colors: {
-      surface: '#1a1a1e',
-      elevated: '#212126',
-      'primary-text': '#f4f4f5',
-      secondary: '#c9cdd6',
-      tertiary: '#8b909a',
-      muted: '#5f636d',
-    }
-  }
-}
-```
+Khong nen dung primary cho moi nut. Trang quan tri nhieu thao tac nen uu tien outline/ghost, chi CTA chinh dung primary.
 
 ---
 
-## ✅ 8. Do’s and Don’ts
+## 8. Table/Data UI
 
-**Do**
-- Always use weight **510** for UI text and labels
-- Apply negative letter-spacing on large headings and timer numbers
-- Keep card backgrounds subtle and translucent
-- Use Primary Accent sparingly and purposefully
-- Test both Dark and Light modes
+Bang du lieu la luong quan trong cua he thong cham cong, nen uu tien do doc va density:
 
-**Don’t**
-- Use solid primary-colored backgrounds for cards or panels
-- Overuse font-weight 700 (bold)
-- Use harsh solid borders
-- Use pure `#ffffff` as primary text (use `#f4f4f5` instead)
+- Header: `bg-muted/60 text-muted-foreground`
+- Row: `border-b border-border hover:bg-muted/40`
+- Status badge dung semantic color rieng, khong chi dung primary.
+- Cot thoi gian dung `font-mono tabular-nums`.
+- Empty state khong dung mock data.
+
+Semantic status goi y:
+
+| Nghiep vu | Mau |
+| --- | --- |
+| Co mat/dung gio | emerald |
+| Di muon/ve som | amber |
+| Vang/lỗi | rose |
+| Nghi phep/ngay le | sky/slate |
+| Cho duyet | amber/slate |
 
 ---
 
-This Design System gives TimeMaster a premium, modern, and highly professional appearance similar to Linear, while preserving full color flexibility and strong productivity focus.
+## 9. Layout
+
+Dashboard/admin layout:
+
+- App background: `bg-background`
+- Sidebar/navbar: `bg-card border-border`
+- Main content: `bg-background`
+- Page section: khong can boc them card neu ben trong da co list card/table.
+
+Kiosk:
+
+- Duoc phep full-screen camera.
+- Overlay nen dung `bg-black/70`, `backdrop-blur`, border nhe.
+- Khong ep kiosk vao `Card` dashboard.
 
 ---
+
+## 10. Quy Trinh Migration
+
+Khi doi UI theo guide nay, lam theo thu tu:
+
+1. Cap nhat token trong `src/assets/main.css`.
+2. Kiem tra `useTheme.ts` van chi doi primary/ring.
+3. Chinh shared UI truoc: `Button`, `Card`, `Input`, `DataTable`, `PageHeader`.
+4. Chinh layout: `DashboardLayout`, `AppSidebar`, `AppNavbar`.
+5. Chinh tung page nghiep vu.
+6. Chay `npm run type-check`, `npm run test:run`, `npm run build-only`.
+
+Khong nen rewrite tat ca page cung luc neu chua co screenshot/QA vi de gay lech spacing, contrast va responsive.
+
+---
+
+## 11. Checklist
+
+Truoc khi merge mot thay doi UI:
+
+- Khong co class mau moi hard-code neu token da co san.
+- Dark mode va light mode deu doc duoc.
+- Text tieng Viet khong bi chat chu tren mobile.
+- Button chinh/phu phan cap ro.
+- Bang du lieu khong bi mat density.
+- Khong co mock data trong man hinh van hanh.
+- Build khong phat sinh warning moi ngoai chunk face-api da biet.
+

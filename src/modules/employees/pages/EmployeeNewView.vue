@@ -61,9 +61,9 @@ const roles = [
 ]
 
 const inputClass =
-  'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+  'h-10 w-full rounded-lg border border-border-standard bg-surface px-3 text-sm text-primary-text placeholder:text-tertiary-text focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/40 transition-all dark:border-border dark:bg-elevated dark:text-primary-text'
 
-const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
+const labelClass = 'block text-xs font-bold  tracking-normal text-secondary-text mb-1.5'
 
 type FieldName =
   | 'fullName'
@@ -141,7 +141,7 @@ const handleSubmit = async () => {
       <template #actions>
         <button
           @click="router.back()"
-          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors"
+          class="flex items-center gap-2 h-10 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-secondary-text shadow-sm hover:bg-surface transition-colors"
         >
           <ArrowLeft class="h-4 w-4" />
           Quay lại
@@ -153,7 +153,7 @@ const handleSubmit = async () => {
       <div
         v-if="submitMessage"
         :class="[
-          'col-span-3 rounded-xl border px-4 py-3 text-sm',
+          'col-span-3 rounded-lg border px-4 py-3 text-sm',
           hasErrors
             ? 'border-rose-200 bg-rose-50 text-rose-700'
             : 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -239,7 +239,7 @@ const handleSubmit = async () => {
                   {{ d.name }}
                 </option>
               </select>
-              <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-slate-500">
+              <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
                 Đang tải phòng ban…
               </p>
               <p v-else-if="errors.departmentId" class="mt-1 text-xs text-rose-600">
@@ -260,7 +260,7 @@ const handleSubmit = async () => {
                   {{ p.name }}
                 </option>
               </select>
-              <p v-if="positionsQuery.isLoading.value" class="mt-1 text-xs text-slate-500">
+              <p v-if="positionsQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
                 Đang tải chức vụ…
               </p>
               <p v-else-if="errors.positionId" class="mt-1 text-xs text-rose-600">
@@ -312,25 +312,25 @@ const handleSubmit = async () => {
               </select>
             </div>
             <div
-              class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
+              class="flex items-center justify-between rounded-lg border border-border-standard bg-surface px-4 py-3 dark:border-border dark:bg-elevated"
             >
               <div>
-                <p class="text-sm font-medium text-slate-900 dark:text-white">
+                <p class="text-sm font-medium text-primary-text dark:text-primary-text">
                   Kích hoạt tài khoản
                 </p>
-                <p class="text-xs text-slate-400">Nhân viên có thể đăng nhập ngay</p>
+                <p class="text-xs text-tertiary-text">Nhân viên có thể đăng nhập ngay</p>
               </div>
               <button
                 type="button"
                 @click="form.isActive = !form.isActive"
                 :class="[
                   'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
-                  form.isActive ? 'bg-indigo-600' : 'bg-slate-200',
+                  form.isActive ? 'bg-primary' : 'bg-muted',
                 ]"
               >
                 <span
                   :class="[
-                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200',
+                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition-transform duration-200',
                     form.isActive ? 'translate-x-5' : 'translate-x-0',
                   ]"
                 ></span>
@@ -341,16 +341,16 @@ const handleSubmit = async () => {
 
         <!-- Action buttons -->
         <div
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3"
+          class="rounded-lg border border-border-standard bg-card p-5 shadow-sm dark:border-border dark:bg-card space-y-3"
         >
           <button
             @click="handleSubmit"
             :disabled="isSubmitting"
             :class="[
-              'flex w-full items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-colors dark:shadow-none',
+              'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-colors dark:shadow-none',
               isSubmitting
-                ? 'bg-indigo-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700',
+                ? 'bg-primary cursor-not-allowed'
+                : 'bg-primary hover:bg-primary',
             ]"
           >
             <Save class="h-4 w-4" />
@@ -358,13 +358,13 @@ const handleSubmit = async () => {
           </button>
           <button
             @click="router.push('/employees')"
-            class="flex w-full items-center justify-center h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            class="flex w-full items-center justify-center h-10 rounded-lg border border-border-standard text-sm font-medium text-secondary-text hover:bg-surface transition-colors"
           >
             Hủy bỏ
           </button>
 
-          <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
-            <p class="text-[10px] text-slate-400 text-center leading-relaxed">
+          <div class="border-t border-border-subtle dark:border-border pt-3">
+            <p class="text-[10px] text-tertiary-text text-center leading-relaxed">
               Nhân viên sẽ nhận email thông báo tài khoản sau khi được tạo thành công
             </p>
           </div>

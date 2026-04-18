@@ -30,12 +30,12 @@ defineProps<{
       <div class="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow class="bg-slate-50/50 dark:bg-slate-900/50">
+            <TableRow class="bg-muted/60">
               <TableHead
                 v-for="col in columns"
                 :key="col.key"
                 :class="[
-                  'text-[11px] font-bold uppercase tracking-wider text-slate-500',
+                  'text-xs font-medium text-muted-foreground',
                   col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left',
                 ]"
               >
@@ -47,14 +47,14 @@ defineProps<{
             <TableRow
               v-if="rows.length === 0"
             >
-              <TableCell :colspan="columns.length" class="py-16 text-center text-sm text-slate-400">
+              <TableCell :colspan="columns.length" class="py-16 text-center text-sm text-muted-foreground">
                 Không có dữ liệu
               </TableCell>
             </TableRow>
             <TableRow
               v-for="(row, idx) in rows"
               :key="idx"
-              class="hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/50"
+              class="border-b border-border hover:bg-muted/40 transition-colors"
             >
               <TableCell
                 v-for="col in columns"
@@ -64,7 +64,7 @@ defineProps<{
                 ]"
               >
                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="idx">
-                  <span class="text-sm text-slate-700 dark:text-slate-300">
+                  <span class="text-sm text-foreground">
                     {{ row[col.key] }}
                   </span>
                 </slot>

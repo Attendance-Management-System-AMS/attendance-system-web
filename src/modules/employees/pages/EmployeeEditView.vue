@@ -42,9 +42,9 @@ const roles = [
 ]
 
 const inputClass =
-  'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+  'h-10 w-full rounded-lg border border-border-standard bg-surface px-3 text-sm text-primary-text placeholder:text-tertiary-text focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/40 transition-all dark:border-border dark:bg-elevated dark:text-primary-text'
 
-const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
+const labelClass = 'block text-xs font-bold  tracking-normal text-secondary-text mb-1.5'
 
 const submitError = ref('')
 
@@ -108,7 +108,7 @@ const handleSubmit = async () => {
       <template #actions>
         <button
           @click="router.back()"
-          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors"
+          class="flex items-center gap-2 h-10 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-secondary-text shadow-sm hover:bg-surface transition-colors"
         >
           <ArrowLeft class="h-4 w-4" />
           Quay lại
@@ -194,13 +194,13 @@ const handleSubmit = async () => {
               </select>
             </div>
             <div
-              class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
+              class="flex items-center justify-between rounded-lg border border-border-standard bg-surface px-4 py-3 dark:border-border dark:bg-elevated"
             >
               <div>
-                <p class="text-sm font-medium text-slate-900 dark:text-white">
+                <p class="text-sm font-medium text-primary-text dark:text-primary-text">
                   Trạng thái tài khoản
                 </p>
-                <p class="text-xs text-slate-400">
+                <p class="text-xs text-tertiary-text">
                   {{ form.isActive ? 'Đang hoạt động' : 'Đã vô hiệu' }}
                 </p>
               </div>
@@ -209,12 +209,12 @@ const handleSubmit = async () => {
                 @click="form.isActive = !form.isActive"
                 :class="[
                   'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
-                  form.isActive ? 'bg-indigo-600' : 'bg-slate-200',
+                  form.isActive ? 'bg-primary' : 'bg-muted',
                 ]"
               >
                 <span
                   :class="[
-                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200',
+                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition-transform duration-200',
                     form.isActive ? 'translate-x-5' : 'translate-x-0',
                   ]"
                 ></span>
@@ -225,13 +225,13 @@ const handleSubmit = async () => {
 
         <!-- Action buttons -->
         <div
-          class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3"
+          class="rounded-lg border border-border-standard bg-card p-5 shadow-sm dark:border-border dark:bg-card space-y-3"
         >
           <button
             @click="handleSubmit"
             :disabled="updateEmployee.isPending.value"
             :class="[
-              'flex w-full items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-colors dark:shadow-none',
+              'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition-colors dark:shadow-none',
               updateEmployee.isPending.value
                 ? 'bg-emerald-300 cursor-not-allowed'
                 : 'bg-emerald-600 hover:bg-emerald-700',
@@ -242,15 +242,15 @@ const handleSubmit = async () => {
           </button>
           <button
             @click="router.push('/employees')"
-            class="flex w-full items-center justify-center h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            class="flex w-full items-center justify-center h-10 rounded-lg border border-border-standard text-sm font-medium text-secondary-text hover:bg-surface transition-colors"
           >
             Hủy bỏ
           </button>
 
-          <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+          <div class="border-t border-border-subtle dark:border-border pt-3">
             <div class="flex items-center justify-between">
-              <span class="text-[10px] text-slate-400">Mã nhân viên</span>
-              <span class="font-mono text-[11px] font-bold text-slate-600">{{ form.empCode }}</span>
+              <span class="text-[10px] text-tertiary-text">Mã nhân viên</span>
+              <span class="font-mono text-[11px] font-bold text-secondary-text">{{ form.empCode }}</span>
             </div>
           </div>
 

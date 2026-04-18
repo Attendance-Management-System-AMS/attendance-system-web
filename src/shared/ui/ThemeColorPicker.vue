@@ -13,10 +13,10 @@ const { activeThemeName, THEMES, applyTheme } = useTheme()
         :key="t.name"
         @click="applyTheme(t.name)"
         :class="[
-          'relative flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 group',
+          'group relative flex flex-col items-center gap-3 rounded-lg border-2 p-4 transition-colors duration-200',
           activeThemeName === t.name
             ? 'border-primary bg-primary/5 ring-4 ring-primary/10'
-            : 'border-slate-100 hover:border-slate-200'
+            : 'border-border-subtle hover:border-border-standard'
         ]"
       >
         <!-- Color Circle -->
@@ -30,8 +30,8 @@ const { activeThemeName, THEMES, applyTheme } = useTheme()
         <!-- Label -->
         <span
           :class="[
-            'text-[9px] font-black uppercase tracking-widest text-center leading-tight',
-            activeThemeName === t.name ? 'text-primary' : 'text-slate-400'
+            'text-center text-[9px] font-medium leading-tight tracking-normal',
+            activeThemeName === t.name ? 'text-primary' : 'text-tertiary-text'
           ]"
         >
           {{ t.label.split(' ')[0] }}

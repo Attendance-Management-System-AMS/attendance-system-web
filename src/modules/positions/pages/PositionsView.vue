@@ -56,7 +56,7 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Chức vụ" description="Quản lý chức vụ nhân sự">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-indigo-600 hover:bg-indigo-700">
+        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/positions/new">
             <Plus class="h-4 w-4" />
             Tạo mới
@@ -65,7 +65,7 @@ const confirmDelete = () => {
       </template>
     </PageHeader>
 
-    <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <DataTable 
         :columns="columns" 
         :rows="positions" 
@@ -74,16 +74,16 @@ const confirmDelete = () => {
         <!-- Custom Name Column -->
         <template #cell-name="{ row }">
           <div class="flex items-center gap-3">
-             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
+             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary">
               <BriefcaseBusiness class="h-4 w-4" />
             </div>
-            <span class="font-bold text-slate-700 dark:text-slate-200">{{ row.name }}</span>
+            <span class="font-bold text-primary-text dark:text-primary-text">{{ row.name }}</span>
           </div>
         </template>
 
         <!-- Custom Code Column -->
         <template #cell-code="{ row }">
-          <code class="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+          <code class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
             {{ row.code || '—' }}
           </code>
         </template>
@@ -116,7 +116,7 @@ const confirmDelete = () => {
         <AlertDialogHeader>
           <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
           <AlertDialogDescription>
-            Bạn có chắc chắn muốn xóa chức vụ <span class="font-bold text-slate-900 dark:text-white">"{{ deleteTarget?.name }}"</span>? 
+            Bạn có chắc chắn muốn xóa chức vụ <span class="font-bold text-primary-text dark:text-primary-text">"{{ deleteTarget?.name }}"</span>? 
             Hành động này không thể hoàn tác.
           </AlertDialogDescription>
         </AlertDialogHeader>

@@ -72,76 +72,67 @@ const handleSubmit = async () => {
 
 <template>
   <div
-    class="relative min-h-screen overflow-hidden bg-linear-to-br from-slate-100 via-indigo-50 to-white dark:from-slate-950 dark:via-indigo-950/40 dark:to-slate-900"
+    class="relative min-h-screen overflow-hidden bg-background text-foreground"
   >
-    <div
-      class="pointer-events-none absolute -top-16 -left-16 h-64 w-64 rounded-full bg-indigo-400/25 blur-3xl dark:bg-indigo-600/20"
-    />
-    <div
-      class="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-indigo-300/20 blur-3xl dark:bg-indigo-500/10"
-    />
-
     <div
       class="relative z-10 mx-auto flex min-h-screen w-full items-center justify-center px-4 py-8 sm:px-6 lg:px-8"
     >
       <div class="w-full max-w-md">
         <section
-          class="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-2xl shadow-indigo-200/30 dark:border-slate-800 dark:bg-slate-900 sm:p-8"
+          class="relative overflow-hidden rounded-lg border border-border-standard bg-card p-6 text-card-foreground shadow-xl sm:p-8"
         >
           <!-- Loading Overlay -->
           <LoadingOverlay :show="isSubmitting" />
 
           <div class="mb-6">
-            <p
-              class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400"
-            >
+            <p class="text-xs font-medium tracking-normal text-primary">
               Đăng nhập hệ thống
             </p>
-            <h2 class="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+            <h2 class="mt-2 text-2xl font-semibold tracking-normal text-primary-text">
               Chào mừng quay lại
             </h2>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p class="mt-1 text-sm text-secondary-text">
               Sử dụng tài khoản nội bộ để truy cập TimeMaster AMS.
             </p>
           </div>
 
           <form class="space-y-4" @submit.prevent="handleSubmit">
             <div>
-              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500"
+              <label class="mb-1.5 block text-xs font-medium tracking-normal text-tertiary-text"
                 >Email</label
               >
               <div class="relative">
                 <Mail
-                  class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary-text"
                 />
                 <input
                   v-model="email"
                   type="email"
                   autocomplete="email"
                   placeholder="admin@timemaster.vn"
-                  class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  class="h-11 w-full rounded-lg border border-border-standard bg-surface pl-10 pr-3 text-sm text-primary-text outline-none transition-colors placeholder:text-tertiary-text focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/40"
                 />
               </div>
             </div>
 
             <div>
-              <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500"
+              <label class="mb-1.5 block text-xs font-medium tracking-normal text-tertiary-text"
                 >Mật khẩu</label
               >
               <div class="relative">
                 <LockKeyhole
-                  class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary-text"
                 />
                 <input
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
                   autocomplete="current-password"
                   placeholder="Nhập mật khẩu"
-                  class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-10 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  class="h-11 w-full rounded-lg border border-border-standard bg-surface pl-10 pr-10 text-sm text-primary-text outline-none transition-colors placeholder:text-tertiary-text focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/40"
                 />
                 <button
                   type="button"
-                  class="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                  class="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-secondary-text transition-colors hover:bg-elevated hover:text-primary-text"
                   @click="showPassword = !showPassword"
                   :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
                 >
@@ -153,18 +144,18 @@ const handleSubmit = async () => {
 
             <div class="flex items-center justify-between gap-3">
               <label
-                class="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-300"
+                class="inline-flex cursor-pointer items-center gap-2 text-sm text-secondary-text"
               >
                 <input
                   v-model="remember"
                   type="checkbox"
-                  class="h-4 w-4 rounded border-slate-300 text-indigo-600"
+                  class="h-4 w-4 rounded border-border-standard text-primary"
                 />
                 Ghi nhớ đăng nhập
               </label>
               <button
                 type="button"
-                class="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                class="text-sm font-medium text-primary hover:brightness-110"
               >
                 Quên mật khẩu?
               </button>
@@ -172,7 +163,7 @@ const handleSubmit = async () => {
 
             <p
               v-if="errorMessage"
-              class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
+              class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400"
             >
               {{ errorMessage }}
             </p>
@@ -180,7 +171,7 @@ const handleSubmit = async () => {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="mt-2 inline-flex h-11 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-400"
+              class="mt-2 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập' }}
             </button>

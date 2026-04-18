@@ -4,23 +4,23 @@ import { Badge } from './badge'
 
 const STATUS_CONFIG = {
   present: {
-    class: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900',
+    class: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400',
     label: 'Đúng giờ',
   },
   late: {
-    class: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900',
+    class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400',
     label: 'Đi trễ',
   },
   absent: {
-    class: 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-50 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900',
+    class: 'border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500/10 dark:text-rose-400',
     label: 'Vắng mặt',
   },
   working: {
-    class: 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-50 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-900',
+    class: 'border-primary/20 bg-primary/10 text-primary hover:bg-primary/10',
     label: 'Đang làm',
   },
   leave: {
-    class: 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    class: 'border-border-standard bg-muted text-secondary-text hover:bg-muted',
     label: 'Nghỉ phép',
   },
 } as const
@@ -37,7 +37,7 @@ const config = computed(() => STATUS_CONFIG[props.status] ?? STATUS_CONFIG.leave
   <Badge
     variant="outline"
     :class="[
-      'rounded-full px-2.5 py-0.5 text-[10px] font-bold transition-none shadow-none',
+      'rounded-lg px-2.5 py-0.5 text-[10px] font-semibold transition-none shadow-none',
       config.class,
     ]"
   >

@@ -19,8 +19,8 @@ const roundedClasses = {
   sm: 'rounded-sm',
   md: 'rounded-md',
   lg: 'rounded-lg',
-  xl: 'rounded-xl',
-  '2xl': 'rounded-xl',
+  xl: 'rounded-lg',
+  '2xl': 'rounded-lg',
   full: 'rounded-full',
 }
 </script>
@@ -28,7 +28,7 @@ const roundedClasses = {
 <template>
   <div
     :class="[
-      'relative overflow-hidden bg-slate-100 dark:bg-slate-800',
+      'relative overflow-hidden bg-muted',
       props.circle ? 'rounded-full' : roundedClasses[props.rounded],
       props.className,
     ]"

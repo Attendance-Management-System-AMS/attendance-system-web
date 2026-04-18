@@ -28,8 +28,8 @@ const submitError = ref('')
 const hasErrors = computed(() => Object.values(errors).some(Boolean))
 
 const inputClass =
-  'h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-white'
-const labelClass = 'block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'
+  'h-10 w-full rounded-lg border border-border-standard bg-surface px-3 text-sm text-primary-text placeholder:text-tertiary-text focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/40 transition-all dark:border-border dark:bg-elevated dark:text-primary-text'
+const labelClass = 'block text-xs font-bold  tracking-normal text-secondary-text mb-1.5'
 
 const validate = () => {
   errors.holidayName = form.holidayName.trim() ? '' : 'Vui lòng nhập tên ngày nghỉ'
@@ -68,7 +68,7 @@ const handleSubmit = async () => {
       <template #actions>
         <button
           @click="router.back()"
-          class="flex items-center gap-2 h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 transition-colors"
+          class="flex items-center gap-2 h-10 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-secondary-text shadow-sm hover:bg-surface transition-colors"
         >
           <ArrowLeft class="h-4 w-4" />
           Quay lại
@@ -76,7 +76,7 @@ const handleSubmit = async () => {
       </template>
     </PageHeader>
 
-    <div v-if="submitError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+    <div v-if="submitError" class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
       {{ submitError }}
     </div>
 
@@ -124,8 +124,8 @@ const handleSubmit = async () => {
               @click="handleSubmit"
               :disabled="createHoliday.isPending.value"
               :class="[
-                'flex w-full items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-colors',
-                createHoliday.isPending.value ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700',
+                'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-colors',
+                createHoliday.isPending.value ? 'bg-primary cursor-not-allowed' : 'bg-primary hover:bg-primary',
               ]"
             >
               <Save class="h-4 w-4" />
@@ -134,7 +134,7 @@ const handleSubmit = async () => {
 
             <button
               @click="router.push('/holidays')"
-              class="flex w-full items-center justify-center h-10 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              class="flex w-full items-center justify-center h-10 rounded-lg border border-border-standard text-sm font-medium text-secondary-text hover:bg-surface transition-colors"
             >
               Hủy bỏ
             </button>

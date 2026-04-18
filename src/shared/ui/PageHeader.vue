@@ -7,13 +7,13 @@ defineProps<{
 
 <template>
   <div
-    class="mb-6 flex flex-col gap-1 border-b border-slate-200/70 pb-5 sm:flex-row sm:items-start sm:justify-between dark:border-slate-800/80"
+    class="mb-6 flex flex-col gap-1 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between"
   >
     <div>
-      <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tight leading-none dark:text-white">
+      <h1 class="text-2xl font-semibold tracking-normal leading-tight text-primary-text">
         {{ title }}
       </h1>
-      <p v-if="description" class="mt-2 text-[12px] font-semibold text-slate-400 tracking-widest leading-none">
+      <p v-if="description" class="mt-2 text-sm font-medium leading-6 text-secondary-text">
         {{ description }}
       </p>
     </div>

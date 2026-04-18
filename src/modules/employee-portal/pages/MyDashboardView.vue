@@ -97,11 +97,11 @@ const recentActivities = computed(() => {
     >
       <template #actions>
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="sm" class="h-8 text-[10px] font-bold uppercase tracking-widest gap-2">
+          <Button variant="outline" size="sm" class="h-8 text-[10px] font-bold  tracking-normal gap-2">
             <Download class="h-3 w-3" />
             Báo cáo
           </Button>
-          <Button size="sm" class="h-8 bg-primary hover:bg-primary/90 text-[10px] font-bold uppercase tracking-widest gap-2">
+          <Button size="sm" class="h-8 bg-primary hover:bg-primary/90 text-[10px] font-bold  tracking-normal gap-2">
             <Timer class="h-3 w-3" />
             Ghi danh
           </Button>
@@ -114,38 +114,38 @@ const recentActivities = computed(() => {
       <Card
         v-for="stat in stats"
         :key="stat.label"
-        class="border-slate-100 shadow-none p-4 sm:p-6 hover:bg-slate-50 transition-all group rounded-xl"
+        class="border-border-subtle shadow-none p-4 sm:p-6 hover:bg-surface transition-all group rounded-lg"
       >
         <div class="flex flex-col">
-          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{
+          <span class="text-[10px] font-semibold text-tertiary-text  tracking-normal">{{
             stat.label
           }}</span>
           <div class="mt-3 flex items-end justify-between">
             <span
-              class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums leading-none group-hover:text-primary transition-colors"
+              class="text-2xl sm:text-3xl font-semibold text-primary-text tabular-nums leading-none group-hover:text-primary transition-colors"
               >{{ stat.value }}</span>
             <div
-              class="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
+              class="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-secondary-text border border-border-standard group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all"
             >
               <component :is="stat.icon" class="h-4 w-4" />
             </div>
           </div>
-          <p class="mt-4 text-[9px] font-bold text-slate-300 uppercase leading-none">{{ stat.status }}</p>
+          <p class="mt-4 text-[9px] font-bold text-tertiary-text  leading-none">{{ stat.status }}</p>
         </div>
       </Card>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Main Content: Attendance Chart Simulation -->
-      <Card class="lg:col-span-2 border-slate-100 shadow-none overflow-hidden rounded-xl">
-        <CardHeader class="p-4 sm:p-6 border-b border-slate-100 bg-white">
+      <Card class="lg:col-span-2 border-border-subtle shadow-none overflow-hidden rounded-lg">
+        <CardHeader class="p-4 sm:p-6 border-b border-border-subtle bg-card">
           <div class="flex items-center justify-between">
             <div>
               <CardTitle
-                class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none"
+                class="text-[10px] font-semibold text-secondary-text  tracking-normal leading-none"
                 >Biểu đồ chuyên cần</CardTitle
               >
-              <p class="mt-2 text-xs font-black text-slate-900 uppercase">
+              <p class="mt-2 text-xs font-semibold text-primary-text ">
                 Dữ liệu chấm công 7 ngày gần nhất
               </p>
             </div>
@@ -159,16 +159,16 @@ const recentActivities = computed(() => {
               class="flex-1 flex flex-col items-center gap-4 group"
             >
               <div
-                class="w-full bg-slate-50 rounded-xl relative overflow-hidden h-full flex flex-col justify-end"
+                class="w-full bg-surface rounded-lg relative overflow-hidden h-full flex flex-col justify-end"
               >
                 <div
                     class="bg-primary group-hover:bg-primary/80 transition-all rounded-t-xl"
                     :style="{ height: `${bar.value}%` }"
                 >
-                  <div class="absolute top-0 inset-x-0 h-1 bg-white/30"></div>
+                  <div class="absolute top-0 inset-x-0 h-1 bg-card/30"></div>
                 </div>
               </div>
-              <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{{
+              <span class="text-[10px] font-semibold text-tertiary-text  tracking-normal">{{
                 bar.label
               }}</span>
             </div>
@@ -179,22 +179,22 @@ const recentActivities = computed(() => {
       <!-- Side Content -->
       <div class="space-y-6">
         <!-- Dashboard shortcuts -->
-        <Card class="border-slate-100 shadow-none p-5 rounded-xl bg-white">
+        <Card class="border-border-subtle shadow-none p-5 rounded-lg bg-card">
           <div class="flex items-center gap-4">
             <div
-              class="h-14 w-14 shrink-0 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10 shadow-sm"
+              class="h-14 w-14 shrink-0 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10 shadow-sm"
             >
               <Star class="h-7 w-7" />
             </div>
             <div>
               <p
-                class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none"
+                class="text-[10px] font-semibold text-tertiary-text  tracking-normal leading-none"
               >
                 Lịch làm việc
               </p>
-              <h4 class="text-xl font-black text-slate-900 mt-2 leading-none">Xem lịch trực</h4>
+              <h4 class="text-xl font-semibold text-primary-text mt-2 leading-none">Xem lịch trực</h4>
               <RouterLink to="/my/schedule"
-                class="inline-block text-[9px] font-bold text-primary mt-1.5 uppercase cursor-pointer hover:underline"
+                class="inline-block text-[9px] font-bold text-primary mt-1.5  cursor-pointer hover:underline"
               >
                 Đi tới lịch biểu
               </RouterLink>
@@ -203,10 +203,10 @@ const recentActivities = computed(() => {
         </Card>
 
         <!-- Activities -->
-        <Card class="border-slate-100 shadow-none overflow-hidden rounded-xl">
-          <CardHeader class="p-5 border-b border-slate-100 bg-white">
+        <Card class="border-border-subtle shadow-none overflow-hidden rounded-lg">
+          <CardHeader class="p-5 border-b border-border-subtle bg-card">
             <CardTitle
-              class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none"
+              class="text-[10px] font-semibold text-secondary-text  tracking-normal leading-none"
               >Thông báo & Sự kiện</CardTitle
             >
           </CardHeader>
@@ -215,21 +215,21 @@ const recentActivities = computed(() => {
               <div
                 v-for="act in recentActivities"
                 :key="act.id"
-                class="p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
+                class="p-4 hover:bg-surface transition-colors cursor-pointer group"
               >
                 <div class="flex gap-4">
                   <div class="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0"></div>
                   <div class="flex-1 min-w-0">
                     <p
-                      class="text-xs font-black text-slate-800 leading-snug uppercase truncate group-hover:text-primary transition-colors"
+                      class="text-xs font-semibold text-primary-text leading-snug  truncate group-hover:text-primary transition-colors"
                     >
                       {{ act.title }}
                     </p>
                     <div class="flex items-center justify-between mt-1.5">
-                      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                      <p class="text-[9px] font-bold text-tertiary-text  tracking-normal">
                         {{ act.category }}
                       </p>
-                      <p class="text-[9px] font-black text-slate-300 uppercase leading-none">
+                      <p class="text-[9px] font-semibold text-tertiary-text  leading-none">
                         {{ act.time }}
                       </p>
                     </div>
@@ -240,7 +240,7 @@ const recentActivities = computed(() => {
             <Button
               variant="ghost"
               as-child
-              class="w-full rounded-none border-t border-slate-50 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors"
+              class="w-full rounded-none border-t border-border-subtle py-4 text-[10px] font-semibold text-tertiary-text  tracking-normal hover:text-primary transition-colors"
             >
               <RouterLink to="/my/attendance">Xem chi tiết <ChevronRight class="ml-2 h-3 w-3" /></RouterLink>
             </Button>
