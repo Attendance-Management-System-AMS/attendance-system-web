@@ -135,10 +135,8 @@ const qrCodeUrl = computed(
             <div class="flex items-center justify-between px-5 py-4 border-b border-border">
               <div class="flex items-center gap-3">
                 <div class="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <router-link to="/kiosk" custom v-slot="{ navigate }">
-                    <Button @click="navigate">
-                      <Monitor class="h-5 w-5 text-primary" />
-                    </Button>
+                  <router-link to="/kiosk" class="hover:opacity-80">
+                    <Monitor class="h-5 w-5 text-primary" />
                   </router-link>
                 </div>
                 <div>
