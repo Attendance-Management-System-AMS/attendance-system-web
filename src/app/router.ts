@@ -62,10 +62,11 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const authed = isAuthenticated()
   const isLoginRoute = to.name === 'login'
+  const isPublicRoute = to.meta?.public === true
   const { user, setUser, hasRole, isAdmin, isHR, isManager, isEmployee } = useAuth()
 
   // 1. Xử lý Auth (Token)
-  if (!authed && !isLoginRoute) {
+  if (!authed && !isLoginRoute && !isPublicRoute) {
     try {
       const response = await authApi.refresh()
       const token = resolveAuthToken(response.result)

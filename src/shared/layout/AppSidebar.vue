@@ -87,6 +87,7 @@ const navGroups: NavGroup[] = [
       { label: 'Bảng tin của tôi', to: '/my/dashboard', icon: LayoutDashboard },
 
       { label: 'Bảng công của tôi', to: '/my/attendance', icon: Timer },
+      { label: 'Lịch làm việc của tôi', to: '/my/schedule', icon: CalendarDays },
       { label: 'Đơn từ của tôi', to: '/my/requests', icon: ClipboardList },
     ],
   },

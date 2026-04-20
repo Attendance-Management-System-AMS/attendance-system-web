@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { Home, Timer, ClipboardList } from 'lucide-vue-next'
+import { Home, Timer, ClipboardList, CalendarDays } from 'lucide-vue-next'
 import { useAuth } from '@/modules/auth/composables/useAuth'
 
 const route = useRoute()
@@ -18,6 +18,7 @@ const navItems = computed<NavItem[]>(() => {
   const baseItems = [
     { label: 'Bảng tin', to: '/my/dashboard', icon: Home },
     { label: 'Bảng công', to: '/my/attendance', icon: Timer },
+    { label: 'Lịch làm', to: '/my/schedule', icon: CalendarDays },
     { label: 'Đơn từ', to: '/my/requests', icon: ClipboardList },
   ]
   return baseItems

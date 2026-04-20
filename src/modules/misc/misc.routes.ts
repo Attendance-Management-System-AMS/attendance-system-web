@@ -53,6 +53,7 @@ export default [
     component: () => import('@/modules/attendance/components/AttendanceKiosk.vue'),
     meta: {
       hideLayout: true,
+      public: true,
       title: 'Máy chấm công',
     },
   },
@@ -67,6 +68,12 @@ export default [
     name: 'my-attendance',
     component: () => import('@/modules/employee-portal/pages/MyAttendanceView.vue'),
     meta: { title: 'Bảng công của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'] },
+  },
+  {
+    path: '/my/schedule',
+    name: 'my-schedule',
+    component: () => import('@/modules/employee-portal/pages/MyScheduleView.vue'),
+    meta: { title: 'Lịch làm việc của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'] },
   },
   {
     path: '/my/requests',
