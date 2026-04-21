@@ -10,6 +10,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const isE2EMode = mode === 'test'
   const devProxyTarget =
     env.DEV_PROXY_TARGET || env.VITE_DEV_PROXY_TARGET || 'http://localhost:9000'
   const devAllowedHostsRaw = (env.DEV_ALLOWED_HOSTS || env.VITE_DEV_ALLOWED_HOSTS)?.trim()
@@ -25,45 +26,49 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       vue(),
       vueJsx(),
-      vueDevTools(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        injectRegister: 'script',
-        manifest: {
-          id: '/ams-kiosk/',
-          name: 'Attendance Management System',
-          short_name: 'AMS Kiosk',
-          description: 'Hệ thống chấm công khuôn mặt tự động (AMS)',
-          theme_color: '#3b82f6',
-          background_color: '#f8fafc',
-          display: 'standalone',
-          orientation: 'portrait',
-          start_url: '/',
-          categories: ['productivity', 'security'],
-          icons: [
-            {
-              src: 'pwa-512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable',
-            },
-            {
-              src: 'pwa-512.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any maskable',
-            },
-          ],
-        },
-        devOptions: {
-          enabled: true,
-          type: 'module',
-        },
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,vue}'],
-          navigateFallback: 'index.html',
-        },
-      }),
+      ...(!isE2EMode ? [vueDevTools()] : []),
+      ...(!isE2EMode
+        ? [
+            VitePWA({
+              registerType: 'autoUpdate',
+              injectRegister: 'script',
+              manifest: {
+                id: '/ams-kiosk/',
+                name: 'Attendance Management System',
+                short_name: 'AMS Kiosk',
+                description: 'Hệ thống chấm công khuôn mặt tự động (AMS)',
+                theme_color: '#3b82f6',
+                background_color: '#f8fafc',
+                display: 'standalone',
+                orientation: 'portrait',
+                start_url: '/',
+                categories: ['productivity', 'security'],
+                icons: [
+                  {
+                    src: 'pwa-512.png',
+                    sizes: '512x512',
+                    type: 'image/png',
+                    purpose: 'any maskable',
+                  },
+                  {
+                    src: 'pwa-512.png',
+                    sizes: '192x192',
+                    type: 'image/png',
+                    purpose: 'any maskable',
+                  },
+                ],
+              },
+              devOptions: {
+                enabled: true,
+                type: 'module',
+              },
+              workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,vue}'],
+                navigateFallback: 'index.html',
+              },
+            }),
+          ]
+        : []),
     ],
     server: {
       host: true,

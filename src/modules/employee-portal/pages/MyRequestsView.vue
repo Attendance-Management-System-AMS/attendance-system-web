@@ -94,6 +94,7 @@ const formatDateRange = (from?: string, to?: string) => {
       <template #actions>
         <Button
           @click="handleCreateRequest"
+          data-testid="my-requests-create"
           class="bg-primary hover:bg-primary/90 h-8 px-3 text-[10px] font-bold  tracking-normal gap-2 rounded shadow-none"
         >
           <Plus class="h-3.5 w-3.5" />
@@ -176,7 +177,10 @@ const formatDateRange = (from?: string, to?: string) => {
               Loại đơn từ
             </Label>
             <Select v-model="newRequest.leaveTypeCode">
-              <SelectTrigger class="h-10 rounded-lg border-primary/10 bg-primary/5 shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold">
+              <SelectTrigger
+                data-testid="my-requests-leave-type"
+                class="h-10 rounded-lg border-primary/10 bg-primary/5 shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
+              >
                 <SelectValue placeholder="Chọn loại đơn" />
               </SelectTrigger>
               <SelectContent>
@@ -193,14 +197,24 @@ const formatDateRange = (from?: string, to?: string) => {
                 <Calendar class="h-3 w-3 text-tertiary-text" />
                 Từ ngày
               </Label>
-              <Input type="date" v-model="newRequest.fromDate" class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold" />
+              <Input
+                v-model="newRequest.fromDate"
+                data-testid="my-requests-from-date"
+                type="date"
+                class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
+              />
             </div>
             <div class="space-y-1.5">
               <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
                 <Calendar class="h-3 w-3 text-tertiary-text" />
                 Đến ngày
               </Label>
-              <Input type="date" v-model="newRequest.toDate" class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold" />
+              <Input
+                v-model="newRequest.toDate"
+                data-testid="my-requests-to-date"
+                type="date"
+                class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
+              />
             </div>
           </div>
 
@@ -209,13 +223,23 @@ const formatDateRange = (from?: string, to?: string) => {
               <FileText class="h-3 w-3 text-tertiary-text" />
               Lý do chi tiết
             </Label>
-            <Textarea v-model="newRequest.reason" placeholder="Nhập lý do cụ thể..." class="min-h-[80px] rounded-lg border-border-subtle bg-surface shadow-none resize-none focus:ring-1 focus:ring-primary text-primary-text font-medium" />
+            <Textarea
+              v-model="newRequest.reason"
+              data-testid="my-requests-reason"
+              placeholder="Nhập lý do cụ thể..."
+              class="min-h-[80px] rounded-lg border-border-subtle bg-surface shadow-none resize-none focus:ring-1 focus:ring-primary text-primary-text font-medium"
+            />
           </div>
         </div>
 
         <DialogFooter class="p-5 bg-card border-t border-border-subtle flex flex-col sm:flex-row gap-3">
           <Button variant="ghost" @click="isCreateModalOpen = false" class="flex-1 h-11 rounded-lg font-semibold  tracking-normal text-tertiary-text hover:bg-surface">Hủy bỏ</Button>
-          <Button @click="handleSubmit" :disabled="createMe.isPending.value" class="flex-1 h-11 rounded-lg bg-primary font-semibold  tracking-normal text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
+          <Button
+            @click="handleSubmit"
+            data-testid="my-requests-submit"
+            :disabled="createMe.isPending.value"
+            class="flex-1 h-11 rounded-lg bg-primary font-semibold  tracking-normal text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
+          >
             <span v-if="createMe.isPending.value">Đang gửi...</span>
             <span v-else>Gửi ngay</span>
           </Button>

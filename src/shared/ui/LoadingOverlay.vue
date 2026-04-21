@@ -11,7 +11,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   show: false,
-  text: 'Đang tải dữ liệu...',
+  text: 'Đang tải ...',
   fullScreen: false,
   blur: true,
   transparent: false

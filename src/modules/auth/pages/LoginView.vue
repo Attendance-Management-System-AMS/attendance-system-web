@@ -107,6 +107,7 @@ const handleSubmit = async () => {
                 />
                 <input
                   v-model="email"
+                  data-testid="login-email"
                   type="email"
                   autocomplete="email"
                   placeholder="admin@timemaster.vn"
@@ -125,6 +126,7 @@ const handleSubmit = async () => {
                 />
                 <input
                   v-model="password"
+                  data-testid="login-password"
                   :type="showPassword ? 'text' : 'password'"
                   autocomplete="current-password"
                   placeholder="Nhập mật khẩu"
@@ -163,6 +165,7 @@ const handleSubmit = async () => {
 
             <p
               v-if="errorMessage"
+              data-testid="login-error"
               class="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400"
             >
               {{ errorMessage }}
@@ -170,6 +173,7 @@ const handleSubmit = async () => {
 
             <button
               type="submit"
+              data-testid="login-submit"
               :disabled="isSubmitting"
               class="mt-2 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >

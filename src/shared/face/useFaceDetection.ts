@@ -3,6 +3,26 @@ import { ref } from 'vue'
 const MODELS_PATH = '/models'
 const DETECT_MAX_SIDE = 360
 type FaceApi = typeof import('face-api.js')
+type FaceDetectionResult = {
+  detection: {
+    score: number
+  }
+  descriptor: Float32Array
+} | null
+
+interface E2EFaceDetectionDriver {
+  loadModels?: () => Promise<void> | void
+  setupCamera?: (video: HTMLVideoElement | null) => Promise<unknown> | unknown
+  detectFace?: () => Promise<FaceDetectionResult> | FaceDetectionResult
+  stopCamera?: () => void
+}
+
+declare global {
+  interface Window {
+    __ATTENDANCE_E2E_FACE__?: E2EFaceDetectionDriver
+  }
+}
+
 let faceapiModule: FaceApi | null = null
 
 async function loadFaceApi() {
@@ -10,6 +30,11 @@ async function loadFaceApi() {
     faceapiModule = await import('face-api.js')
   }
   return faceapiModule
+}
+
+function getE2EDriver() {
+  if (typeof window === 'undefined') return undefined
+  return window.__ATTENDANCE_E2E_FACE__
 }
 
 export function useFaceDetection() {
@@ -20,6 +45,14 @@ export function useFaceDetection() {
 
   const loadModels = async () => {
     if (isLoaded.value) return
+
+    const e2eDriver = getE2EDriver()
+    if (e2eDriver) {
+      await e2eDriver.loadModels?.()
+      isLoaded.value = true
+      return
+    }
+
     const faceapi = await loadFaceApi()
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH),
@@ -30,6 +63,11 @@ export function useFaceDetection() {
   }
 
   const setupCamera = async () => {
+    const e2eDriver = getE2EDriver()
+    if (e2eDriver) {
+      return await e2eDriver.setupCamera?.(videoRef.value)
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: 'user',
@@ -44,6 +82,11 @@ export function useFaceDetection() {
   }
 
   const detectFace = async () => {
+    const e2eDriver = getE2EDriver()
+    if (e2eDriver?.detectFace) {
+      return await e2eDriver.detectFace()
+    }
+
     const video = videoRef.value
     if (!video || !isLoaded.value || video.readyState !== 4 || detectInFlight) return null
 
@@ -79,6 +122,12 @@ export function useFaceDetection() {
   }
 
   const stopCamera = () => {
+    const e2eDriver = getE2EDriver()
+    if (e2eDriver) {
+      e2eDriver.stopCamera?.()
+      return
+    }
+
     const stream = videoRef.value?.srcObject as MediaStream | null
     stream?.getTracks().forEach((track) => track.stop())
   }

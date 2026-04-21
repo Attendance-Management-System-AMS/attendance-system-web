@@ -159,10 +159,22 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
         <template #cell-actions="{ row }">
             <div v-if="isPendingLeave(row.status)" class="flex justify-end gap-1.5">
-                <Button size="icon" variant="outline" class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10" @click="handleApprove(row.id)">
+                <Button
+                    size="icon"
+                    variant="outline"
+                    class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10"
+                    :aria-label="`Phe duyet don ${row.id}`"
+                    @click="handleApprove(row.id)"
+                >
                     <Check class="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="outline" class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10" @click="handleReject(row.id)">
+                <Button
+                    size="icon"
+                    variant="outline"
+                    class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10"
+                    :aria-label="`Tu choi don ${row.id}`"
+                    @click="handleReject(row.id)"
+                >
                     <X class="h-4 w-4" />
                 </Button>
             </div>
