@@ -4,7 +4,7 @@ import type { ApiResponse } from '@/shared/types/api'
 import type { UserProfile } from '@/modules/auth/composables/useAuth'
 
 export interface LoginRequest {
-    email: string
+    login: string
     password: string
     remember?: boolean
 }
@@ -26,8 +26,8 @@ export function resolveAuthToken(result?: LoginResult | RefreshResult | null): s
 export const authApi = {
     login: (payload: LoginRequest) =>
         authHttp.post<ApiResponse<LoginResult>>('/auth/login', {
-            username: payload.email,
-            email: payload.email,
+            username: payload.login,
+            email: payload.login,
             password: payload.password,
             remember: payload.remember,
         }).then((res) => res.data),

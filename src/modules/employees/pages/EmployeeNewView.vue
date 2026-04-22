@@ -3,16 +3,19 @@ import FormCard from '@/shared/ui/FormCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQueryClient } from '@tanstack/vue-query'
 import { ArrowLeft, Briefcase, Save, User } from 'lucide-vue-next'
 import { useEmployees } from '@/modules/employees/composables/useEmployees'
 import { useDepartments } from '@/modules/departments/composables/useDepartments'
 import { usePositions } from '@/modules/positions/composables/usePositions'
+import { queryKeys } from '@/shared/lib/queryKeys'
 import type { CreateEmployee } from '@/modules/employees/types/employee.types'
 import type { Department } from '@/modules/departments/types/department.types'
 import type { Position } from '@/modules/positions/types/position.types'
 import type { Employee } from '@/modules/employees/types/employee.types'
 
 const router = useRouter()
+const queryClient = useQueryClient()
 const { createEmployee, employeesQuery: managersQuery } = useEmployees({
   size: 200,
   sort: 'fullName',
@@ -126,6 +129,10 @@ const handleSubmit = async () => {
 
   try {
     await createEmployee.mutateAsync(payload)
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.employees.all(),
+      refetchType: 'all',
+    })
     router.push('/employees')
   } catch (error) {
     submitMessage.value = 'Tạo nhân viên thất bại. Vui lòng thử lại.'
@@ -268,17 +275,6 @@ const handleSubmit = async () => {
         <div class="space-y-6 xl:sticky xl:top-6 self-start">
           <FormCard title="Thiết lập nhanh" :icon="Save">
             <div class="space-y-4">
-              <div class="rounded-xl border border-border-standard bg-surface/70 px-4 py-4 dark:border-border dark:bg-elevated/70">
-                <p class="text-xs font-bold text-secondary-text">Mã nhân viên</p>
-                <p class="mt-1 font-mono text-sm text-primary-text">Tự động tạo sau khi lưu</p>
-              </div>
-              <div class="rounded-xl border border-border-standard bg-surface/70 px-4 py-4 dark:border-border dark:bg-elevated/70">
-                <p class="text-xs font-bold text-secondary-text">Tài khoản đăng nhập</p>
-                <p class="mt-1 text-sm text-primary-text">Tự động tạo cùng lúc với nhân viên</p>
-                <p class="mt-1 text-xs text-tertiary-text">
-                  Username sẽ là mã nhân viên. Mật khẩu mặc định là <code>employeeCode + @123</code>.
-                </p>
-              </div>
               <div
                 class="flex items-center justify-between rounded-xl border border-border-standard bg-surface px-4 py-4 dark:border-border dark:bg-elevated"
               >
@@ -315,7 +311,7 @@ const handleSubmit = async () => {
             <div class="space-y-1">
               <p class="text-sm font-semibold text-primary-text">Lưu hồ sơ</p>
               <p class="text-xs leading-relaxed text-tertiary-text">
-                Sau khi lưu, hệ thống sẽ tạo hồ sơ nhân viên và cấp tài khoản đăng nhập mặc định.
+                Sau khi lưu, hệ thống sẽ tạo hồ sơ nhân viên, username theo mã nhân viên và mật khẩu mặc định dạng <code>Emp@0025</code>.
               </p>
             </div>
             <button

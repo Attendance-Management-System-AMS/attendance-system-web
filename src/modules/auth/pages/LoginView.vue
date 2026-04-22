@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-vue-next'
+import { Eye, EyeOff, LockKeyhole, User } from 'lucide-vue-next'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 import { setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
@@ -11,27 +11,27 @@ import LoadingOverlay from '@/shared/ui/LoadingOverlay.vue'
 const router = useRouter()
 const route = useRoute()
 
-const email = ref('')
+const login = ref('')
 const password = ref('')
 const remember = ref(true)
 const showPassword = ref(false)
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 
-const canSubmit = computed(() => email.value.trim() !== '' && password.value.trim() !== '')
+const canSubmit = computed(() => login.value.trim() !== '' && password.value.trim() !== '')
 
 const handleSubmit = async () => {
   errorMessage.value = ''
 
   if (!canSubmit.value) {
-    errorMessage.value = 'Vui lòng nhập email và mật khẩu.'
+    errorMessage.value = 'Vui lòng nhập tên đăng nhập hoặc email và mật khẩu.'
     return
   }
 
   isSubmitting.value = true
   try {
     const data = await authApi.login({
-      email: email.value.trim(),
+      login: login.value.trim(),
       password: password.value,
       remember: remember.value,
     })
@@ -99,18 +99,18 @@ const handleSubmit = async () => {
           <form class="space-y-4" @submit.prevent="handleSubmit">
             <div>
               <label class="mb-1.5 block text-xs font-medium tracking-normal text-tertiary-text"
-                >Email</label
+                >Tên đăng nhập hoặc email</label
               >
               <div class="relative">
-                <Mail
+                <User
                   class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary-text"
                 />
                 <input
-                  v-model="email"
+                  v-model="login"
                   data-testid="login-email"
-                  type="email"
-                  autocomplete="email"
-                  placeholder="admin@timemaster.vn"
+                  type="text"
+                  autocomplete="username"
+                  placeholder="EMP-0001 hoặc admin@timemaster.vn"
                   class="h-11 w-full rounded-lg border border-border-standard bg-surface pl-10 pr-3 text-sm text-primary-text outline-none transition-colors placeholder:text-tertiary-text focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/40"
                 />
               </div>
