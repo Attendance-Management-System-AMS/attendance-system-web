@@ -157,7 +157,7 @@ const formatDateRange = (from?: string, to?: string) => {
 
     <!-- Create Request Dialog -->
     <Dialog :open="isCreateModalOpen" @update:open="isCreateModalOpen = $event">
-      <DialogContent class="max-w-[calc(100vw-32px)] sm:max-w-[450px] rounded-lg p-0 overflow-hidden border-none shadow-2xl">
+      <DialogContent class="max-w-[calc(100vw-32px)] sm:max-w-112.5 rounded-lg p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader class="p-4 sm:p-6 bg-card border-b border-primary/10">
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -227,7 +227,7 @@ const formatDateRange = (from?: string, to?: string) => {
               v-model="newRequest.reason"
               data-testid="my-requests-reason"
               placeholder="Nhập lý do cụ thể..."
-              class="min-h-[80px] rounded-lg border-border-subtle bg-surface shadow-none resize-none focus:ring-1 focus:ring-primary text-primary-text font-medium"
+              class="min-h-20 rounded-lg border-border-subtle bg-surface shadow-none resize-none focus:ring-1 focus:ring-primary text-primary-text font-medium"
             />
           </div>
         </div>

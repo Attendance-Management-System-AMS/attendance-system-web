@@ -23,7 +23,7 @@ export interface Employee {
 
 export interface CreateEmployee {
   fullName: string
-  employeeCode: string
+  employeeCode?: string
   email: string
   gender?: string
   departmentId?: number

@@ -3,21 +3,28 @@ import FormCard from '@/shared/ui/FormCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Briefcase, Save, Shield, User } from 'lucide-vue-next'
+import { ArrowLeft, Briefcase, Save, User } from 'lucide-vue-next'
 import { useEmployees } from '@/modules/employees/composables/useEmployees'
 import { useDepartments } from '@/modules/departments/composables/useDepartments'
 import { usePositions } from '@/modules/positions/composables/usePositions'
 import type { CreateEmployee } from '@/modules/employees/types/employee.types'
 import type { Department } from '@/modules/departments/types/department.types'
 import type { Position } from '@/modules/positions/types/position.types'
+import type { Employee } from '@/modules/employees/types/employee.types'
 
 const router = useRouter()
-const { createEmployee } = useEmployees()
+const { createEmployee, employeesQuery: managersQuery } = useEmployees({
+  size: 200,
+  sort: 'fullName',
+  sortDir: 'asc',
+  status: 'ACTIVE',
+})
 const { departmentsQuery } = useDepartments()
 const { positionsQuery } = usePositions()
 
 const departments = computed<Department[]>(() => departmentsQuery.data.value?.content ?? [])
 const positions = computed<Position[]>(() => positionsQuery.data.value ?? [])
+const managers = computed<Employee[]>(() => managersQuery.data.value?.content ?? [])
 
 const filteredPositions = computed(() => {
   const deptId = form.departmentId
@@ -27,17 +34,12 @@ const filteredPositions = computed(() => {
 
 const form = reactive({
   fullName: '',
-  empCode: '',
-  nationalId: '',
-  phone: '',
+  gender: '',
   email: '',
-  address: '',
   departmentId: '',
   positionId: '',
-  shift: '',
+  managerId: '',
   joinDate: '',
-  username: '',
-  role: 'employee',
   isActive: true,
 })
 
@@ -53,11 +55,10 @@ function numericIdForApi(v: string): number | undefined {
   const n = Number(v)
   return Number.isFinite(n) ? n : undefined
 }
-const shifts = ['Ca sáng (08:00–17:30)', 'Ca chiều (13:00–22:00)', 'Ca đêm (22:00–06:00)']
-const roles = [
-  { label: 'Nhân viên', value: 'employee' },
-  { label: 'Quản lý', value: 'manager' },
-  { label: 'Quản trị viên', value: 'admin' },
+const genders = [
+  { label: 'Nam', value: 'MALE' },
+  { label: 'Nữ', value: 'FEMALE' },
+  { label: 'Khác', value: 'OTHER' },
 ]
 
 const inputClass =
@@ -67,29 +68,27 @@ const labelClass = 'block text-xs font-bold  tracking-normal text-secondary-text
 
 type FieldName =
   | 'fullName'
-  | 'empCode'
+  | 'gender'
   | 'email'
   | 'departmentId'
   | 'positionId'
-  | 'shift'
-  | 'username'
+  | 'managerId'
 type FieldErrors = Record<FieldName, string>
 
 const errors = reactive<FieldErrors>({
   fullName: '',
-  empCode: '',
+  gender: '',
   email: '',
   departmentId: '',
   positionId: '',
-  shift: '',
-  username: '',
+  managerId: '',
 })
 
 const submitMessage = ref('')
 
 const validateForm = () => {
   errors.fullName = form.fullName.trim() ? '' : 'Vui lòng nhập họ và tên'
-  errors.empCode = form.empCode.trim() ? '' : 'Vui lòng nhập mã nhân viên'
+  errors.gender = form.gender ? '' : 'Vui lòng chọn giới tính'
   errors.email = form.email.trim()
     ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())
       ? ''
@@ -97,8 +96,7 @@ const validateForm = () => {
     : 'Vui lòng nhập email'
   errors.departmentId = form.departmentId ? '' : 'Vui lòng chọn phòng ban'
   errors.positionId = form.positionId ? '' : 'Vui lòng chọn chức vụ'
-  errors.shift = form.shift ? '' : 'Vui lòng chọn ca làm việc'
-  errors.username = form.username.trim() ? '' : 'Vui lòng nhập tên đăng nhập'
+  errors.managerId = ''
 
   return Object.values(errors).every((value) => !value)
 }
@@ -117,10 +115,11 @@ const handleSubmit = async () => {
 
   const payload: CreateEmployee = {
     fullName: form.fullName.trim(),
-    employeeCode: form.empCode.trim(),
+    gender: form.gender || undefined,
     email: form.email.trim(),
     departmentId: numericIdForApi(form.departmentId),
     positionId: numericIdForApi(form.positionId),
+    managerId: numericIdForApi(form.managerId),
     status: form.isActive ? 'ACTIVE' : 'INACTIVE',
     joinDate: form.joinDate || undefined,
   }
@@ -149,224 +148,195 @@ const handleSubmit = async () => {
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="space-y-6">
       <div
         v-if="submitMessage"
-        :class="[
-          'col-span-3 rounded-lg border px-4 py-3 text-sm',
-          hasErrors
-            ? 'border-rose-200 bg-rose-50 text-rose-700'
-            : 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        ]"
+        :class="[hasErrors ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700', 'rounded-lg border px-4 py-3 text-sm']"
       >
         {{ submitMessage }}
       </div>
 
-      <!-- Left: Main form -->
-      <div class="col-span-2 space-y-6">
-        <!-- Personal info -->
-        <FormCard title="Thông tin cá nhân" :icon="User">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="col-span-2">
-              <label :class="labelClass">Họ và tên <span class="text-rose-500">*</span></label>
-              <input
-                v-model="form.fullName"
-                type="text"
-                placeholder="Nguyễn Văn A"
-                :class="[inputClass, errors.fullName && 'border-rose-400']"
-              />
-              <p v-if="errors.fullName" class="mt-1 text-xs text-rose-600">{{ errors.fullName }}</p>
-            </div>
-            <div>
-              <label :class="labelClass">Mã nhân viên <span class="text-rose-500">*</span></label>
-              <input
-                v-model="form.empCode"
-                type="text"
-                placeholder="NV001"
-                :class="[inputClass, errors.empCode && 'border-rose-400']"
-                class="font-mono"
-              />
-              <p v-if="errors.empCode" class="mt-1 text-xs text-rose-600">{{ errors.empCode }}</p>
-            </div>
-            <div>
-              <label :class="labelClass">Số CCCD</label>
-              <input
-                v-model="form.nationalId"
-                type="text"
-                placeholder="0XXXXXXXXX"
-                :class="inputClass"
-                class="font-mono"
-              />
-            </div>
-            <div>
-              <label :class="labelClass">Số điện thoại</label>
-              <input v-model="form.phone" type="tel" placeholder="0XXXXXXXXX" :class="inputClass" />
-            </div>
-            <div>
-              <label :class="labelClass">Email <span class="text-rose-500">*</span></label>
-              <input
-                v-model="form.email"
-                type="email"
-                placeholder="nhanvien@company.vn"
-                :class="[inputClass, errors.email && 'border-rose-400']"
-              />
-              <p v-if="errors.email" class="mt-1 text-xs text-rose-600">{{ errors.email }}</p>
-            </div>
-            <div class="col-span-2">
-              <label :class="labelClass">Địa chỉ</label>
-              <input
-                v-model="form.address"
-                type="text"
-                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-                :class="inputClass"
-              />
-            </div>
-          </div>
-        </FormCard>
-
-        <!-- Work info -->
-        <FormCard title="Thông tin công việc" :icon="Briefcase">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label :class="labelClass">Phòng ban <span class="text-rose-500">*</span></label>
-              <select
-                v-model="form.departmentId"
-                :disabled="departmentsQuery.isLoading.value"
-                :class="[inputClass, errors.departmentId && 'border-rose-400']"
-              >
-                <option value="" disabled>— Chọn phòng ban —</option>
-                <option v-for="d in departments" :key="d.id" :value="String(d.id)">
-                  {{ d.name }}
-                </option>
-              </select>
-              <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
-                Đang tải phòng ban…
-              </p>
-              <p v-else-if="errors.departmentId" class="mt-1 text-xs text-rose-600">
-                {{ errors.departmentId }}
-              </p>
-            </div>
-            <div>
-              <label :class="labelClass">Chức vụ <span class="text-rose-500">*</span></label>
-              <select
-                v-model="form.positionId"
-                :disabled="!form.departmentId || positionsQuery.isLoading.value"
-                :class="[inputClass, errors.positionId && 'border-rose-400']"
-              >
-                <option value="" disabled>
-                  {{ form.departmentId ? '— Chọn chức vụ —' : '— Chọn phòng ban trước —' }}
-                </option>
-                <option v-for="p in filteredPositions" :key="p.id" :value="String(p.id)">
-                  {{ p.name }}
-                </option>
-              </select>
-              <p v-if="positionsQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
-                Đang tải chức vụ…
-              </p>
-              <p v-else-if="errors.positionId" class="mt-1 text-xs text-rose-600">
-                {{ errors.positionId }}
-              </p>
-              <p
-                v-else-if="form.departmentId && !filteredPositions.length"
-                class="mt-1 text-xs text-amber-600"
-              >
-                Chưa có chức vụ cho phòng ban này. Hãy thêm chức vụ trong mục Chức vụ.
-              </p>
-            </div>
-            <div>
-              <label :class="labelClass">Ca làm việc <span class="text-rose-500">*</span></label>
-              <select v-model="form.shift" :class="[inputClass, errors.shift && 'border-rose-400']">
-                <option value="">-- Chọn ca --</option>
-                <option v-for="s in shifts" :key="s" :value="s">{{ s }}</option>
-              </select>
-              <p v-if="errors.shift" class="mt-1 text-xs text-rose-600">{{ errors.shift }}</p>
-            </div>
-            <div>
-              <label :class="labelClass">Ngày vào làm</label>
-              <input v-model="form.joinDate" type="date" :class="inputClass" />
-            </div>
-          </div>
-        </FormCard>
-      </div>
-
-      <!-- Right: Account + Actions -->
-      <div class="space-y-6">
-        <!-- Account & permissions -->
-        <FormCard title="Tài khoản & Phân quyền" :icon="Shield">
-          <div class="space-y-4">
-            <div>
-              <label :class="labelClass">Tên đăng nhập <span class="text-rose-500">*</span></label>
-              <input
-                v-model="form.username"
-                type="text"
-                placeholder="ten.dangnhap"
-                :class="[inputClass, errors.username && 'border-rose-400']"
-                class="font-mono"
-              />
-              <p v-if="errors.username" class="mt-1 text-xs text-rose-600">{{ errors.username }}</p>
-            </div>
-            <div>
-              <label :class="labelClass">Vai trò</label>
-              <select v-model="form.role" :class="inputClass">
-                <option v-for="r in roles" :key="r.value" :value="r.value">{{ r.label }}</option>
-              </select>
-            </div>
-            <div
-              class="flex items-center justify-between rounded-lg border border-border-standard bg-surface px-4 py-3 dark:border-border dark:bg-elevated"
-            >
-              <div>
-                <p class="text-sm font-medium text-primary-text dark:text-primary-text">
-                  Kích hoạt tài khoản
-                </p>
-                <p class="text-xs text-tertiary-text">Nhân viên có thể đăng nhập ngay</p>
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.75fr)_360px]">
+        <div class="space-y-6">
+          <FormCard title="Thông tin cá nhân" :icon="User">
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="md:col-span-2">
+                <label :class="labelClass">Họ và tên <span class="text-rose-500">*</span></label>
+                <input
+                  v-model="form.fullName"
+                  type="text"
+                  placeholder="Nguyễn Văn A"
+                  :class="[inputClass, errors.fullName && 'border-rose-400']"
+                />
+                <p v-if="errors.fullName" class="mt-1 text-xs text-rose-600">{{ errors.fullName }}</p>
               </div>
-              <button
-                type="button"
-                @click="form.isActive = !form.isActive"
-                :class="[
-                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
-                  form.isActive ? 'bg-primary' : 'bg-muted',
-                ]"
-              >
-                <span
-                  :class="[
-                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition-transform duration-200',
-                    form.isActive ? 'translate-x-5' : 'translate-x-0',
-                  ]"
-                ></span>
-              </button>
+              <div>
+                <label :class="labelClass">Giới tính <span class="text-rose-500">*</span></label>
+                <select v-model="form.gender" :class="[inputClass, errors.gender && 'border-rose-400']">
+                  <option value="" disabled>— Chọn giới tính —</option>
+                  <option v-for="gender in genders" :key="gender.value" :value="gender.value">
+                    {{ gender.label }}
+                  </option>
+                </select>
+                <p v-if="errors.gender" class="mt-1 text-xs text-rose-600">{{ errors.gender }}</p>
+              </div>
+              <div>
+                <label :class="labelClass">Ngày vào làm</label>
+                <input v-model="form.joinDate" type="date" :class="inputClass" />
+              </div>
+              <div class="md:col-span-2">
+                <label :class="labelClass">Email <span class="text-rose-500">*</span></label>
+                <input
+                  v-model="form.email"
+                  type="email"
+                  placeholder="nhanvien@company.vn"
+                  :class="[inputClass, errors.email && 'border-rose-400']"
+                />
+                <p v-if="errors.email" class="mt-1 text-xs text-rose-600">{{ errors.email }}</p>
+              </div>
             </div>
-          </div>
-        </FormCard>
+          </FormCard>
 
-        <!-- Action buttons -->
-        <div
-          class="rounded-lg border border-border-standard bg-card p-5 shadow-sm dark:border-border dark:bg-card space-y-3"
-        >
-          <button
-            @click="handleSubmit"
-            :disabled="isSubmitting"
-            :class="[
-              'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-colors dark:shadow-none',
-              isSubmitting
-                ? 'bg-primary cursor-not-allowed'
-                : 'bg-primary hover:bg-primary',
-            ]"
-          >
-            <Save class="h-4 w-4" />
-            {{ isSubmitting ? 'Đang lưu...' : 'Lưu nhân viên' }}
-          </button>
-          <button
-            @click="router.push('/employees')"
-            class="flex w-full items-center justify-center h-10 rounded-lg border border-border-standard text-sm font-medium text-secondary-text hover:bg-surface transition-colors"
-          >
-            Hủy bỏ
-          </button>
+          <FormCard title="Thông tin công việc" :icon="Briefcase">
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label :class="labelClass">Phòng ban <span class="text-rose-500">*</span></label>
+                <select
+                  v-model="form.departmentId"
+                  :disabled="departmentsQuery.isLoading.value"
+                  :class="[inputClass, errors.departmentId && 'border-rose-400']"
+                >
+                  <option value="" disabled>— Chọn phòng ban —</option>
+                  <option v-for="d in departments" :key="d.id" :value="String(d.id)">
+                    {{ d.name }}
+                  </option>
+                </select>
+                <p v-if="departmentsQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
+                  Đang tải phòng ban…
+                </p>
+                <p v-else-if="errors.departmentId" class="mt-1 text-xs text-rose-600">
+                  {{ errors.departmentId }}
+                </p>
+              </div>
+              <div>
+                <label :class="labelClass">Chức vụ <span class="text-rose-500">*</span></label>
+                <select
+                  v-model="form.positionId"
+                  :disabled="!form.departmentId || positionsQuery.isLoading.value"
+                  :class="[inputClass, errors.positionId && 'border-rose-400']"
+                >
+                  <option value="" disabled>
+                    {{ form.departmentId ? '— Chọn chức vụ —' : '— Chọn phòng ban trước —' }}
+                  </option>
+                  <option v-for="p in filteredPositions" :key="p.id" :value="String(p.id)">
+                    {{ p.name }}
+                  </option>
+                </select>
+                <p v-if="positionsQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
+                  Đang tải chức vụ…
+                </p>
+                <p v-else-if="errors.positionId" class="mt-1 text-xs text-rose-600">
+                  {{ errors.positionId }}
+                </p>
+                <p
+                  v-else-if="form.departmentId && !filteredPositions.length"
+                  class="mt-1 text-xs text-amber-600"
+                >
+                  Chưa có chức vụ cho phòng ban này. Hãy thêm chức vụ trong mục Chức vụ.
+                </p>
+              </div>
+              <div class="md:col-span-2">
+                <label :class="labelClass">Quản lý trực tiếp</label>
+                <select
+                  v-model="form.managerId"
+                  :disabled="managersQuery.isLoading.value"
+                  :class="inputClass"
+                >
+                  <option value="">— Không chọn —</option>
+                  <option v-for="manager in managers" :key="manager.id" :value="String(manager.id)">
+                    {{ manager.fullName }} · {{ manager.employeeCode }}
+                  </option>
+                </select>
+                <p v-if="managersQuery.isLoading.value" class="mt-1 text-xs text-secondary-text">
+                  Đang tải danh sách quản lý…
+                </p>
+              </div>
+            </div>
+          </FormCard>
+        </div>
 
-          <div class="border-t border-border-subtle dark:border-border pt-3">
-            <p class="text-[10px] text-tertiary-text text-center leading-relaxed">
-              Nhân viên sẽ nhận email thông báo tài khoản sau khi được tạo thành công
-            </p>
+        <div class="space-y-6 xl:sticky xl:top-6 self-start">
+          <FormCard title="Thiết lập nhanh" :icon="Save">
+            <div class="space-y-4">
+              <div class="rounded-xl border border-border-standard bg-surface/70 px-4 py-4 dark:border-border dark:bg-elevated/70">
+                <p class="text-xs font-bold text-secondary-text">Mã nhân viên</p>
+                <p class="mt-1 font-mono text-sm text-primary-text">Tự động tạo sau khi lưu</p>
+              </div>
+              <div class="rounded-xl border border-border-standard bg-surface/70 px-4 py-4 dark:border-border dark:bg-elevated/70">
+                <p class="text-xs font-bold text-secondary-text">Tài khoản đăng nhập</p>
+                <p class="mt-1 text-sm text-primary-text">Tự động tạo cùng lúc với nhân viên</p>
+                <p class="mt-1 text-xs text-tertiary-text">
+                  Username sẽ là mã nhân viên. Mật khẩu mặc định là <code>employeeCode + @123</code>.
+                </p>
+              </div>
+              <div
+                class="flex items-center justify-between rounded-xl border border-border-standard bg-surface px-4 py-4 dark:border-border dark:bg-elevated"
+              >
+                <div>
+                  <p class="text-sm font-medium text-primary-text dark:text-primary-text">
+                    Trạng thái nhân viên
+                  </p>
+                  <p class="text-xs text-tertiary-text">
+                    {{ form.isActive ? 'ACTIVE' : 'INACTIVE' }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  @click="form.isActive = !form.isActive"
+                  :class="[
+                    'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
+                    form.isActive ? 'bg-primary' : 'bg-muted',
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition-transform duration-200',
+                      form.isActive ? 'translate-x-5' : 'translate-x-0',
+                    ]"
+                  ></span>
+                </button>
+              </div>
+            </div>
+          </FormCard>
+
+          <div
+            class="space-y-4 rounded-xl border border-border-standard bg-card p-5 shadow-sm dark:border-border dark:bg-card"
+          >
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-primary-text">Lưu hồ sơ</p>
+              <p class="text-xs leading-relaxed text-tertiary-text">
+                Sau khi lưu, hệ thống sẽ tạo hồ sơ nhân viên và cấp tài khoản đăng nhập mặc định.
+              </p>
+            </div>
+            <button
+              @click="handleSubmit"
+              :disabled="isSubmitting"
+              :class="[
+                'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-white shadow-lg shadow-primary/20 transition-colors dark:shadow-none',
+                isSubmitting
+                  ? 'bg-primary cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary',
+              ]"
+            >
+              <Save class="h-4 w-4" />
+              {{ isSubmitting ? 'Đang lưu...' : 'Lưu nhân viên' }}
+            </button>
+            <button
+              @click="router.push('/employees')"
+              class="flex w-full items-center justify-center h-10 rounded-lg border border-border-standard text-sm font-medium text-secondary-text hover:bg-surface transition-colors"
+            >
+              Hủy bỏ
+            </button>
           </div>
         </div>
       </div>
