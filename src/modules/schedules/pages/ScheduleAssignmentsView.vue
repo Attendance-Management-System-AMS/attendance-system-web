@@ -43,6 +43,15 @@ const initialWeeklyShifts = () => ({
   1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: ''
 })
 
+const formatDateForInput = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const todayInput = formatDateForInput(new Date())
+
 const assignmentForm = reactive({
   mode: 'bulk' as 'bulk' | 'template',
   employeeIds: [] as number[],
@@ -50,7 +59,7 @@ const assignmentForm = reactive({
   shiftsPerDay: initialWeeklyShifts() as Record<number, string>,
   templateId: '',
   daysOfWeek: [] as number[],
-  effectiveFrom: new Date().toISOString().split('T')[0],
+  effectiveFrom: todayInput,
 })
 
 const employeeSearch = ref('')
@@ -258,7 +267,7 @@ const resetAssignmentForm = () => {
   assignmentForm.shiftsPerDay = initialWeeklyShifts()
   assignmentForm.templateId = ''
   assignmentForm.daysOfWeek = []
-  assignmentForm.effectiveFrom = new Date().toISOString().split('T')[0]
+  assignmentForm.effectiveFrom = todayInput
   employeeSearch.value = ''
 }
 
@@ -274,6 +283,10 @@ const submitAssignment = async () => {
   const effectiveFrom = assignmentForm.effectiveFrom
   if (!effectiveFrom) {
     assignmentError.value = 'Vui lòng chọn ngày hiệu lực.'
+    return
+  }
+  if (effectiveFrom < todayInput) {
+    assignmentError.value = 'Ngày hiệu lực không được ở quá khứ.'
     return
   }
 
@@ -545,7 +558,7 @@ const confirmDeleteSchedule = async () => {
                       <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text block">2. Ngày hiệu lực</label>
                       <div class="relative">
                         <CalendarIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tertiary-text" />
-                        <input v-model="assignmentForm.effectiveFrom" type="date"
+                        <input v-model="assignmentForm.effectiveFrom" type="date" :min="todayInput"
                           class="h-11 w-full pl-10 rounded-lg border border-border-subtle bg-surface text-sm font-semibold text-primary-text focus:ring-1 focus:ring-primary outline-none" />
                       </div>
                     </div>
@@ -638,16 +651,7 @@ const confirmDeleteSchedule = async () => {
                     <option v-for="tpl in templatesQuery.data.value" :key="tpl.id" :value="String(tpl.id)">
                       {{ tpl.name }} ({{ tpl.items.length }} ngày phân ca)
                     </option>
-                  </select>
-                  <div v-if="assignmentForm.templateId" class="p-5 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center gap-4">
-                    <div class="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
-                      <Star class="h-5 w-5 fill-emerald-600" />
-                    </div>
-                    <div>
-                      <p class="text-sm font-semibold text-emerald-900 ">Đã kích hoạt chế độ áp dụng mẫu lịch</p>
-                      <p class="text-[10px] font-semibold text-emerald-600/70  tracking-normal mt-1">Lịch biểu sẽ tự động đồng bộ theo cấu hình chuyên gia.</p>
-                    </div>
-                  </div>
+                  </select>                 
                 </div>
               </div>
 

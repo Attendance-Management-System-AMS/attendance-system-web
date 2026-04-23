@@ -74,6 +74,7 @@ const handleSubmit = async () => {
   <div
     class="relative min-h-screen overflow-hidden bg-background text-foreground"
   >
+    <LoadingOverlay :show="isSubmitting" text="Đang đăng nhập..." full-screen />
     <div
       class="relative z-10 mx-auto flex min-h-screen w-full items-center justify-center px-4 py-8 sm:px-6 lg:px-8"
     >
@@ -81,8 +82,6 @@ const handleSubmit = async () => {
         <section
           class="relative overflow-hidden rounded-lg border border-border-standard bg-card p-6 text-card-foreground shadow-xl sm:p-8"
         >
-          <!-- Loading Overlay -->
-          <LoadingOverlay :show="isSubmitting" />
 
           <div class="mb-6">
             <p class="text-xs font-medium tracking-normal text-primary">

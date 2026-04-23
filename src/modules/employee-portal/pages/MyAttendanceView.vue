@@ -62,6 +62,29 @@ const nextMonth = () => {
   } else currentMonth.value++
 }
 
+const getAttendanceTimestamp = (logEntry: Attendance | undefined, key: 'checkIn' | 'checkOut') => {
+  if (!logEntry) return null
+  return key === 'checkIn'
+    ? logEntry.checkIn || logEntry.checkInTime || logEntry.check_in_time || null
+    : logEntry.checkOut || logEntry.checkOutTime || logEntry.check_out_time || null
+}
+
+const resolveAttendanceStatus = (
+  logEntry: Attendance | undefined,
+  dateStr: string,
+  todayStr: string,
+) => {
+  if (!logEntry) return ''
+
+  const checkInValue = getAttendanceTimestamp(logEntry, 'checkIn')
+  const checkOutValue = getAttendanceTimestamp(logEntry, 'checkOut')
+  if (dateStr < todayStr && checkInValue && !checkOutValue) {
+    return 'MISSING_CHECKOUT'
+  }
+
+  return logEntry.status || ''
+}
+
 const logs = computed(() => {
   const apiData = (historyQuery.data.value?.content || []) as Attendance[]
   const scheduleData = (scheduleQuery.data.value || []) as EmployeeScheduleResponse[]
@@ -78,12 +101,8 @@ const logs = computed(() => {
       return itemDate === dateStr
     })
 
-    const checkInValue = logEntry
-      ? logEntry.checkIn || logEntry.checkInTime || logEntry.check_in_time
-      : null
-    const checkOutValue = logEntry
-      ? logEntry.checkOut || logEntry.checkOutTime || logEntry.check_out_time
-      : null
+    const checkInValue = getAttendanceTimestamp(logEntry, 'checkIn')
+    const checkOutValue = getAttendanceTimestamp(logEntry, 'checkOut')
 
     const checkInDate = checkInValue ? new Date(checkInValue) : null
     const checkOutDate = checkOutValue ? new Date(checkOutValue) : null
@@ -123,7 +142,7 @@ const logs = computed(() => {
             hour12: false,
           }).format(checkOutDate)
         : '—',
-      status: logEntry?.status || '',
+      status: resolveAttendanceStatus(logEntry, dateStr, todayStr),
       lateMinutes: logEntry?.lateMinutes || 0,
       isToday: dateStr === todayStr,
     })
@@ -134,11 +153,17 @@ const logs = computed(() => {
 
 const summary = computed(() => {
   const data = (historyQuery.data.value?.content || []) as Attendance[]
+  const todayStr = formatDateStr(new Date())
+  const statusOf = (logEntry: Attendance) => {
+    const dateStr = logEntry.workDate ? formatDateStr(new Date(logEntry.workDate)) : ''
+    return resolveAttendanceStatus(logEntry, dateStr, todayStr)
+  }
+
   return {
-    present: data.filter((l) => l.status === 'PRESENT').length,
-    late: data.filter((l) => l.status === 'LATE').length,
-    absent: data.filter((l) => l.status === 'ABSENT').length,
-    incomplete: data.filter((l) => l.status === 'EARLY_LEAVE').length,
+    present: data.filter((l) => statusOf(l) === 'PRESENT').length,
+    late: data.filter((l) => statusOf(l) === 'LATE').length,
+    absent: data.filter((l) => statusOf(l) === 'ABSENT').length,
+    incomplete: data.filter((l) => ['EARLY_LEAVE', 'MISSING_CHECKOUT'].includes(statusOf(l))).length,
   }
 })
 

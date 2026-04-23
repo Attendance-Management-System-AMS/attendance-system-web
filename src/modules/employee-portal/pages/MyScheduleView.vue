@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { useMyAttendance } from '@/modules/attendance/composables/useMyAttendance'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 
 const today = new Date()
 const currentMonth = ref(today.getMonth())
@@ -31,28 +32,65 @@ const nextMonth = () => {
 
 const { scheduleQuery } = useMyAttendance()
 
+const scheduleErrorMessage = computed(() =>
+  scheduleQuery.isError.value
+    ? getApiErrorMessage(
+        scheduleQuery.error.value,
+        'Không tải được lịch làm việc của bạn. Kiểm tra lại liên kết tài khoản nhân viên.',
+      )
+    : '',
+)
+
 interface UserShift {
+  id: number
+  dayOfWeek: number
+  effectiveFrom: string
   name: string
   start: string
   end: string
   short: string
 }
 
-// Map dayOfWeek (1-7, 8=CN) to shift info from API
-const scheduleMapByDay = computed(() => {
-  const map: Record<number, UserShift> = {}
-  if (!scheduleQuery.data.value) return map
-
-  scheduleQuery.data.value.forEach(item => {
-    map[item.dayOfWeek] = {
+const normalizedSchedules = computed<UserShift[]>(() =>
+  (scheduleQuery.data.value ?? [])
+    .filter(
+      (item) =>
+        item.isActive &&
+        item.dayOfWeek != null &&
+        item.effectiveFrom &&
+        item.shiftName &&
+        item.startTime &&
+        item.endTime,
+    )
+    .map((item) => ({
+      id: item.id,
+      dayOfWeek: item.dayOfWeek,
+      effectiveFrom: item.effectiveFrom,
       name: item.shiftName,
       start: item.startTime.substring(0, 5),
       end: item.endTime.substring(0, 5),
-      short: item.shiftName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2)
-    }
-  })
-  return map
-})
+      short: item.shiftName
+        .split(' ')
+        .map((word) => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2),
+    })),
+)
+
+function toDateOnly(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year ?? today.getFullYear(), (month ?? 1) - 1, day ?? 1)
+}
+
+function resolveScheduleForDate(dateObj: Date) {
+  const normalizedDow = dateObj.getDay() === 0 ? 7 : dateObj.getDay()
+
+  return normalizedSchedules.value
+    .filter((item) => item.dayOfWeek === normalizedDow)
+    .filter((item) => toDateOnly(item.effectiveFrom).getTime() <= dateObj.getTime())
+    .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))[0] ?? null
+}
 
 const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
@@ -86,10 +124,26 @@ const calendarDays = computed(() => {
       key,
       isToday: key === todayKey,
       isWeekend: dateObj.getDay() === 0 || dateObj.getDay() === 6,
-      schedule: scheduleMapByDay.value[normalizedDow] ?? null,
+      schedule: resolveScheduleForDate(dateObj),
     })
   }
   return days
+})
+
+const visibleSchedules = computed(() => {
+  const monthEnd = new Date(currentYear.value, currentMonth.value + 1, 0)
+  const schedulesByDay = new Map<number, UserShift>()
+
+  normalizedSchedules.value
+    .filter((item) => toDateOnly(item.effectiveFrom).getTime() <= monthEnd.getTime())
+    .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))
+    .forEach((item) => {
+      if (!schedulesByDay.has(item.dayOfWeek)) {
+        schedulesByDay.set(item.dayOfWeek, item)
+      }
+    })
+
+  return Array.from(schedulesByDay.values()).sort((left, right) => left.dayOfWeek - right.dayOfWeek)
 })
 
 const selectedKey = ref<string | null>(todayKey)
@@ -114,7 +168,7 @@ const selectDay = (day: CalendarDay) => {
         <Button variant="ghost" size="icon" @click="prevMonth" class="h-8 w-8">
           <ChevronLeft class="h-4 w-4" />
         </Button>
-        <div class="px-4 text-[11px] font-semibold  tracking-normal text-primary-text dark:text-primary-text min-w-[140px] text-center">
+        <div class="px-4 text-[11px] font-semibold  tracking-normal text-primary-text dark:text-primary-text min-w-35 text-center">
           {{ monthLabel }}
         </div>
         <Button variant="ghost" size="icon" @click="nextMonth" class="h-8 w-8">
@@ -126,6 +180,16 @@ const selectDay = (day: CalendarDay) => {
     <div v-if="scheduleQuery.isLoading.value" class="flex h-64 items-center justify-center">
        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
+
+    <Card v-else-if="scheduleQuery.isError.value" class="border-rose-200 bg-rose-50 shadow-none dark:border-rose-900/40 dark:bg-rose-950/20">
+      <CardContent class="py-10 text-center">
+        <CalendarIcon class="mx-auto mb-3 h-8 w-8 text-rose-500" />
+        <p class="text-sm font-semibold text-rose-700 dark:text-rose-300">Không tải được lịch làm việc</p>
+        <p class="mt-2 text-sm text-rose-600 dark:text-rose-400">
+          {{ scheduleErrorMessage }}
+        </p>
+      </CardContent>
+    </Card>
 
     <div v-else class="grid lg:grid-cols-3 gap-6">
       <!-- Calendar Grid -->
@@ -193,15 +257,15 @@ const selectDay = (day: CalendarDay) => {
             <CardTitle class="text-[10px] font-bold  tracking-normal text-tertiary-text">Ca làm việc của bạn</CardTitle>
           </CardHeader>
           <CardContent class="space-y-3">
-             <div v-if="scheduleQuery.data.value?.length === 0" class="text-xs text-tertiary-text italic">Chưa có dữ liệu ca làm việc</div>
-             <div v-for="item in scheduleQuery.data.value" :key="item.id" class="flex items-center justify-between text-xs font-bold">
+             <div v-if="visibleSchedules.length === 0" class="text-xs text-tertiary-text italic">Chưa có dữ liệu ca làm việc trong tháng này</div>
+             <div v-for="item in visibleSchedules" :key="item.id" class="flex items-center justify-between text-xs font-bold">
                <div class="flex items-center gap-3">
                  <Badge class="h-4 w-10 bg-primary/10 text-primary border-none p-0 flex justify-center text-[8px]">
-                   {{ item.shiftName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) }}
+                   {{ item.short }}
                  </Badge>
-                 <span class="text-secondary-text dark:text-tertiary-text">{{ item.shiftName }}</span>
+                 <span class="text-secondary-text dark:text-tertiary-text">{{ item.name }}</span>
                </div>
-               <span class="text-tertiary-text font-mono">{{ item.startTime.substring(0, 5) }}-{{ item.endTime.substring(0, 5) }}</span>
+               <span class="text-tertiary-text font-mono">{{ item.start }}-{{ item.end }}</span>
              </div>
           </CardContent>
         </Card>

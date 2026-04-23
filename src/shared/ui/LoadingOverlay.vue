@@ -30,9 +30,9 @@ const props = withDefaults(defineProps<Props>(), {
     <div
       v-if="props.show"
       :class="[
-        props.fullScreen ? 'fixed inset-0 z-100' : 'absolute inset-0 z-50 rounded-inherit',
+        props.fullScreen ? 'fixed inset-0 z-[100]' : 'absolute inset-0 z-50 rounded-inherit',
         props.blur ? 'backdrop-blur-sm' : '',
-        props.transparent ? 'bg-background/40' : 'bg-background/80',
+        props.transparent ? 'bg-background/40' : props.fullScreen ? 'bg-background' : 'bg-background/80',
         'flex flex-col items-center justify-center p-4 text-center'
       ]"
     >
