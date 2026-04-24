@@ -2,10 +2,15 @@ export interface Schedule {
   id: number;
   employeeId: number;
   shiftId: number;
+  employeeName?: string;
+  shiftName?: string;
+  startTime?: string;
+  endTime?: string;
   date?: string;
   dayOfWeek?: number;
   isActive?: boolean;
   effectiveFrom?: string;
+  effectiveTo?: string | null;
   note?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -23,7 +28,7 @@ export interface CreateSchedule {
 export interface UpdateScheduleRequest {
   shiftId: number;
   force?: boolean;
-}
+  effectiveTo?: string | null;}
 
 export interface ScheduleTemplateItem {
   id?: number;
@@ -51,6 +56,8 @@ export interface ApplyTemplateRequest {
   employeeIds: number[];
   templateId: number;
   effectiveFrom: string;
+  effectiveTo?: string | null;
+  force?: boolean;
 }
 
 export interface BulkAssignRequest {
@@ -58,6 +65,8 @@ export interface BulkAssignRequest {
   shiftId: number;
   daysOfWeek: number[];
   effectiveFrom: string;
+  effectiveTo?: string | null;
+  force?: boolean;
 }
 
 export interface EmployeeScheduleResponse {
@@ -70,4 +79,5 @@ export interface EmployeeScheduleResponse {
   dayOfWeek: number;
   isActive: boolean;
   effectiveFrom: string;
+  effectiveTo?: string | null;
 }

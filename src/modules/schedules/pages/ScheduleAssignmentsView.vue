@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { ArrowLeft, CalendarRange, LayoutGrid, Trash2, Check, X, Calendar as CalendarIcon, Info, Star } from 'lucide-vue-next'
+import { ArrowLeft, CalendarRange, LayoutGrid, Trash2, Check, X, Calendar as CalendarIcon, Info, Loader2 } from 'lucide-vue-next'
 import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
 import FormCard from '@/shared/ui/FormCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -62,6 +62,7 @@ const assignmentForm = reactive({
   templateId: '',
   daysOfWeek: [] as number[],
   effectiveFrom: todayInput,
+  effectiveTo: '',
 })
 
 const employeeSearch = ref('')
@@ -207,6 +208,7 @@ const assignedSchedulesQuery = useQuery<ScheduleSearchData>({
     return normalizeScheduleSearchData(response.data?.result)
   },
   staleTime: 1000 * 30,
+  refetchOnMount: 'always',
 })
 
 watch([scheduleEmployeeFilter, scheduleShiftFilter, scheduleDayFilter, scheduleSearch], () => {
@@ -262,6 +264,17 @@ const fmtDateInput = (value?: string): string => {
   return trimmed.slice(0, 10)
 }
 
+const formatEffectiveRange = (schedule: Schedule) => {
+  const from = fmtDateInput(schedule.effectiveFrom)
+  const to = fmtDateInput(schedule.effectiveTo ?? undefined)
+  if (to === '—') return `Từ ${from}`
+  return `${from} → ${to}`
+}
+
+const isSubmittingAssignment = computed(
+  () => bulkAssign.isPending.value || applyTemplate.isPending.value,
+)
+
 const resetAssignmentForm = () => {
   assignmentForm.mode = 'bulk'
   assignmentForm.employeeIds = []
@@ -270,6 +283,7 @@ const resetAssignmentForm = () => {
   assignmentForm.templateId = ''
   assignmentForm.daysOfWeek = []
   assignmentForm.effectiveFrom = todayInput
+  assignmentForm.effectiveTo = ''
   employeeSearch.value = ''
 }
 
@@ -291,6 +305,10 @@ const submitAssignment = async () => {
     assignmentError.value = 'Ngày hiệu lực không được ở quá khứ.'
     return
   }
+  if (assignmentForm.effectiveTo && assignmentForm.effectiveTo < effectiveFrom) {
+    assignmentError.value = 'Ngày kết thúc không được nhỏ hơn ngày hiệu lực.'
+    return
+  }
 
   isSubmitting.value = true
   const empCount = assignmentForm.employeeIds.length
@@ -307,6 +325,8 @@ const submitAssignment = async () => {
         employeeIds: assignmentForm.employeeIds,
         templateId: Number(assignmentForm.templateId),
         effectiveFrom: effectiveFrom,
+        effectiveTo: assignmentForm.effectiveTo || undefined,
+        force: true,
       })
     } else {
       const groups: Record<string, number[]> = {}
@@ -334,6 +354,8 @@ const submitAssignment = async () => {
           shiftId: Number(shiftId),
           daysOfWeek: days,
           effectiveFrom: effectiveFrom,
+          effectiveTo: assignmentForm.effectiveTo || undefined,
+          force: true,
         })
       )
 
@@ -454,7 +476,7 @@ const confirmDeleteSchedule = async () => {
               <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Nhân viên</th>
               <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Ca làm việc</th>
               <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Thứ</th>
-              <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Hiệu lực</th>
+              <th class="px-4 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text">Khoảng hiệu lực</th>
               <th class="px-4 py-3 text-center text-[11px] font-semibold  tracking-normal text-secondary-text">Trạng thái</th>
               <th class="px-4 py-3 text-right text-[11px] font-semibold  tracking-normal text-secondary-text">Thao tác</th>
             </tr>
@@ -482,7 +504,7 @@ const confirmDeleteSchedule = async () => {
                   {{ formatDayOfWeekLabel(schedule.dayOfWeek) }}
                 </Badge>
               </td>
-              <td class="px-4 py-3 text-xs font-semibold text-secondary-text ">{{ fmtDateInput(schedule.effectiveFrom) }}</td>
+              <td class="px-4 py-3 text-xs font-semibold text-secondary-text ">{{ formatEffectiveRange(schedule) }}</td>
               <td class="px-4 py-3 text-center">
                 <span :class="[
                   'inline-flex h-6 items-center rounded px-2 text-[9px] font-semibold  tracking-normal',
@@ -549,7 +571,11 @@ const confirmDeleteSchedule = async () => {
                     <p class="text-[10px] font-semibold text-tertiary-text  tracking-normal mt-0.5">Phân công ca làm chi tiết theo từng thứ trong tuần</p>
                   </div>
                 </div>
-                <button @click="isAssignDialogOpen = false" class="h-8 w-8 flex items-center justify-center rounded-lg text-tertiary-text hover:text-secondary-text hover:bg-surface transition-all">
+                <button
+                  @click="!isSubmittingAssignment && (isAssignDialogOpen = false)"
+                  :disabled="isSubmittingAssignment"
+                  class="h-8 w-8 flex items-center justify-center rounded-lg text-tertiary-text hover:text-secondary-text hover:bg-surface transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                >
                   <X class="h-5 w-5" />
                 </button>
               </div>
@@ -599,12 +625,24 @@ const confirmDeleteSchedule = async () => {
                     </div>
 
                     <div class="space-y-3">
-                      <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text block">2. Ngày hiệu lực</label>
+                      <label class="text-[11px] font-semibold  tracking-normal text-tertiary-text block">2. Khoảng hiệu lực</label>
                       <div class="relative">
                         <CalendarIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tertiary-text" />
                         <input v-model="assignmentForm.effectiveFrom" type="date" :min="todayInput"
                           class="h-11 w-full pl-10 rounded-lg border border-border-subtle bg-surface text-sm font-semibold text-primary-text focus:ring-1 focus:ring-primary outline-none" />
                       </div>
+                      <div class="relative">
+                        <CalendarIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-tertiary-text" />
+                        <input
+                          v-model="assignmentForm.effectiveTo"
+                          type="date"
+                          :min="assignmentForm.effectiveFrom || todayInput"
+                          class="h-11 w-full pl-10 rounded-lg border border-border-subtle bg-surface text-sm font-semibold text-primary-text focus:ring-1 focus:ring-primary outline-none"
+                        />
+                      </div>
+                      <p class="text-[10px] font-semibold text-tertiary-text tracking-normal">
+                        Để trống ngày kết thúc nếu lịch có hiệu lực vô thời hạn.
+                      </p>
                     </div>
                   </div>
 

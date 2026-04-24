@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { clearAuthToken, isAuthenticated, setAuthTokens } from '@/shared/auth/token'
+import { isAuthenticated, setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
 import { useAuth, type UserRole } from '@/modules/auth/composables/useAuth'
+import { resetAuthSession } from '@/shared/auth/session'
 
 // Route nghiệp vụ nằm trong chính module để dễ lần theo chức năng.
 import attendance from '@/modules/attendance/attendance.routes'
@@ -76,7 +77,7 @@ router.beforeEach(async (to) => {
         throw new Error('No token')
       }
     } catch {
-      clearAuthToken()
+      resetAuthSession()
       return { name: 'login', query: { redirect: to.fullPath } }
     }
   }
@@ -112,6 +113,9 @@ router.beforeEach(async (to) => {
           setUser(null)
           if (!isLoginRoute) return { name: 'login' }
         }
+      } catch {
+        resetAuthSession()
+        if (!isLoginRoute) return { name: 'login' }
       }
       // Lỗi khác (network, server) → không logout, user vẫn giữ session
     }

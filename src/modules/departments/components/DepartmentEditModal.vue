@@ -15,6 +15,8 @@ import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 const props = defineProps<{
     open: boolean
     department: Department | null
+    isSubmitting?: boolean
+    submitError?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -30,7 +32,6 @@ const emit = defineEmits<{
 const name = ref('')
 const description = ref('')
 const status = ref<'ACTIVE' | 'INACTIVE'>('ACTIVE')
-const loading = ref(false)
 const error = ref<string | null>(null)
 
 watchEffect(() => {
@@ -41,7 +42,7 @@ watchEffect(() => {
     }
 })
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
     if (!name.value.trim()) {
         error.value = 'Tên phòng ban là bắt buộc'
         return
@@ -49,7 +50,6 @@ const handleSubmit = async () => {
 
     if (!props.department?.id) return
 
-    loading.value = true
     error.value = null
 
     emit('updated', {
@@ -119,21 +119,21 @@ const handleClose = () => {
                         </select>
                     </div>
 
-                    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+                    <p v-if="error || submitError" class="text-sm text-red-600">{{ error || submitError }}</p>
 
                     <div class="mt-6 flex justify-end gap-3">
                         <DialogClose as-child>
                             <button type="button"
                                 class="rounded-lg border border-border-standard px-4 py-2 text-sm font-medium text-primary-text hover:bg-surface dark:border-border dark:text-tertiary-text dark:hover:bg-elevated"
-                                :disabled="loading">
+                                :disabled="isSubmitting">
                                 Hủy
                             </button>
                         </DialogClose>
 
                         <button type="submit"
                             class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary disabled:opacity-50"
-                            :disabled="loading">
-                            {{ loading ? 'Đang cập nhật...' : 'Cập nhật' }}
+                            :disabled="isSubmitting">
+                            {{ isSubmitting ? 'Đang cập nhật...' : 'Cập nhật' }}
                         </button>
                     </div>
                 </form>

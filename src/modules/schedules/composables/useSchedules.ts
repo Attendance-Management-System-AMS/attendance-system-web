@@ -67,10 +67,11 @@ export function useSchedules(
         : await scheduleApi.search(queryParams)
       return normalizeScheduleListResult(response.data?.result)
     },
-    // Luôn refetch khi component mount lại (ví dụ navigate từ trang assignments về)
+
     staleTime: 0,
     gcTime: 1000 * 60 * 10,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   // Mutation tạo schedule

@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useDepartments } from '@/modules/departments/composables/useDepartments'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import SearchToolbar from '@/shared/ui/SearchToolbar.vue'
 import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
@@ -58,6 +59,18 @@ const isEditModalOpen = ref(false)
 const editTarget = ref<Department | null>(null)
 const deleteDialog = ref(false)
 const deleteTarget = ref<Department | null>(null)
+const createError = ref<string | null>(null)
+const editError = ref<string | null>(null)
+
+const handleCreated = async (data: { name: string; description: string }) => {
+  createError.value = null
+  try {
+    await createDepartment.mutateAsync(data)
+    isCreateModalOpen.value = false
+  } catch (err) {
+    createError.value = getApiErrorMessage(err, 'Không thể tạo phòng ban.')
+  }
+}
 
 const handleCreated = (payload: {
   data: { name: string; description: string }
@@ -78,19 +91,21 @@ const handleEdit = (id: string | number) => {
   }
 }
 
-const handleUpdated = (payload: {
-  id: string | number
-  data: Partial<Department>
-  onSuccess: () => void
-  onError: (err: unknown) => void
-}) => {
-  updateDepartment.mutate(
-    { id: String(payload.id), data: payload.data },
-    {
-      onSuccess: () => payload.onSuccess(),
-      onError: (err) => payload.onError(err),
-    },
-  )
+const handleUpdated = async (id: string | number, data: Partial<Department>) => {
+  editError.value = null
+  try {
+    await updateDepartment.mutateAsync({ id: String(id), data })
+    isEditModalOpen.value = false
+    editTarget.value = null
+  } catch (err) {
+    editError.value = getApiErrorMessage(err, 'Không thể cập nhật phòng ban.')
+  }
+}
+
+const handleCloseEditModal = () => {
+  isEditModalOpen.value = false
+  editError.value = null
+  editTarget.value = null
 }
 
 const handleDelete = (id: string | number) => {
@@ -190,14 +205,18 @@ const columns = [
     <!-- Modals -->
     <DepartmentCreateModal
       :open="isCreateModalOpen"
-      @close="isCreateModalOpen = false"
+      :is-submitting="createDepartment.isPending.value"
+      :submit-error="createError"
+      @close="handleCloseCreateModal"
       @created="handleCreated"
     />
 
     <DepartmentEditModal
       :open="isEditModalOpen"
       :department="editTarget"
-      @close="isEditModalOpen = false"
+      :is-submitting="updateDepartment.isPending.value"
+      :submit-error="editError"
+      @close="handleCloseEditModal"
       @updated="handleUpdated"
     />
 

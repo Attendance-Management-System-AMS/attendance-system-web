@@ -19,6 +19,10 @@ export interface LoginResult {
 
 export type RefreshResult = LoginResult
 
+export interface LogoutRequest {
+    refreshToken?: string | null
+}
+
 export function resolveAuthToken(result?: LoginResult | RefreshResult | null): string | undefined {
     return result?.token || result?.accessToken || result?.jwt
 }
@@ -35,6 +39,8 @@ export const authApi = {
         authHttp.post<ApiResponse<RefreshResult>>('/auth/refresh', {
             refreshToken: getRefreshToken(),
         }).then((res) => res.data),
+    logout: (payload?: LogoutRequest) =>
+        authHttp.post<ApiResponse<string>>('/auth/logout', payload ?? {}).then((res) => res.data),
     getProfile: () =>
         authHttp.get<ApiResponse<UserProfile>>('/auth/me').then((res) => res.data),
 }

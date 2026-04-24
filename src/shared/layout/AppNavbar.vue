@@ -3,18 +3,21 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { Bell, ChevronDown, Home, LogOut, Menu, Moon, Search, Settings, Sun, User } from 'lucide-vue-next'
 import { onClickOutside } from '@vueuse/core'
-import { clearAuthToken } from '@/shared/auth/token'
+import { getRefreshToken } from '@/shared/auth/token'
+import { authApi } from '@/modules/auth/api/auth.api'
 import { useAuth } from '@/modules/auth/composables/useAuth'
 import { useTheme } from '@/shared/theme/useTheme'
+import { resetAuthSession } from '@/shared/auth/session'
 
 const emit = defineEmits<{
   (e: 'toggleSidebar'): void
 }>()
 
-const { user, setUser } = useAuth()
+const { user } = useAuth()
 const route = useRoute()
 const router = useRouter()
 const { activeColorScheme, applyColorScheme } = useTheme()
+const isLoggingOut = ref(false)
 
 const toggleColorScheme = () => {
   const newScheme = activeColorScheme.value === 'dark' ? 'light' : 'dark'
@@ -97,11 +100,21 @@ const menuItems = [
   { label: 'Cài đặt', icon: Settings, to: '/settings' },
 ]
 
-const handleLogout = () => {
-  setUser(null)
-  clearAuthToken()
+const handleLogout = async () => {
+  if (isLoggingOut.value) return
+
+  isLoggingOut.value = true
   isProfileOpen.value = false
-  router.push('/login')
+
+  try {
+    await authApi.logout({ refreshToken: getRefreshToken() })
+  } catch {
+    // Logout should still clear the local session if the backend request fails.
+  } finally {
+    resetAuthSession()
+    isLoggingOut.value = false
+    await router.push('/login')
+  }
 }
 </script>
 
@@ -258,10 +271,11 @@ const handleLogout = () => {
               <div class="border-t border-border p-1.5">
                 <button
                   @click="handleLogout"
-                  class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-rose-600 transition-colors hover:bg-rose-500/10"
+                  :disabled="isLoggingOut"
+                  class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-rose-600 transition-colors hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <LogOut class="h-4 w-4 shrink-0" />
-                  Đăng xuất
+                  {{ isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất' }}
                 </button>
               </div>
             </div>

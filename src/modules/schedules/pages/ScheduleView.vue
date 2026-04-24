@@ -93,6 +93,11 @@ const fmtYmd = (date: Date): string => {
 const fmtDayLabel = (date: Date): string =>
   new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(date).replace('.', '')
 
+const toBackendDayOfWeek = (date: Date): number => {
+  const weekday = date.getDay()
+  return weekday === 0 ? 7 : weekday
+}
+
 const weekStart = computed(() => startOfWeekMonday(currentDate.value))
 const weekDays = computed(() => {
   return Array.from({ length: 7 }).map((_, i) => {
@@ -159,15 +164,15 @@ const appliesToDate = (schedule: Schedule, ymd: string): boolean => {
   if (schedule.date) return normalizeYmd(schedule.date) === currentDateStr
 
   const effectiveFromStr = normalizeYmd(schedule.effectiveFrom)
+  const effectiveToStr = normalizeYmd(schedule.effectiveTo ?? undefined)
   if (schedule.dayOfWeek === undefined || schedule.dayOfWeek === null || !effectiveFromStr)
     return false
   if (currentDateStr < effectiveFromStr) return false
+  if (effectiveToStr && currentDateStr > effectiveToStr) return false
 
   const parsedDate = new Date(ymd)
-  const weekday = parsedDate.getDay()
-  // getDay(): 0=Sunday, 1=Monday, ..., 6=Saturday
-  // DB dayOfWeek: 1=Monday, 2=Tuesday, ..., 6=Saturday, 7=Sunday
-  const currentDayOfWeek = weekday === 0 ? 7 : weekday
+
+  const currentDayOfWeek = toBackendDayOfWeek(parsedDate)
   return Number(schedule.dayOfWeek) === Number(currentDayOfWeek)
 }
 
@@ -254,16 +259,22 @@ const handleActionDelete = async () => {
 }
 
 const getSchedulesForEmployeeDate = (employee: Employee, date: string): ScheduleWithShift[] => {
-  const matches = enrichedSchedules.value.filter(
+  const matchingSchedules = enrichedSchedules.value.filter(
     (s) => String(s.employeeId) === String(employee.id) && appliesToDate(s, date),
   )
-  
-  // Sắp xếp ca theo giờ bắt đầu (Ca sáng -> chiều -> đêm)
-  return matches.sort((a, b) => {
-    const timeA = a.shift?.startTime || '23:59'
-    const timeB = b.shift?.startTime || '23:59'
-    return timeA.localeCompare(timeB)
-  })
+
+  if (matchingSchedules.length === 0) return []
+
+  const latestEffectiveFrom = matchingSchedules
+    .map((schedule) => normalizeYmd(schedule.effectiveFrom) ?? '')
+    .sort()
+    .slice(-1)[0]
+
+  if (!latestEffectiveFrom) return matchingSchedules
+
+  return matchingSchedules.filter(
+    (schedule) => normalizeYmd(schedule.effectiveFrom) === latestEffectiveFrom,
+  )
 }
 
 const getShiftBadgeStyle = (shiftName?: string) => {
