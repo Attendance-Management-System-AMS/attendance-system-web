@@ -59,9 +59,14 @@ const editTarget = ref<Department | null>(null)
 const deleteDialog = ref(false)
 const deleteTarget = ref<Department | null>(null)
 
-const handleCreated = (data: { name: string; description: string }) => {
-  createDepartment.mutate(data, {
-    onSuccess: () => (isCreateModalOpen.value = false),
+const handleCreated = (payload: {
+  data: { name: string; description: string }
+  onSuccess: () => void
+  onError: (err: unknown) => void
+}) => {
+  createDepartment.mutate(payload.data, {
+    onSuccess: () => payload.onSuccess(),
+    onError: (err) => payload.onError(err),
   })
 }
 
@@ -73,14 +78,17 @@ const handleEdit = (id: string | number) => {
   }
 }
 
-const handleUpdated = (id: string | number, data: Partial<Department>) => {
+const handleUpdated = (payload: {
+  id: string | number
+  data: Partial<Department>
+  onSuccess: () => void
+  onError: (err: unknown) => void
+}) => {
   updateDepartment.mutate(
-    { id: String(id), data },
+    { id: String(payload.id), data: payload.data },
     {
-      onSuccess: () => {
-        isEditModalOpen.value = false
-        editTarget.value = null
-      },
+      onSuccess: () => payload.onSuccess(),
+      onError: (err) => payload.onError(err),
     },
   )
 }

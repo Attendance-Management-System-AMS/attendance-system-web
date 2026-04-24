@@ -17,6 +17,12 @@ export interface CreateSchedule {
   dayOfWeek: number;
   isActive: boolean;
   effectiveFrom: string;
+  force?: boolean;
+}
+
+export interface UpdateScheduleRequest {
+  shiftId: number;
+  force?: boolean;
 }
 
 export interface ScheduleTemplateItem {

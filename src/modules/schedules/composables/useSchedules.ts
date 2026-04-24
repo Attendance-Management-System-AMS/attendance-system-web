@@ -67,8 +67,10 @@ export function useSchedules(
         : await scheduleApi.search(queryParams)
       return normalizeScheduleListResult(response.data?.result)
     },
-    staleTime: 1000 * 60 * 3,
+    // Luôn refetch khi component mount lại (ví dụ navigate từ trang assignments về)
+    staleTime: 0,
     gcTime: 1000 * 60 * 10,
+    refetchOnMount: 'always',
   })
 
   // Mutation tạo schedule
@@ -101,7 +103,8 @@ export function useSchedules(
   // Mutation áp dụng template
   const applyTemplate = useMutation({
     mutationFn: (data: ApplyTemplateRequest) => scheduleApi.applyTemplate(data),
-    onSuccess: () => {
+    onSettled: () => {
+      // Invalidate tất cả query liên quan đến schedules
       queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all() })
     },
   })
@@ -109,7 +112,17 @@ export function useSchedules(
   // Mutation gán hàng loạt
   const bulkAssign = useMutation({
     mutationFn: (data: BulkAssignRequest) => scheduleApi.bulkAssign(data),
-    onSuccess: () => {
+    onSettled: () => {
+      // Invalidate tất cả query liên quan đến schedules
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all() })
+    },
+  })
+
+  // Mutation cập nhật ca làm
+  const updateSchedule = useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: import('../types/schedule.types').UpdateScheduleRequest }) =>
+      scheduleApi.update(id, data),
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all() })
     },
   })
@@ -117,6 +130,7 @@ export function useSchedules(
   return {
     schedulesQuery,
     createSchedule,
+    updateSchedule,
     deleteSchedule,
     applyTemplate,
     bulkAssign,

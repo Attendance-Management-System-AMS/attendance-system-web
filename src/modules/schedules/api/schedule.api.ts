@@ -8,6 +8,8 @@ export const scheduleApi = {
   search: (params: Record<string, unknown>) =>
     api.get<ApiResponse<Page<Schedule>>>('/attendance/schedules', { params }),
   create: (data: CreateSchedule) => api.post<ApiResponse<Schedule>>('/attendance/schedules', data),
+  update: (id: string | number, data: import('./types/schedule.types').UpdateScheduleRequest) => 
+    api.put<ApiResponse<Schedule>>(`/attendance/schedules/${id}`, data),
   bulkAssign: (data: BulkAssignRequest) => api.post<ApiResponse<void>>('/attendance/schedules/bulk', data),
   applyTemplate: (data: ApplyTemplateRequest) => api.post<ApiResponse<void>>('/attendance/schedules/apply-template', data),
   delete: (id: string | number) => api.delete<ApiResponse<void>>(`/attendance/schedules/${id}`),
