@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Check, X, Plus, Clock, CheckCircle2, XCircle } from 'lucide-vue-next'
+import { Check, X, Plus, Clock, CheckCircle2, Loader2, XCircle } from 'lucide-vue-next'
 import { useLeaves } from '@/modules/leaves/composables/useLeaves'
 import type { CreateLeaveRequest, LeaveRequest } from '@/modules/leaves/types/leave.types'
 import { isPendingLeave, normalizeLeaveStatus } from '@/modules/leaves/utils/leaveStatus'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 import FilterSelect from '@/shared/ui/FilterSelect.vue'
 import SearchToolbar from '@/shared/ui/SearchToolbar.vue'
 import LeaveCreateModal from '@/modules/leaves/components/LeaveCreateModal.vue'
@@ -60,29 +61,56 @@ const columns = [
 ]
 
 const isCreateModalOpen = ref(false)
+const processingLeaveId = ref<string | number | null>(null)
+const processingAction = ref<'approve' | 'reject' | null>(null)
 
-const handleApprove = (id: string | number) => {
-  approveLeave.mutate(id, {
-    onSuccess: () => toast.success('Đã phê duyệt đơn nghỉ phép'),
-    onError: () => toast.error('Không thể phê duyệt đơn này')
-  })
+const isActionLoading = (id: string | number, action: 'approve' | 'reject') =>
+  processingLeaveId.value === id && processingAction.value === action
+
+const handleApprove = async (id: string | number) => {
+  if (processingLeaveId.value !== null) return
+
+  processingLeaveId.value = id
+  processingAction.value = 'approve'
+
+  try {
+    await approveLeave.mutateAsync(id)
+    await leavesQuery.refetch()
+    toast.success('Đã phê duyệt đơn. Bảng công các ngày chưa có chấm công đã được cập nhật sang nghỉ phép.')
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Không thể phê duyệt đơn này.'))
+  } finally {
+    processingLeaveId.value = null
+    processingAction.value = null
+  }
 }
 
-const handleReject = (id: string | number) => {
-  rejectLeave.mutate(id, {
-    onSuccess: () => toast.success('Đã từ chối đơn nghỉ phép'),
-    onError: () => toast.error('Lỗi khi thực hiện thao tác')
-  })
-}
+const handleReject = async (id: string | number) => {
+  if (processingLeaveId.value !== null) return
 
+  processingLeaveId.value = id
+  processingAction.value = 'reject'
+
+  try {
+    await rejectLeave.mutateAsync(id)
+    await leavesQuery.refetch()
+    toast.success('Đã từ chối đơn nghỉ phép.')
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Không thể từ chối đơn này.'))
+  } finally {
+    processingLeaveId.value = null
+    processingAction.value = null
+  }
+}
 
 const handleCreated = async (payload: CreateLeaveRequest) => {
   try {
     await createLeave.mutateAsync(payload)
+    await leavesQuery.refetch()
     toast.success('Gửi đơn nghỉ phép thành công')
     isCreateModalOpen.value = false
-  } catch {
-    toast.error('Gửi đơn thất bại')
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Gửi đơn thất bại'))
   }
 }
 </script>
@@ -164,18 +192,22 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
                     variant="outline"
                     class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10"
                     :aria-label="`Phe duyet don ${row.id}`"
+                    :disabled="processingLeaveId !== null"
                     @click="handleApprove(row.id)"
                 >
-                    <Check class="h-4 w-4" />
+                    <Loader2 v-if="isActionLoading(row.id, 'approve')" class="h-4 w-4 animate-spin" />
+                    <Check v-else class="h-4 w-4" />
                 </Button>
                 <Button
                     size="icon"
                     variant="outline"
                     class="h-8 w-8 text-primary border-primary/20 hover:bg-primary/10"
                     :aria-label="`Tu choi don ${row.id}`"
+                    :disabled="processingLeaveId !== null"
                     @click="handleReject(row.id)"
                 >
-                    <X class="h-4 w-4" />
+                    <Loader2 v-if="isActionLoading(row.id, 'reject')" class="h-4 w-4 animate-spin" />
+                    <X v-else class="h-4 w-4" />
                 </Button>
             </div>
             <span v-else class="text-[10px] font-semibold  tracking-normal text-tertiary-text mr-2">Hoàn thành</span>

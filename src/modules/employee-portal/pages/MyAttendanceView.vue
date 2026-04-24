@@ -118,7 +118,11 @@ const logs = computed(() => {
         const backendDay = jsDay === 0 ? 7 : jsDay
         const matchedSchedule = scheduleData
           .filter(
-            (s) => s.dayOfWeek === backendDay && s.isActive && s.effectiveFrom <= dateStr,
+            (s) =>
+              s.dayOfWeek === backendDay &&
+              s.isActive &&
+              s.effectiveFrom <= dateStr &&
+              (!s.effectiveTo || s.effectiveTo >= dateStr),
           )
           .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0]
 

@@ -45,6 +45,7 @@ interface UserShift {
   id: number
   dayOfWeek: number
   effectiveFrom: string
+  effectiveTo?: string | null
   name: string
   start: string
   end: string
@@ -66,6 +67,7 @@ const normalizedSchedules = computed<UserShift[]>(() =>
       id: item.id,
       dayOfWeek: item.dayOfWeek,
       effectiveFrom: item.effectiveFrom,
+      effectiveTo: item.effectiveTo ?? null,
       name: item.shiftName,
       start: item.startTime.substring(0, 5),
       end: item.endTime.substring(0, 5),
@@ -83,12 +85,25 @@ function toDateOnly(value: string) {
   return new Date(year ?? today.getFullYear(), (month ?? 1) - 1, day ?? 1)
 }
 
+function isScheduleActiveOnDate(item: UserShift, dateObj: Date) {
+  const startTime = toDateOnly(item.effectiveFrom).getTime()
+  if (startTime > dateObj.getTime()) {
+    return false
+  }
+
+  if (!item.effectiveTo) {
+    return true
+  }
+
+  return toDateOnly(item.effectiveTo).getTime() >= dateObj.getTime()
+}
+
 function resolveScheduleForDate(dateObj: Date) {
   const normalizedDow = dateObj.getDay() === 0 ? 7 : dateObj.getDay()
 
   return normalizedSchedules.value
     .filter((item) => item.dayOfWeek === normalizedDow)
-    .filter((item) => toDateOnly(item.effectiveFrom).getTime() <= dateObj.getTime())
+    .filter((item) => isScheduleActiveOnDate(item, dateObj))
     .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))[0] ?? null
 }
 
@@ -131,11 +146,13 @@ const calendarDays = computed(() => {
 })
 
 const visibleSchedules = computed(() => {
+  const monthStart = new Date(currentYear.value, currentMonth.value, 1)
   const monthEnd = new Date(currentYear.value, currentMonth.value + 1, 0)
   const schedulesByDay = new Map<number, UserShift>()
 
   normalizedSchedules.value
     .filter((item) => toDateOnly(item.effectiveFrom).getTime() <= monthEnd.getTime())
+    .filter((item) => !item.effectiveTo || toDateOnly(item.effectiveTo).getTime() >= monthStart.getTime())
     .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))
     .forEach((item) => {
       if (!schedulesByDay.has(item.dayOfWeek)) {

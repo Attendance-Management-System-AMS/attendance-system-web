@@ -67,8 +67,10 @@ export function useSchedules(
         : await scheduleApi.search(queryParams)
       return normalizeScheduleListResult(response.data?.result)
     },
-    staleTime: 1000 * 60 * 3,
+    staleTime: 0,
     gcTime: 1000 * 60 * 10,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   // Mutation tạo schedule

@@ -140,6 +140,16 @@ const getShiftName = (shiftId: string | number | null | undefined) => {
   return shift?.name || `Ca #${shiftId}`
 }
 
+const getTemplateItemShiftId = (template: ScheduleTemplate, dayOfWeek: number) => {
+  const item = template.items.find((entry) => entry.dayOfWeek === dayOfWeek)
+  return item?.shiftId || item?.shift?.id
+}
+
+const getTemplateItemShiftName = (template: ScheduleTemplate, dayOfWeek: number) => {
+  const shiftId = getTemplateItemShiftId(template, dayOfWeek)
+  return shiftId ? getShiftName(shiftId) : 'Nghỉ'
+}
+
 const getDayLabel = (dayValue: number) => {
   return daysOfWeek.find((d) => d.value === dayValue)?.label || ''
 }
@@ -244,18 +254,18 @@ const applyToWeekdays = (shiftId: string) => {
           <p class="text-[10px] font-bold tracking-normal text-tertiary-text">
             Khung giờ làm việc
           </p>
-          <div class="grid grid-cols-2 gap-x-4 gap-y-1.5">
+          <div class="space-y-1.5">
             <div
-              v-for="item in [...template.items].sort((a, b) => a.dayOfWeek - b.dayOfWeek)"
-              :key="item.id || item.dayOfWeek"
-              class="flex items-center gap-2"
+              v-for="day in daysOfWeek"
+              :key="day.value"
+              class="flex items-center justify-between gap-3 rounded-md border border-border-subtle bg-surface/30 px-2 py-1.5"
             >
-              <span class="text-[10px] font-bold text-tertiary-text w-8"
-                >{{ getDayLabel(item.dayOfWeek) }}:</span
-              >
-              <span class="text-xs font-semibold text-primary-text dark:text-tertiary-text truncate">{{
-                getShiftName(item.shiftId || (item as any).shift?.id)
-              }}</span>
+              <span class="w-16 shrink-0 text-[10px] font-bold text-tertiary-text">
+                {{ day.label }}
+              </span>
+              <span class="min-w-0 flex-1 truncate text-right text-xs font-semibold text-primary-text dark:text-tertiary-text">
+                {{ getTemplateItemShiftName(template, day.value) }}
+              </span>
             </div>
           </div>
         </div>

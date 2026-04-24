@@ -1,6 +1,7 @@
 import axios from 'axios'
-import { clearAuthToken, getAuthToken, setAuthTokens } from '@/shared/auth/token'
+import { getAuthToken, setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
+import { resetAuthSession } from '@/shared/auth/session'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -46,7 +47,14 @@ api.interceptors.response.use(
           return api.request(originalRequest)
         }
       } catch (refreshError) {
-        clearAuthToken()
+        const redirectPath =
+          typeof window !== 'undefined'
+            ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+            : undefined
+        resetAuthSession({
+          redirectToLogin: typeof window !== 'undefined' && !window.location.pathname.startsWith('/login'),
+          redirectPath,
+        })
         return Promise.reject(refreshError)
       }
     }

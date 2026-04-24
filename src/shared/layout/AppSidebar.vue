@@ -16,18 +16,19 @@ import {
   Users,
 } from 'lucide-vue-next'
 import { useAuth, type UserRole } from '@/modules/auth/composables/useAuth'
+import { getUserRoleLabel, hasAnyRoleAccess, roleGroups } from '@/shared/auth/access-control'
 
 interface NavItem {
   label: string
   to: string
   icon: unknown
-  roles?: UserRole[]
+  roles?: readonly UserRole[]
   children?: Omit<NavItem, 'icon'>[]
 }
 
 interface NavGroup {
   label: string
-  roles?: UserRole[]
+  roles?: readonly UserRole[]
   items: NavItem[]
 }
 
@@ -40,7 +41,7 @@ const emit = defineEmits<{
 }>()
 
 const route = useRoute()
-const { user, hasRole } = useAuth()
+const { user } = useAuth()
 
 const navGroups: NavGroup[] = [
   {
@@ -50,30 +51,30 @@ const navGroups: NavGroup[] = [
         label: 'Dashboard',
         to: '/dashboard',
         icon: LayoutDashboard,
-        roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
+        roles: roleGroups.operations,
       },
       {
         label: 'Chấm công hôm nay',
         to: '/attendance',
         icon: Timer,
-        roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
+        roles: roleGroups.operations,
       },
       {
         label: 'Lịch làm việc',
         to: '/schedule',
         icon: CalendarDays,
-        roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
+        roles: roleGroups.operations,
         children: [
-          { label: 'Bảng lịch', to: '/schedule' },
-          { label: 'Phân công lịch', to: '/schedule/assignments' },
-          { label: 'Mẫu lịch làm việc', to: '/schedule/templates' },
+          { label: 'Bảng lịch', to: '/schedule', roles: roleGroups.operations },
+          { label: 'Phân công lịch', to: '/schedule/assignments', roles: roleGroups.adminHr },
+          { label: 'Mẫu lịch làm việc', to: '/schedule/templates', roles: roleGroups.adminHr },
         ],
       },
     ],
   },
   {
     label: 'Nhân sự',
-    roles: ['ROLE_ADMIN', 'ROLE_HR'],
+    roles: roleGroups.adminHr,
     items: [
       { label: 'Nhân viên', to: '/employees', icon: Users },
       { label: 'Phòng ban', to: '/departments', icon: Building2 },
@@ -82,7 +83,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'Cá nhân',
-    roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'],
+    roles: roleGroups.selfService,
     items: [
       { label: 'Bảng tin của tôi', to: '/my/dashboard', icon: LayoutDashboard },
 
@@ -93,23 +94,23 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'Vận hành',
-    roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
+    roles: roleGroups.operations,
     items: [
       { label: 'Nghỉ phép', to: '/leaves', icon: ClipboardList },
-      { label: 'Ca làm việc', to: '/shifts', icon: Timer, roles: ['ROLE_ADMIN', 'ROLE_HR'] },
-      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays, roles: ['ROLE_ADMIN', 'ROLE_HR'] },
+      { label: 'Ca làm việc', to: '/shifts', icon: Timer, roles: roleGroups.adminHr },
+      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays, roles: roleGroups.adminHr },
     ],
   },
   {
     label: 'Báo cáo',
-    roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
+    roles: roleGroups.operations,
     items: [
       { label: 'Phân tích & Báo cáo', to: '/reports', icon: BarChart3 },
     ],
   },
   {
     label: 'Hệ thống',
-    roles: ['ROLE_ADMIN'],
+    roles: roleGroups.adminOnly,
     items: [
       { label: 'Cài đặt', to: '/settings', icon: Settings },
       { label: 'Phân quyền', to: '/permissions', icon: Lock },
@@ -118,24 +119,24 @@ const navGroups: NavGroup[] = [
 ]
 
 const filteredNavGroups = computed(() => {
+  const userRoles = user.value?.roles ?? []
+
   return navGroups
-    .filter((group) => !group.roles || hasRole(group.roles))
+    .filter((group) => hasAnyRoleAccess(userRoles, group.roles))
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !item.roles || hasRole(item.roles)),
+      items: group.items
+        .filter((item) => hasAnyRoleAccess(userRoles, item.roles))
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((child) => hasAnyRoleAccess(userRoles, child.roles)),
+        })),
     }))
     .filter((group) => group.items.length > 0)
 })
 
 const userDisplayName = computed(() => user.value?.fullName || 'Người dùng')
-const userRoleName = computed(() => {
-  const roles = user.value?.roles ?? []
-  if (roles.includes('ROLE_ADMIN')) return 'Quản trị viên'
-  if (roles.includes('ROLE_HR')) return 'Nhân sự'
-  if (roles.includes('ROLE_MANAGER')) return 'Quản lý'
-  if (roles.includes('ROLE_EMPLOYEE')) return 'Nhân viên'
-  return 'Khách'
-})
+const userRoleName = computed(() => getUserRoleLabel(user.value?.roles ?? []))
 const userInitials = computed(() => {
   if (!user.value?.fullName) return '??'
   return user.value.fullName

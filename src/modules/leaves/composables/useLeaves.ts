@@ -39,7 +39,10 @@ export function useLeaves() {
 
   const approveLeave = useMutation({
     mutationFn: (id: string | number) => leaveApi.approve(id).then((res) => res.data.result),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.leaves.all() }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leaves.all() })
+      queryClient.invalidateQueries({ queryKey: ['attendance'] })
+    },
   })
 
   const rejectLeave = useMutation({
