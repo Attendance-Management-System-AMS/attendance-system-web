@@ -10,6 +10,7 @@ import {
     DialogClose,
 } from 'reka-ui'
 import type { Department } from '@/modules/departments/types/department.types'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 
 const props = defineProps<{
     open: boolean
@@ -20,7 +21,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'close'): void
-    (e: 'updated', id: string | number, data: Partial<Department>): void
+    (e: 'updated', payload: {
+        id: string | number
+        data: Partial<Department>
+        onSuccess: () => void
+        onError: (err: unknown) => void
+    }): void
 }>()
 
 const name = ref('')
@@ -45,10 +51,22 @@ const handleSubmit = () => {
     if (!props.department?.id) return
 
     error.value = null
-    emit('updated', props.department.id, {
-        name: name.value.trim(),
-        description: description.value.trim(),
-        status: status.value,
+
+    emit('updated', {
+        id: props.department.id,
+        data: {
+            name: name.value.trim(),
+            description: description.value.trim(),
+            status: status.value,
+        },
+        onSuccess: () => {
+            loading.value = false
+            emit('close')
+        },
+        onError: (err: unknown) => {
+            error.value = getApiErrorMessage(err, 'Lỗi khi cập nhật phòng ban')
+            loading.value = false
+        },
     })
 }
 

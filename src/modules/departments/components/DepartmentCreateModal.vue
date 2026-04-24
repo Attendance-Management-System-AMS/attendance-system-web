@@ -9,6 +9,7 @@ import {
     DialogDescription,
     DialogClose,
 } from 'reka-ui'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 
 defineProps<{
     open: boolean
@@ -18,7 +19,11 @@ defineProps<{
 
 const emit = defineEmits<{
     (e: 'close'): void
-    (e: 'created', department: { name: string; description: string }): void
+    (e: 'created', payload: {
+        data: { name: string; description: string }
+        onSuccess: () => void
+        onError: (err: unknown) => void
+    }): void
 }>()
 
 const name = ref('')
@@ -32,7 +37,19 @@ const handleSubmit = () => {
     }
 
     error.value = null
-    emit('created', { name: name.value.trim(), description: description.value.trim() })
+
+    emit('created', {
+        data: { name: name.value, description: description.value },
+        onSuccess: () => {
+            resetForm()
+            loading.value = false
+            emit('close')
+        },
+        onError: (err: unknown) => {
+            error.value = getApiErrorMessage(err, 'Lỗi khi tạo phòng ban')
+            loading.value = false
+        },
+    })
 }
 
 const resetForm = () => {

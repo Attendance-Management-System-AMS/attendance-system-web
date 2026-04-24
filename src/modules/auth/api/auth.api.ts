@@ -44,3 +44,4 @@ export const authApi = {
     getProfile: () =>
         authHttp.get<ApiResponse<UserProfile>>('/auth/me').then((res) => res.data),
 }
+

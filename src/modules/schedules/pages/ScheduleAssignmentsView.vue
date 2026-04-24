@@ -38,6 +38,8 @@ const assignmentSuccess = ref('')
 const deleteDialogOpen = ref(false)
 const isAssignDialogOpen = ref(false)
 const deleteTarget = ref<ScheduleWithShift | null>(null)
+const isSubmitting = ref(false)
+const submitProgress = ref('')
 
 const initialWeeklyShifts = () => ({
   1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: ''
@@ -308,12 +310,17 @@ const submitAssignment = async () => {
     return
   }
 
+  isSubmitting.value = true
+  const empCount = assignmentForm.employeeIds.length
+
   try {
     if (assignmentForm.mode === 'template') {
       if (!assignmentForm.templateId) {
         assignmentError.value = 'Vui lòng chọn mẫu lịch.'
+        isSubmitting.value = false
         return
       }
+      submitProgress.value = `Đang áp dụng mẫu lịch cho ${empCount} nhân viên...`
       await applyTemplate.mutateAsync({
         employeeIds: assignmentForm.employeeIds,
         templateId: Number(assignmentForm.templateId),
@@ -321,7 +328,6 @@ const submitAssignment = async () => {
         effectiveTo: assignmentForm.effectiveTo || undefined,
         force: true,
       })
-      assignmentSuccess.value = 'Đã áp dụng mẫu lịch thành công.'
     } else {
       const groups: Record<string, number[]> = {}
       let hasSelection = false
@@ -335,10 +341,14 @@ const submitAssignment = async () => {
 
       if (!hasSelection) {
         assignmentError.value = 'Vui lòng chọn ít nhất một ca làm việc cho một ngày.'
+        isSubmitting.value = false
         return
       }
 
-      const promises = Object.entries(groups).map(([shiftId, days]) => 
+      const groupEntries = Object.entries(groups)
+      submitProgress.value = `Đang gán ${groupEntries.length} nhóm ca cho ${empCount} nhân viên...`
+
+      const promises = groupEntries.map(([shiftId, days]) =>
         bulkAssign.mutateAsync({
           employeeIds: assignmentForm.employeeIds,
           shiftId: Number(shiftId),
@@ -348,21 +358,32 @@ const submitAssignment = async () => {
           force: true,
         })
       )
-      
+
       await Promise.all(promises)
-      assignmentSuccess.value = 'Đã gán lịch làm việc thành công.'
     }
 
-    await assignedSchedulesQuery.refetch()
+    // Thành công → toast + đóng dialog ngay lập tức
+    toast.success(`Đã gán lịch thành công cho ${empCount} nhân viên.`)
+    isAssignDialogOpen.value = false
+    resetAssignmentForm()
 
-    setTimeout(() => {
-      isAssignDialogOpen.value = false
-      resetAssignmentForm()
-      assignmentSuccess.value = ''
-    }, 1200)
-  } catch (err) {
-    assignmentError.value = getApiErrorMessage(err, 'Thao tác thất bại. Vui lòng thử lại.')
+    // Refetch data ngầm (không block UI)
+    assignedSchedulesQuery.refetch()
+  } catch (err: any) {
+    const respData = err?.response?.data?.data
+    if (Array.isArray(respData) && respData.length > 0 && respData[0].newShiftName) {
+      // Parse conflict details from backend
+      const conflictsStr = respData
+        .map((c: any) => `${c.dayOfWeek === 7 ? 'Chủ nhật' : 'Thứ ' + c.dayOfWeek}: ${c.newShiftName} trùng với ${c.existingShiftName}`)
+        .join(', ')
+      assignmentError.value = `Xung đột lịch: ${conflictsStr}`
+    } else {
+      assignmentError.value = getApiErrorMessage(err, 'Thao tác thất bại. Vui lòng thử lại.')
+    }
     toast.error(assignmentError.value)
+  } finally {
+    isSubmitting.value = false
+    submitProgress.value = ''
   }
 }
 
@@ -559,6 +580,29 @@ const confirmDeleteSchedule = async () => {
                 </button>
               </div>
 
+              <!-- Loading Overlay -->
+              <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+              >
+                <div v-if="isSubmitting" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-card/80 backdrop-blur-[2px] rounded-lg">
+                  <div class="flex flex-col items-center gap-5">
+                    <div class="relative h-12 w-12">
+                      <div class="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+                      <div class="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                    </div>
+                    <div class="text-center">
+                      <p class="text-sm font-semibold text-primary-text">Đang xử lý...</p>
+                      <p class="text-[11px] text-tertiary-text mt-1 font-medium">{{ submitProgress }}</p>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+
               <!-- Content -->
               <div class="flex-1 overflow-y-auto p-6 space-y-8 min-h-0">
                 <!-- Step 1: Mode & Employees -->
@@ -694,22 +738,29 @@ const confirmDeleteSchedule = async () => {
               </div>
 
               <!-- Footer -->
-              <div class="border-t border-border-subtle p-6 bg-card shrink-0 flex items-center justify-end gap-4">
-                <div v-if="isSubmittingAssignment" class="mr-auto flex items-center gap-2 text-[11px] font-semibold text-primary">
-                  <Loader2 class="h-4 w-4 animate-spin" />
-                  Đang lưu lịch và làm mới danh sách...
+              <div class="border-t border-border-subtle p-6 bg-card shrink-0 flex items-center justify-between gap-4">
+                <p v-if="assignmentError" class="text-xs font-semibold text-rose-500 flex-1 truncate">{{ assignmentError }}</p>
+                <div v-else></div>
+                <div class="flex items-center gap-4 shrink-0">
+                  <Button variant="ghost" @click="isAssignDialogOpen = false"
+                    :disabled="isSubmitting"
+                    class="h-11 px-8 rounded-lg text-[11px] font-semibold  tracking-normal text-tertiary-text hover:bg-surface hover:text-secondary-text transition-all">Hủy bỏ</Button>
+                  
+                  <Button @click="submitAssignment" 
+                    :disabled="isSubmitting"
+                    class="h-12 px-12 rounded-lg bg-primary text-white text-[11px] font-semibold  tracking-normal shadow-2xl shadow-primary/20 hover:bg-primary hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0">
+                    <template v-if="isSubmitting">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Đang xử lý...
+                    </template>
+                    <template v-else>
+                      Xác nhận thiết lập
+                    </template>
+                  </Button>
                 </div>
-
-                <Button variant="ghost" @click="isAssignDialogOpen = false"
-                  :disabled="isSubmittingAssignment"
-                  class="h-11 px-8 rounded-lg text-[11px] font-semibold  tracking-normal text-tertiary-text hover:bg-surface hover:text-secondary-text transition-all">Hủy bỏ</Button>
-                
-                <Button @click="submitAssignment" 
-                  :disabled="isSubmittingAssignment"
-                  class="h-12 px-12 rounded-lg bg-primary text-white text-[11px] font-semibold  tracking-normal shadow-2xl shadow-primary/20 hover:bg-primary hover:-translate-y-0.5 transition-all">
-                  <Loader2 v-if="isSubmittingAssignment" class="mr-2 h-4 w-4 animate-spin" />
-                  {{ isSubmittingAssignment ? 'Đang thiết lập...' : 'Xác nhận thiết lập' }}
-                </Button>
               </div>
             </div>
           </Transition>

@@ -19,6 +19,8 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import PageHeader from '@/shared/ui/PageHeader.vue'
+import { toast } from 'vue-sonner'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 
 import { useEmployees } from '@/modules/employees/composables/useEmployees'
 import { useSchedules } from '@/modules/schedules/composables/useSchedules'
@@ -39,7 +41,7 @@ interface ScheduleWithShift extends Schedule {
 const { employeesQuery } = useEmployees()
 const { shiftsQuery } = useShifts()
 const { departmentsQuery } = useDepartments()
-const { schedulesQuery } = useSchedules(null, { size: 1000 })
+const { schedulesQuery, deleteSchedule, createSchedule, updateSchedule } = useSchedules(null, { size: 1000 })
 
 const employees = computed<Employee[]>(() => employeesQuery.data.value?.content ?? [])
 const shifts = computed<Shift[]>(() => (shiftsQuery.data.value ?? []) as Shift[])
@@ -59,6 +61,12 @@ const selectedEmployeeId = ref<number | null>(null)
 const selectedEmployee = computed(() =>
   employees.value.find((e: Employee) => e.id === selectedEmployeeId.value),
 )
+
+// Quick Action Modal State
+const actionModalOpen = ref(false)
+const actionTarget = ref<{ schedule?: ScheduleWithShift, employee: Employee, date: string, mode: 'edit' | 'create' } | null>(null)
+const actionShiftId = ref('')
+const isActionLoading = ref(false)
 
 const addDays = (date: Date, days: number): Date => {
   const d = new Date(date)
@@ -163,8 +171,91 @@ const appliesToDate = (schedule: Schedule, ymd: string): boolean => {
   if (effectiveToStr && currentDateStr > effectiveToStr) return false
 
   const parsedDate = new Date(ymd)
+
   const currentDayOfWeek = toBackendDayOfWeek(parsedDate)
   return Number(schedule.dayOfWeek) === Number(currentDayOfWeek)
+}
+
+// Quick Action Modal Logic
+const openEditDialog = (schedule: ScheduleWithShift, employee: Employee, date: string) => {
+  actionTarget.value = { schedule, employee, date, mode: 'edit' }
+  actionShiftId.value = String(schedule.shiftId)
+  actionModalOpen.value = true
+}
+
+const openCreateDialog = (employee: Employee, date: string) => {
+  actionTarget.value = { employee, date, mode: 'create' }
+  actionShiftId.value = ''
+  actionModalOpen.value = true
+}
+
+const closeActionModal = () => {
+  actionModalOpen.value = false
+  actionTarget.value = null
+  actionShiftId.value = ''
+}
+
+const handleActionSubmit = async () => {
+  if (!actionTarget.value || !actionShiftId.value) return
+  isActionLoading.value = true
+  try {
+    const { mode, schedule, employee, date } = actionTarget.value
+    
+    if (mode === 'edit' && schedule) {
+      // Sử dụng API Update nguyên tử
+      await updateSchedule.mutateAsync({
+        id: schedule.id,
+        data: {
+          shiftId: Number(actionShiftId.value),
+          force: true
+        }
+      })
+    } else {
+      // Tính dayOfWeek từ ngày
+      const d = new Date(date)
+      const weekday = d.getDay()
+      const dayOfWeek = weekday === 0 ? 7 : weekday
+
+      // Tạo ca mới
+      await createSchedule.mutateAsync({
+        employeeId: employee.id,
+        shiftId: Number(actionShiftId.value),
+        dayOfWeek,
+        effectiveFrom: date,
+        isActive: true,
+        force: true // Cho phép ghi đè nếu trùng giờ (vì người dùng chủ động chọn)
+      })
+    }
+
+    toast.success(mode === 'edit' ? 'Đã cập nhật ca làm việc' : 'Đã phân ca thành công')
+    closeActionModal()
+  } catch (err: any) {
+    const respData = err?.response?.data?.data
+    if (Array.isArray(respData) && respData.length > 0 && respData[0].newShiftName) {
+      const conflictsStr = respData
+        .map((c: any) => `${c.dayOfWeek === 7 ? 'Chủ nhật' : 'Thứ ' + c.dayOfWeek}: ${c.newShiftName} trùng với ${c.existingShiftName}`)
+        .join(', ')
+      toast.error(`Xung đột: ${conflictsStr}`)
+    } else {
+      toast.error(getApiErrorMessage(err, 'Thao tác thất bại'))
+    }
+  } finally {
+    isActionLoading.value = false
+  }
+}
+
+const handleActionDelete = async () => {
+  if (!actionTarget.value || !actionTarget.value.schedule) return
+  isActionLoading.value = true
+  try {
+    await deleteSchedule.mutateAsync(actionTarget.value.schedule.id)
+    toast.success('Đã xóa ca làm việc')
+    closeActionModal()
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Không thể xóa ca làm việc'))
+  } finally {
+    isActionLoading.value = false
+  }
 }
 
 const getSchedulesForEmployeeDate = (employee: Employee, date: string): ScheduleWithShift[] => {
@@ -363,16 +454,15 @@ const getShiftBadgeStyle = (shiftName?: string) => {
               <td
                 v-for="day in weekDays"
                 :key="day.ymd"
-                :class="[
-                  'px-3 py-5 align-top border-r border-border text-center',
-                  day.isToday ? 'bg-muted/50' : '',
-                ]"
+                class="relative px-3 py-5 align-top border-r border-border text-center group"
+                :class="day.isToday ? 'bg-muted/50' : ''"
               >
                 <div class="space-y-2 flex flex-col items-center">
                   <div
                     v-for="s in getSchedulesForEmployeeDate(employee, day.ymd)"
                     :key="s.id"
-                    class="w-full text-[10px] font-semibold p-2.5 rounded-lg border text-center transition-all shadow-sm group-hover:shadow-md"
+                    @click.stop="openEditDialog(s, employee, day.ymd)"
+                    class="w-full text-[10px] font-semibold p-2.5 rounded-lg border text-center transition-all shadow-sm group-hover:shadow-md cursor-pointer hover:scale-[1.02]"
                     :class="getShiftBadgeStyle(s.shift?.name)"
                   >
                     <p class=" tracking-normal leading-none mb-1.5">{{ s.shift?.name }}</p>
@@ -381,6 +471,14 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                     </p>
                   </div>
                 </div>
+
+                <!-- Quick add button -->
+                <button
+                  @click.stop="openCreateDialog(employee, day.ymd)"
+                  class="absolute inset-0 m-auto h-6 w-6 rounded-full bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-primary hover:text-white"
+                >
+                  <Plus class="h-4 w-4" />
+                </button>
               </td>
             </tr>
           </tbody>
@@ -521,7 +619,8 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                       <div
                         v-for="s in getSchedulesForEmployeeDate(selectedEmployee, day.ymd)"
                         :key="s.id"
-                        class="flex items-center justify-between"
+                        class="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-surface transition-colors cursor-pointer"
+                        @click.stop="openEditDialog(s, selectedEmployee, day.ymd)"
                       >
                         <span class="text-xs font-semibold text-primary-text  tracking-normal">{{
                           s.shift?.name
@@ -557,6 +656,58 @@ const getShiftBadgeStyle = (shiftName?: string) => {
               <Eye class="h-4 w-4" /> Lịch sử
             </Button>
           </div>
+        </div>
+      </Transition>
+    </Teleport>
+    <!-- Quick Action Modal -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="actionModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-card/40 backdrop-blur-[2px]">
+          <Transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="opacity-0 scale-95 translate-y-4"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+          >
+            <div v-if="actionModalOpen" class="relative w-full max-w-sm rounded-lg border border-border-subtle bg-card shadow-2xl p-6">
+              <h3 class="text-lg font-semibold mb-4">{{ actionTarget?.mode === 'edit' ? 'Chi tiết ca làm' : 'Phân ca nhanh' }}</h3>
+              
+              <div class="space-y-4">
+                <div>
+                  <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Nhân viên</p>
+                  <p class="text-sm font-semibold">{{ actionTarget?.employee.fullName }}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Ngày làm việc</p>
+                  <p class="text-sm font-semibold">{{ actionTarget?.date }}</p>
+                </div>
+                
+                <div>
+                  <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Chọn ca làm</p>
+                  <select v-model="actionShiftId" class="w-full h-10 px-3 rounded-lg border border-border-subtle bg-surface text-sm font-semibold focus:ring-1 focus:ring-primary outline-none">
+                    <option value="" disabled>-- Chọn ca --</option>
+                    <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">{{ shift.name }} ({{ shift.startTime?.slice(0,5) }} - {{ shift.endTime?.slice(0,5) }})</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mt-8 flex gap-3">
+                <Button v-if="actionTarget?.mode === 'edit'" @click="handleActionDelete" variant="outline" class="flex-1 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border-rose-200" :disabled="isActionLoading">
+                  {{ isActionLoading ? 'Đang xóa...' : 'Xóa ca' }}
+                </Button>
+                <Button v-else @click="closeActionModal" variant="outline" class="flex-1" :disabled="isActionLoading">Hủy</Button>
+                <Button @click="handleActionSubmit" class="flex-1 bg-primary hover:bg-primary/90 text-white" :disabled="isActionLoading || !actionShiftId">
+                  {{ isActionLoading ? 'Đang lưu...' : 'Lưu lại' }}
+                </Button>
+              </div>
+            </div>
+          </Transition>
         </div>
       </Transition>
     </Teleport>

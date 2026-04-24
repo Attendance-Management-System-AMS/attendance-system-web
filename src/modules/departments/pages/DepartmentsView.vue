@@ -72,9 +72,15 @@ const handleCreated = async (data: { name: string; description: string }) => {
   }
 }
 
-const handleCloseCreateModal = () => {
-  isCreateModalOpen.value = false
-  createError.value = null
+const handleCreated = (payload: {
+  data: { name: string; description: string }
+  onSuccess: () => void
+  onError: (err: unknown) => void
+}) => {
+  createDepartment.mutate(payload.data, {
+    onSuccess: () => payload.onSuccess(),
+    onError: (err) => payload.onError(err),
+  })
 }
 
 const handleEdit = (id: string | number) => {

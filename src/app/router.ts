@@ -66,7 +66,7 @@ router.beforeEach(async (to) => {
   const isPublicRoute = to.meta?.public === true
   const { user, setUser, hasRole, isAdmin, isHR, isManager, isEmployee } = useAuth()
 
-  // 1. Xử lý Auth (Token)
+  // 1. Xử lý Auth (Token) — chỉ thử refresh 1 lần duy nhất
   if (!authed && !isLoginRoute && !isPublicRoute) {
     try {
       const response = await authApi.refresh()
@@ -86,24 +86,38 @@ router.beforeEach(async (to) => {
   if (isAuthenticated() && !user.value) {
     try {
       const resp = await authApi.getProfile()
-      const result = resp.result
-      if (!result) return
+      if (resp.result) {
+        setUser(resp.result)
+      }
+    } catch (profileErr: unknown) {
+      // Nếu 401 (access token hết hạn) → thử refresh 1 lần rồi retry getProfile
+      const is401 = typeof profileErr === 'object' && profileErr !== null
+        && 'response' in profileErr
+        && (profileErr as { response?: { status?: number } }).response?.status === 401
 
-      setUser(result)
-    } catch {
-      try {
-        const refreshResponse = await authApi.refresh()
-        const token = resolveAuthToken(refreshResponse.result)
-        if (!token) throw new Error('No token')
-        setAuthTokens(token, refreshResponse.result?.refreshToken)
-        const retryProfile = await authApi.getProfile()
-        if (retryProfile.result) {
-          setUser(retryProfile.result)
+      if (is401) {
+        try {
+          const refreshResponse = await authApi.refresh()
+          const token = resolveAuthToken(refreshResponse.result)
+          if (!token) throw new Error('No token from refresh')
+          setAuthTokens(token, refreshResponse.result?.refreshToken)
+
+          // Retry getProfile với token mới
+          const retryResp = await authApi.getProfile()
+          if (retryResp.result) {
+            setUser(retryResp.result)
+          }
+        } catch {
+          // Refresh cũng thất bại → token thực sự hết hạn → logout
+          clearAuthToken()
+          setUser(null)
+          if (!isLoginRoute) return { name: 'login' }
         }
       } catch {
         resetAuthSession()
         if (!isLoginRoute) return { name: 'login' }
       }
+      // Lỗi khác (network, server) → không logout, user vẫn giữ session
     }
   }
 

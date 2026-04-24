@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getAuthToken, setAuthTokens } from '@/shared/auth/token'
+import { clearAuthToken, getAuthToken, getRefreshToken, setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
 import { resetAuthSession } from '@/shared/auth/session'
 
@@ -25,6 +25,31 @@ api.interceptors.request.use(
   }
 )
 
+// ── Refresh Token Mutex ──────────────────────────────────────────────
+// Đảm bảo chỉ có 1 request refresh tại 1 thời điểm.
+// Các request 401 khác sẽ đợi kết quả từ refresh đang chạy.
+let isRefreshing = false
+let refreshSubscribers: Array<(token: string) => void> = []
+let refreshFailSubscribers: Array<(err: unknown) => void> = []
+
+function subscribeTokenRefresh(onResolved: (token: string) => void, onRejected: (err: unknown) => void) {
+  refreshSubscribers.push(onResolved)
+  refreshFailSubscribers.push(onRejected)
+}
+
+function onRefreshSuccess(newToken: string) {
+  refreshSubscribers.forEach((cb) => cb(newToken))
+  refreshSubscribers = []
+  refreshFailSubscribers = []
+}
+
+function onRefreshFailure(err: unknown) {
+  refreshFailSubscribers.forEach((cb) => cb(err))
+  refreshSubscribers = []
+  refreshFailSubscribers = []
+}
+// ─────────────────────────────────────────────────────────────────────
+
 // Response interceptor (e.g., for handling global errors)
 api.interceptors.response.use(
   (response) => response,
@@ -34,11 +59,40 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !String(originalRequest.url ?? '').includes('/auth/')) {
       originalRequest._retry = true
 
+      // Nếu đang có 1 refresh đang chạy → đợi kết quả
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          subscribeTokenRefresh(
+            (newToken: string) => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`
+              } else {
+                originalRequest.headers = { Authorization: `Bearer ${newToken}` }
+              }
+              resolve(api.request(originalRequest))
+            },
+            (err: unknown) => {
+              reject(err)
+            }
+          )
+        })
+      }
+
+      // Bắt đầu refresh
+      isRefreshing = true
       try {
+        // Kiểm tra refresh token còn tồn tại không
+        const currentRefreshToken = getRefreshToken()
+        if (!currentRefreshToken) {
+          throw { isAuthExpired: true }
+        }
+
         const refreshResponse = await authApi.refresh()
         const nextToken = resolveAuthToken(refreshResponse.result)
         if (nextToken) {
           setAuthTokens(nextToken, refreshResponse.result?.refreshToken)
+          onRefreshSuccess(nextToken)
+
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${nextToken}`
           } else {
@@ -46,16 +100,27 @@ api.interceptors.response.use(
           }
           return api.request(originalRequest)
         }
-      } catch (refreshError) {
-        const redirectPath =
-          typeof window !== 'undefined'
-            ? `${window.location.pathname}${window.location.search}${window.location.hash}`
-            : undefined
-        resetAuthSession({
-          redirectToLogin: typeof window !== 'undefined' && !window.location.pathname.startsWith('/login'),
-          redirectPath,
-        })
+
+        throw { isAuthExpired: true }
+      } catch (refreshError: unknown) {
+        onRefreshFailure(refreshError)
+
+        // Chỉ clear token + redirect login khi server trả lỗi 400/401 (token thực sự hết hạn)
+        // KHÔNG clear khi network error / timeout (lỗi tạm thời)
+        const isServerReject = axios.isAxiosError(refreshError)
+          && refreshError.response
+          && (refreshError.response.status === 400 || refreshError.response.status === 401)
+
+        const isAuthExpired = typeof refreshError === 'object' && refreshError !== null && 'isAuthExpired' in refreshError
+
+        if (isServerReject || isAuthExpired) {
+          clearAuthToken()
+          window.location.href = '/login'
+        }
+
         return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
 
