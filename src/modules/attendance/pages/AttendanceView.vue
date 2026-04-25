@@ -66,6 +66,7 @@ const statuses = [
 
 const deleteTarget = ref<Attendance | null>(null)
 const isAlertOpen = ref(false)
+const deleteTargetName = computed(() => deleteTarget.value?.employee?.fullName ?? '')
 
 const handleDelete = (id: string | number) => {
   const record = records.value?.find(r => String(r.id) === String(id))
@@ -227,6 +228,6 @@ const qrCodeUrl = computed(
 
     <DeleteConfirmDialog :open="isAlertOpen" title="Xác nhận xóa bản ghi"
       description="Lịch sử chấm công của ngày này sẽ bị gỡ bỏ khỏi hệ thống."
-      :item-name="deleteTarget?.employee?.fullName" @confirm="confirmDelete" @cancel="isAlertOpen = false" />
+      :item-name="deleteTargetName" @confirm="confirmDelete" @cancel="isAlertOpen = false" />
   </div>
 </template>
