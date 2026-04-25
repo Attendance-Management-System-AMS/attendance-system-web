@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { isAuthenticated, setAuthTokens } from '@/shared/auth/token'
+import { isAuthenticated, setAuthTokens, clearAuthToken } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
 import { useAuth, type UserRole } from '@/modules/auth/composables/useAuth'
 import { resetAuthSession } from '@/shared/auth/session'
@@ -107,17 +107,14 @@ router.beforeEach(async (to) => {
           if (retryResp.result) {
             setUser(retryResp.result)
           }
-        } catch {
+        } catch (e) {
           // Refresh cũng thất bại → token thực sự hết hạn → logout
           clearAuthToken()
           setUser(null)
+          resetAuthSession()
           if (!isLoginRoute) return { name: 'login' }
         }
-      } catch {
-        resetAuthSession()
-        if (!isLoginRoute) return { name: 'login' }
       }
-      // Lỗi khác (network, server) → không logout, user vẫn giữ session
     }
   }
 

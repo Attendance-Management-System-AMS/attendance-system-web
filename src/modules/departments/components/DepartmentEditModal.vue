@@ -60,12 +60,10 @@ const handleSubmit = () => {
             status: status.value,
         },
         onSuccess: () => {
-            loading.value = false
             emit('close')
         },
         onError: (err: unknown) => {
             error.value = getApiErrorMessage(err, 'Lỗi khi cập nhật phòng ban')
-            loading.value = false
         },
     })
 }

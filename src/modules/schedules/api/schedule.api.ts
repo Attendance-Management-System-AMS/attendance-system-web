@@ -1,6 +1,12 @@
 import api from '@/shared/api/client'
 import type { ApiResponse, Page } from '@/shared/types/api'
-import type { Schedule, CreateSchedule, ApplyTemplateRequest, BulkAssignRequest } from '@/modules/schedules/types/schedule.types'
+import type {
+  Schedule,
+  CreateSchedule,
+  ApplyTemplateRequest,
+  BulkAssignRequest,
+  UpdateScheduleRequest,
+} from '@/modules/schedules/types/schedule.types'
 
 export const scheduleApi = {
   getByEmployee: (employeeId: string | number) =>
@@ -8,7 +14,7 @@ export const scheduleApi = {
   search: (params: Record<string, unknown>) =>
     api.get<ApiResponse<Page<Schedule>>>('/attendance/schedules', { params }),
   create: (data: CreateSchedule) => api.post<ApiResponse<Schedule>>('/attendance/schedules', data),
-  update: (id: string | number, data: import('./types/schedule.types').UpdateScheduleRequest) => 
+  update: (id: string | number, data: UpdateScheduleRequest) =>
     api.put<ApiResponse<Schedule>>(`/attendance/schedules/${id}`, data),
   bulkAssign: (data: BulkAssignRequest) => api.post<ApiResponse<void>>('/attendance/schedules/bulk', data),
   applyTemplate: (data: ApplyTemplateRequest) => api.post<ApiResponse<void>>('/attendance/schedules/apply-template', data),

@@ -42,12 +42,10 @@ const handleSubmit = () => {
         data: { name: name.value, description: description.value },
         onSuccess: () => {
             resetForm()
-            loading.value = false
             emit('close')
         },
         onError: (err: unknown) => {
             error.value = getApiErrorMessage(err, 'Lỗi khi tạo phòng ban')
-            loading.value = false
         },
     })
 }

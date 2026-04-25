@@ -62,14 +62,9 @@ const deleteTarget = ref<Department | null>(null)
 const createError = ref<string | null>(null)
 const editError = ref<string | null>(null)
 
-const handleCreated = async (data: { name: string; description: string }) => {
+const handleCloseCreateModal = () => {
+  isCreateModalOpen.value = false
   createError.value = null
-  try {
-    await createDepartment.mutateAsync(data)
-    isCreateModalOpen.value = false
-  } catch (err) {
-    createError.value = getApiErrorMessage(err, 'Không thể tạo phòng ban.')
-  }
 }
 
 const handleCreated = (payload: {
@@ -77,8 +72,11 @@ const handleCreated = (payload: {
   onSuccess: () => void
   onError: (err: unknown) => void
 }) => {
+  createError.value = null
   createDepartment.mutate(payload.data, {
-    onSuccess: () => payload.onSuccess(),
+    onSuccess: () => {
+      payload.onSuccess()
+    },
     onError: (err) => payload.onError(err),
   })
 }
@@ -86,20 +84,31 @@ const handleCreated = (payload: {
 const handleEdit = (id: string | number) => {
   const dept = filteredDepartments.value.find((d: Department) => String(d.id) === String(id))
   if (dept) {
+    editError.value = null
     editTarget.value = dept
     isEditModalOpen.value = true
   }
 }
 
-const handleUpdated = async (id: string | number, data: Partial<Department>) => {
+const handleUpdated = (payload: {
+  id: string | number
+  data: Partial<Department>
+  onSuccess: () => void
+  onError: (err: unknown) => void
+}) => {
   editError.value = null
-  try {
-    await updateDepartment.mutateAsync({ id: String(id), data })
-    isEditModalOpen.value = false
-    editTarget.value = null
-  } catch (err) {
-    editError.value = getApiErrorMessage(err, 'Không thể cập nhật phòng ban.')
-  }
+  updateDepartment.mutate(
+    { id: String(payload.id), data: payload.data },
+    {
+      onSuccess: () => {
+        payload.onSuccess()
+      },
+      onError: (err) => {
+        editError.value = getApiErrorMessage(err, 'Không thể cập nhật phòng ban.')
+        payload.onError(err)
+      },
+    },
+  )
 }
 
 const handleCloseEditModal = () => {
