@@ -53,7 +53,7 @@ const stats = computed(() => [
 
 const columns = [
     { key: 'employee', label: 'Nhân viên' },
-    { key: 'department', label: 'Phòng ban' },
+    { key: 'departmentName', label: 'Phòng ban' },
     { key: 'type', label: 'Loại nghỉ' },
     { key: 'dateRange', label: 'Thời gian' },
     { key: 'status', label: 'Trạng thái' },
@@ -166,7 +166,7 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
         <template #cell-type="{ row }">
             <Badge variant="outline" class="bg-primary/10/50 text-primary border-primary/20 font-bold text-[9px] px-1.5 ">
-                {{ (row.leaveType && typeof row.leaveType === 'object') ? row.leaveType.name : (row.leaveType || 'Nghỉ phép') }}
+                {{ (row.leaveType && typeof row.leaveType === 'object') ? row.leaveType.name : (row.leaveTypeName || row.leaveType || 'Nghỉ phép') }}
             </Badge>
         </template>
 

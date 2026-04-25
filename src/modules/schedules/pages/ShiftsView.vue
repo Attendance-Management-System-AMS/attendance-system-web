@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Timer, Plus } from 'lucide-vue-next'
+import { Timer, Plus, Loader2 } from 'lucide-vue-next'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
@@ -8,7 +8,6 @@ import DataTable from '@/shared/ui/DataTable.vue'
 import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -18,6 +17,8 @@ import {
 } from '@/shared/ui/alert-dialog'
 import { useShifts } from '@/modules/schedules/composables/useShifts'
 import type { Shift } from '@/modules/schedules/types/shift.types'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
+import { toast } from 'vue-sonner'
 
 const { shiftsQuery, deleteShift } = useShifts()
 const { data: shiftsRaw, isLoading } = shiftsQuery
@@ -33,6 +34,7 @@ const columns = [
 
 const deleteTarget = ref<Shift | null>(null)
 const isAlertOpen = ref(false)
+const isDeletingShiftId = ref<string | number | null>(null)
 
 const handleDelete = (id: string | number) => {
   const item = shifts.value.find((s) => String(s.id) === String(id))
@@ -42,11 +44,21 @@ const handleDelete = (id: string | number) => {
   }
 }
 
-const confirmDelete = () => {
-  if (deleteTarget.value) {
-    deleteShift.mutate(deleteTarget.value.id)
+const confirmDelete = async () => {
+  if (!deleteTarget.value || isDeletingShiftId.value !== null) return
+
+  isDeletingShiftId.value = deleteTarget.value.id
+
+  try {
+    await deleteShift.mutateAsync(deleteTarget.value.id)
+    await shiftsQuery.refetch()
+    toast.success('Đã xóa ca làm việc thành công.')
     isAlertOpen.value = false
     deleteTarget.value = null
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Không thể xóa ca làm việc.'))
+  } finally {
+    isDeletingShiftId.value = null
   }
 }
 
@@ -105,11 +117,10 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
         <!-- Custom Status Column -->
         <template #cell-status="{ row }">
           <Badge 
-            :variant="row.status === 'inactive' ? 'secondary' : 'default'"
-            class="font-bold flex-shrink-0"
-            :class="row.status !== 'inactive' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30' : ''"
+            variant="default"
+            class="font-bold flex-shrink-0 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30"
           >
-            {{ row.status === 'inactive' ? 'Ngừng hoạt động' : 'Hoạt động' }}
+            Hoạt động
           </Badge>
         </template>
 
@@ -135,10 +146,16 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Hủy</AlertDialogCancel>
-          <AlertDialogAction @click="confirmDelete" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Xác nhận xóa
-          </AlertDialogAction>
+          <AlertDialogCancel :disabled="isDeletingShiftId !== null">Hủy</AlertDialogCancel>
+          <Button
+            type="button"
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            :disabled="isDeletingShiftId !== null"
+            @click="confirmDelete"
+          >
+            <Loader2 v-if="isDeletingShiftId !== null" class="mr-2 h-4 w-4 animate-spin" />
+            {{ isDeletingShiftId !== null ? 'Đang xóa...' : 'Xác nhận xóa' }}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

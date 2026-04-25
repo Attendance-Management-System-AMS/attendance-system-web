@@ -3,12 +3,9 @@ import { computed, ref } from 'vue'
 import {
   ChevronLeft,
   ChevronRight,
-  Edit3,
-  Eye,
   X,
   Search,
   Plus,
-  Calendar as CalendarIcon,
   CalendarDays,
   Users,
   Clock,
@@ -56,11 +53,6 @@ const itemsPerPage = 20
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterDepartment = ref('')
-
-const selectedEmployeeId = ref<number | null>(null)
-const selectedEmployee = computed(() =>
-  employees.value.find((e: Employee) => e.id === selectedEmployeeId.value),
-)
 
 // Quick Action Modal State
 const actionModalOpen = ref(false)
@@ -158,6 +150,25 @@ const normalizeYmd = (value?: string): string | null => {
   return value.trim().slice(0, 10)
 }
 
+const todayYmd = () => fmtYmd(new Date())
+
+const isPastYmd = (value?: string | null): boolean => {
+  const normalized = normalizeYmd(value ?? undefined)
+  if (!normalized) return false
+  return normalized < todayYmd()
+}
+
+const pastActionMessage = (mode: 'edit' | 'create'): string =>
+  mode === 'edit'
+    ? 'Không thể chỉnh sửa ca làm cho ngày trong quá khứ.'
+    : 'Không thể phân ca nhanh cho ngày trong quá khứ.'
+
+const previousDateYmd = (value: string): string => {
+  const baseDate = new Date(`${value}T00:00:00`)
+  baseDate.setDate(baseDate.getDate() - 1)
+  return fmtYmd(baseDate)
+}
+
 const appliesToDate = (schedule: Schedule, ymd: string): boolean => {
   if (schedule.isActive === false) return false
   const currentDateStr = ymd.slice(0, 10)
@@ -184,6 +195,9 @@ const openEditDialog = (schedule: ScheduleWithShift, employee: Employee, date: s
 }
 
 const openCreateDialog = (employee: Employee, date: string) => {
+  if (isPastYmd(date)) {
+    return
+  }
   actionTarget.value = { employee, date, mode: 'create' }
   actionShiftId.value = ''
   actionModalOpen.value = true
@@ -200,16 +214,47 @@ const handleActionSubmit = async () => {
   isActionLoading.value = true
   try {
     const { mode, schedule, employee, date } = actionTarget.value
+
+    if (isPastYmd(date)) {
+      toast.error(pastActionMessage(mode))
+      return
+    }
     
     if (mode === 'edit' && schedule) {
-      // Sử dụng API Update nguyên tử
-      await updateSchedule.mutateAsync({
-        id: schedule.id,
-        data: {
-          shiftId: Number(actionShiftId.value),
-          force: true
-        }
-      })
+      const selectedShiftId = Number(actionShiftId.value)
+      const scheduleEffectiveFrom = normalizeYmd(schedule.effectiveFrom)
+      const scheduleEffectiveTo = normalizeYmd(schedule.effectiveTo ?? undefined)
+      const shouldSplitSchedule =
+        !!scheduleEffectiveFrom && scheduleEffectiveFrom < date
+
+      if (shouldSplitSchedule) {
+        await updateSchedule.mutateAsync({
+          id: schedule.id,
+          data: {
+            effectiveTo: previousDateYmd(date),
+            force: true,
+          }
+        })
+
+        await createSchedule.mutateAsync({
+          employeeId: employee.id,
+          shiftId: selectedShiftId,
+          dayOfWeek: Number(schedule.dayOfWeek),
+          effectiveFrom: date,
+          effectiveTo: scheduleEffectiveTo ?? undefined,
+          isActive: schedule.isActive ?? true,
+          force: true,
+        })
+      } else {
+        // Sử dụng API Update nguyên tử khi lịch chưa đi vào quá khứ
+        await updateSchedule.mutateAsync({
+          id: schedule.id,
+          data: {
+            shiftId: selectedShiftId,
+            force: true
+          }
+        })
+      }
     } else {
       // Tính dayOfWeek từ ngày
       const d = new Date(date)
@@ -285,6 +330,10 @@ const getShiftBadgeStyle = (shiftName?: string) => {
   if (name.includes('đêm')) return 'bg-violet-50 text-violet-600 border-violet-100'
   return 'bg-surface text-secondary-text border-border-subtle'
 }
+
+const isReadOnlyPastAction = computed(() =>
+  actionTarget.value ? isPastYmd(actionTarget.value.date) : false,
+)
 </script>
 
 <template>
@@ -421,8 +470,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
             <tr
               v-for="employee in paginatedEmployees"
               :key="employee.id"
-              class="group hover:bg-surface/50 transition-colors cursor-pointer"
-              @click="selectedEmployeeId = employee.id"
+              class="group hover:bg-surface/50 transition-colors"
             >
               <td class="sticky left-0 z-10 bg-card border-r border-border px-6 py-5">
                 <div class="flex items-center gap-4">
@@ -474,6 +522,7 @@ const getShiftBadgeStyle = (shiftName?: string) => {
 
                 <!-- Quick add button -->
                 <button
+                  v-if="!isPastYmd(day.ymd)"
                   @click.stop="openCreateDialog(employee, day.ymd)"
                   class="absolute inset-0 m-auto h-6 w-6 rounded-full bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-primary hover:text-white"
                 >
@@ -514,151 +563,6 @@ const getShiftBadgeStyle = (shiftName?: string) => {
       </div>
     </div>
 
-    <!-- Detail Side Panel -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="translate-x-full"
-        leave-to-class="translate-x-full"
-        leave-active-class="transition duration-200 ease-in"
-      >
-        <div
-          v-if="selectedEmployee"
-          class="fixed inset-y-0 right-0 z-50 w-full sm:w-[450px] bg-card shadow-2xl border-l border-border flex flex-col"
-        >
-          <!-- Side Header -->
-          <div class="p-6 border-b border-border flex items-center justify-between bg-card">
-            <div class="flex items-center gap-4">
-              <div
-                class="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20"
-              >
-                <CalendarIcon class="h-6 w-6" />
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-primary-text tracking-normal ">
-                  Chi tiết lịch biểu
-                </h3>
-                <p class="text-[10px] font-bold text-tertiary-text  tracking-normal mt-0.5">
-                  Thời gian thực • {{ weekRangeLabel }}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              @click="selectedEmployeeId = null"
-              class="h-9 w-9 rounded-full bg-muted hover:bg-emphasis transition-colors"
-            >
-              <X class="h-5 w-5 text-secondary-text" />
-            </Button>
-          </div>
-
-          <!-- Side Content -->
-          <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-card">
-            <!-- Profile Info -->
-            <div
-              class="flex flex-col items-center text-center p-8 rounded-lg border border-border bg-card shadow-none"
-            >
-              <Avatar class="h-24 w-24 border-4 border-white shadow-2xl mb-6">
-                <AvatarFallback class="bg-primary text-primary-foreground text-2xl font-semibold">
-                  {{
-                    selectedEmployee.fullName
-                      .split(' ')
-                      .map((n: string) => n[0])
-                      .slice(-2)
-                      .join('')
-                      .toUpperCase()
-                  }}
-                </AvatarFallback>
-              </Avatar>
-              <h4
-                class="text-2xl font-semibold text-primary-text  tracking-normal leading-none"
-              >
-                {{ selectedEmployee.fullName }}
-              </h4>
-              <Badge
-                variant="secondary"
-                class="mt-3 bg-primary/10 text-primary border-none font-semibold tabular-nums h-7 px-4 rounded-full  text-[10px] tracking-normal"
-                >{{ selectedEmployee.employeeCode }}</Badge
-              >
-              <p class="mt-4 text-[10px] font-bold text-tertiary-text  tracking-normal">
-                {{ selectedEmployee.departmentName || 'Công ty CP TimeMaster' }}
-              </p>
-            </div>
-
-            <!-- Week Schedule Detail -->
-            <div class="space-y-5">
-              <h5 class="text-[11px] font-semibold  tracking-normal text-secondary-text pl-2">
-                Lịch làm việc trong tuần
-              </h5>
-              <div class="space-y-3">
-                <div
-                  v-for="day in weekDays"
-                  :key="day.ymd"
-                  class="flex items-center gap-5 p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-all group"
-                >
-                  <div class="w-14 text-center border-r border-border pr-5 shrink-0">
-                    <p
-                      class="text-[10px] font-semibold  tracking-normal"
-                      :class="day.isToday ? 'text-primary' : 'text-tertiary-text'"
-                    >
-                      {{ day.dayLabel }}
-                    </p>
-                    <p
-                      class="text-xl font-semibold mt-1 leading-none"
-                      :class="day.isToday ? 'text-primary' : 'text-primary-text'"
-                    >
-                      {{ day.dayNumber }}
-                    </p>
-                  </div>
-                  <div class="flex-1">
-                    <div
-                      v-if="getSchedulesForEmployeeDate(selectedEmployee, day.ymd).length"
-                      class="space-y-2"
-                    >
-                      <div
-                        v-for="s in getSchedulesForEmployeeDate(selectedEmployee, day.ymd)"
-                        :key="s.id"
-                        class="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-surface transition-colors cursor-pointer"
-                        @click.stop="openEditDialog(s, selectedEmployee, day.ymd)"
-                      >
-                        <span class="text-xs font-semibold text-primary-text  tracking-normal">{{
-                          s.shift?.name
-                        }}</span>
-                        <Badge
-                          variant="outline"
-                          class="text-[10px] font-mono border-border-subtle text-secondary-text bg-surface"
-                          >{{ s.shift?.startTime?.slice(0, 5) }} —
-                          {{ s.shift?.endTime?.slice(0, 5) }}</Badge
-                        >
-                      </div>
-                    </div>
-                    <p v-else class="text-[11px] font-bold text-tertiary-text tracking-normal">
-                      Nghỉ ca / Chưa phân bổ
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Side Footer -->
-          <div class="p-6 border-t border-border-subtle bg-card grid grid-cols-2 gap-4">
-            <Button
-              class="h-12 bg-primary hover:bg-primary/90 font-semibold  tracking-normal text-[11px] text-primary-foreground gap-2 rounded-lg shadow-lg shadow-primary/20"
-            >
-              <Edit3 class="h-4 w-4" /> Chỉnh sửa
-            </Button>
-            <Button
-              variant="outline"
-              class="h-12 font-semibold  tracking-normal text-[11px] text-secondary-text gap-2 rounded-lg border-border-subtle hover:bg-surface transition-all"
-            >
-              <Eye class="h-4 w-4" /> Lịch sử
-            </Button>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
     <!-- Quick Action Modal -->
     <Teleport to="body">
       <Transition
@@ -669,14 +573,27 @@ const getShiftBadgeStyle = (shiftName?: string) => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="actionModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-card/40 backdrop-blur-[2px]">
+        <div
+          v-if="actionModalOpen"
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-card/40 backdrop-blur-[2px]"
+          @click.self="!isActionLoading && closeActionModal()"
+        >
           <Transition
             enter-active-class="transition duration-300 ease-out"
             enter-from-class="opacity-0 scale-95 translate-y-4"
             enter-to-class="opacity-100 scale-100 translate-y-0"
           >
             <div v-if="actionModalOpen" class="relative w-full max-w-sm rounded-lg border border-border-subtle bg-card shadow-2xl p-6">
-              <h3 class="text-lg font-semibold mb-4">{{ actionTarget?.mode === 'edit' ? 'Chi tiết ca làm' : 'Phân ca nhanh' }}</h3>
+              <button
+                type="button"
+                class="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-tertiary-text transition-colors hover:bg-muted hover:text-primary-text"
+                :disabled="isActionLoading"
+                @click="closeActionModal"
+              >
+                <X class="h-4 w-4" />
+              </button>
+
+              <h3 class="text-lg font-semibold mb-4 pr-10">{{ actionTarget?.mode === 'edit' ? 'Chi tiết ca làm' : 'Phân ca nhanh' }}</h3>
               
               <div class="space-y-4">
                 <div>
@@ -690,20 +607,43 @@ const getShiftBadgeStyle = (shiftName?: string) => {
                 
                 <div>
                   <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Chọn ca làm</p>
-                  <select v-model="actionShiftId" class="w-full h-10 px-3 rounded-lg border border-border-subtle bg-surface text-sm font-semibold focus:ring-1 focus:ring-primary outline-none">
+                  <select
+                    v-model="actionShiftId"
+                    class="w-full h-10 px-3 rounded-lg border border-border-subtle bg-surface text-sm font-semibold focus:ring-1 focus:ring-primary outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                    :disabled="isReadOnlyPastAction || isActionLoading"
+                  >
                     <option value="" disabled>-- Chọn ca --</option>
                     <option v-for="shift in shifts" :key="shift.id" :value="String(shift.id)">{{ shift.name }} ({{ shift.startTime?.slice(0,5) }} - {{ shift.endTime?.slice(0,5) }})</option>
                   </select>
                 </div>
+
+                <p
+                  v-if="isReadOnlyPastAction"
+                  class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300"
+                >
+                  {{
+                    actionTarget?.mode === 'edit'
+                      ? 'Ca làm trong quá khứ chỉ xem chi tiết, không được đổi sang ca mới.'
+                      : 'Không thể phân ca nhanh cho ngày trong quá khứ.'
+                  }}
+                </p>
               </div>
 
               <div class="mt-8 flex gap-3">
+                <Button @click="closeActionModal" variant="outline" class="flex-1" :disabled="isActionLoading">Đóng</Button>
                 <Button v-if="actionTarget?.mode === 'edit'" @click="handleActionDelete" variant="outline" class="flex-1 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border-rose-200" :disabled="isActionLoading">
                   {{ isActionLoading ? 'Đang xóa...' : 'Xóa ca' }}
                 </Button>
-                <Button v-else @click="closeActionModal" variant="outline" class="flex-1" :disabled="isActionLoading">Hủy</Button>
-                <Button @click="handleActionSubmit" class="flex-1 bg-primary hover:bg-primary/90 text-white" :disabled="isActionLoading || !actionShiftId">
-                  {{ isActionLoading ? 'Đang lưu...' : 'Lưu lại' }}
+                <Button @click="handleActionSubmit" class="flex-1 bg-primary hover:bg-primary/90 text-white" :disabled="isActionLoading || !actionShiftId || isReadOnlyPastAction">
+                  {{
+                    isReadOnlyPastAction
+                      ? actionTarget?.mode === 'edit'
+                        ? 'Không sửa quá khứ'
+                        : 'Không phân ca quá khứ'
+                      : isActionLoading
+                        ? 'Đang lưu...'
+                        : 'Lưu lại'
+                  }}
                 </Button>
               </div>
             </div>

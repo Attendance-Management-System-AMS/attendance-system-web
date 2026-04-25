@@ -22,13 +22,17 @@ export interface CreateSchedule {
   dayOfWeek: number;
   isActive: boolean;
   effectiveFrom: string;
+  effectiveTo?: string | null;
   force?: boolean;
 }
 
 export interface UpdateScheduleRequest {
-  shiftId: number;
+  shiftId?: number;
+  effectiveFrom?: string;
   force?: boolean;
-  effectiveTo?: string | null;}
+  effectiveTo?: string | null;
+  isActive?: boolean;
+}
 
 export interface ScheduleTemplateItem {
   id?: number;

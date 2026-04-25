@@ -3,6 +3,49 @@ import { queryKeys } from '@/shared/lib/queryKeys'
 import { leaveApi } from '@/modules/leaves/api/leave.api'
 import type { CreateLeaveRequest, LeaveRequest, LeaveType } from '@/modules/leaves/types/leave.types'
 
+type LeaveListResult =
+  | LeaveRequest[]
+  | {
+      content?: LeaveRequest[]
+      items?: LeaveRequest[]
+      records?: LeaveRequest[]
+      data?: LeaveRequest[]
+    }
+  | undefined
+
+function normalizeLeave(raw: LeaveRequest): LeaveRequest {
+  return {
+    ...raw,
+    departmentName: raw.departmentName,
+    leaveType:
+      raw.leaveType ??
+      raw.leaveTypeName ??
+      raw.leaveTypeCode ??
+      (typeof raw.leaveType === 'string' ? raw.leaveType : undefined),
+    fromDate: raw.fromDate ?? raw.startDate,
+    toDate: raw.toDate ?? raw.endDate,
+  }
+}
+
+function normalizeLeaveList(result: LeaveListResult): LeaveRequest[] {
+  if (Array.isArray(result)) {
+    return result.map(normalizeLeave)
+  }
+  if (result && typeof result === 'object') {
+    const container =
+      result.content ??
+      result.items ??
+      result.records ??
+      result.data ??
+      []
+
+    if (Array.isArray(container)) {
+      return container.map(normalizeLeave)
+    }
+  }
+  return []
+}
+
 export function useLeaves() {
   const queryClient = useQueryClient()
 
@@ -10,12 +53,11 @@ export function useLeaves() {
     queryKey: queryKeys.leaves.all(),
     queryFn: async () => {
       const response = await leaveApi.getAll()
-      const result = response.data?.result as LeaveRequest[] | { content?: LeaveRequest[] } | undefined
-      if (Array.isArray(result)) return result
-      if (result && Array.isArray(result.content)) return result.content
-      return []
+      return normalizeLeaveList(response.data?.result as LeaveListResult)
     },
-    staleTime: 1000 * 60 * 1,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   const leaveTypesQuery = useQuery<LeaveType[]>({

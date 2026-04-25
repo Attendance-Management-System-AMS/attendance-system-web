@@ -11,6 +11,8 @@ export interface LeaveRequest {
   departmentName?: string
   reason: string
   leaveType?: LeaveType | string
+  leaveTypeName?: string
+  leaveTypeCode?: string
   /** Backend mới */
   fromDate?: string
   toDate?: string
@@ -19,6 +21,8 @@ export interface LeaveRequest {
   endDate?: string
   days?: number
   status: LeaveStatus
+  approvedByName?: string
+  createdAt?: string
 }
 
 export interface CreateLeaveRequest {
