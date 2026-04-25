@@ -61,24 +61,24 @@ export default [
     path: '/my/dashboard',
     name: 'my-dashboard',
     component: () => import('@/modules/employee-portal/pages/MyDashboardView.vue'),
-    meta: { title: 'Bảng tin của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'] },
+    meta: { title: 'Bảng tin của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_MANAGER', 'ROLE_HR', 'ROLE_ADMIN'] },
   },
   {
     path: '/my/attendance',
     name: 'my-attendance',
     component: () => import('@/modules/employee-portal/pages/MyAttendanceView.vue'),
-    meta: { title: 'Bảng công của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'] },
+    meta: { title: 'Bảng công của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_MANAGER', 'ROLE_HR', 'ROLE_ADMIN'] },
   },
   {
     path: '/my/schedule',
     name: 'my-schedule',
     component: () => import('@/modules/employee-portal/pages/MyScheduleView.vue'),
-    meta: { title: 'Lịch làm việc của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'] },
+    meta: { title: 'Lịch làm việc của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_MANAGER', 'ROLE_HR', 'ROLE_ADMIN'] },
   },
   {
     path: '/my/requests',
     name: 'my-requests',
     component: () => import('@/modules/employee-portal/pages/MyRequestsView.vue'),
-    meta: { title: 'Đơn từ của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_ADMIN'] },
+    meta: { title: 'Đơn từ của tôi', roles: ['ROLE_EMPLOYEE', 'ROLE_MANAGER', 'ROLE_HR', 'ROLE_ADMIN'] },
   },
 ] as RouteRecordRaw[]

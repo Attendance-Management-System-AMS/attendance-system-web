@@ -54,6 +54,18 @@ const navGroups: NavGroup[] = [
         roles: roleGroups.operations,
       },
       {
+        label: 'Phân tích & Báo cáo',
+        to: '/reports',
+        icon: BarChart3,
+        roles: roleGroups.operations,
+      },
+    ],
+  },
+  {
+    label: 'Lịch & Chấm công',
+    roles: roleGroups.operations,
+    items: [
+      {
         label: 'Chấm công hôm nay',
         to: '/attendance',
         icon: Timer,
@@ -65,11 +77,12 @@ const navGroups: NavGroup[] = [
         icon: CalendarDays,
         roles: roleGroups.operations,
         children: [
-          { label: 'Bảng lịch', to: '/schedule', roles: roleGroups.operations },
           { label: 'Phân công lịch', to: '/schedule/assignments', roles: roleGroups.adminHr },
           { label: 'Mẫu lịch làm việc', to: '/schedule/templates', roles: roleGroups.adminHr },
         ],
       },
+      { label: 'Ca làm việc', to: '/shifts', icon: Timer, roles: roleGroups.adminHr },
+      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays, roles: roleGroups.adminHr },
     ],
   },
   {
@@ -93,19 +106,10 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Vận hành',
+    label: 'Đơn từ',
     roles: roleGroups.operations,
     items: [
       { label: 'Nghỉ phép', to: '/leaves', icon: ClipboardList },
-      { label: 'Ca làm việc', to: '/shifts', icon: Timer, roles: roleGroups.adminHr },
-      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays, roles: roleGroups.adminHr },
-    ],
-  },
-  {
-    label: 'Báo cáo',
-    roles: roleGroups.operations,
-    items: [
-      { label: 'Phân tích & Báo cáo', to: '/reports', icon: BarChart3 },
     ],
   },
   {

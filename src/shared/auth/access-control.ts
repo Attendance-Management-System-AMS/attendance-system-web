@@ -63,7 +63,7 @@ export const roleGroups: {
   adminOnly: ['ROLE_ADMIN'],
   adminHr: ['ROLE_ADMIN', 'ROLE_HR'],
   operations: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
-  selfService: ['ROLE_ADMIN', 'ROLE_EMPLOYEE'],
+  selfService: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER', 'ROLE_EMPLOYEE'],
   authenticated: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER', 'ROLE_EMPLOYEE'],
 }
 
@@ -272,8 +272,8 @@ export const permissionScreens: PermissionScreen[] = [
     description: 'Tổng hợp dữ liệu chấm công và đơn từ của cá nhân.',
     access: {
       ROLE_ADMIN: 'self',
-      ROLE_HR: 'none',
-      ROLE_MANAGER: 'none',
+      ROLE_HR: 'self',
+      ROLE_MANAGER: 'self',
       ROLE_EMPLOYEE: 'self',
     },
   },
@@ -285,8 +285,8 @@ export const permissionScreens: PermissionScreen[] = [
     description: 'Xem check-in, check-out, trạng thái công và lịch sử chấm công của mình.',
     access: {
       ROLE_ADMIN: 'self',
-      ROLE_HR: 'none',
-      ROLE_MANAGER: 'none',
+      ROLE_HR: 'self',
+      ROLE_MANAGER: 'self',
       ROLE_EMPLOYEE: 'self',
     },
   },
@@ -298,8 +298,8 @@ export const permissionScreens: PermissionScreen[] = [
     description: 'Theo dõi lịch đang có hiệu lực và ca được phân cho bản thân.',
     access: {
       ROLE_ADMIN: 'self',
-      ROLE_HR: 'none',
-      ROLE_MANAGER: 'none',
+      ROLE_HR: 'self',
+      ROLE_MANAGER: 'self',
       ROLE_EMPLOYEE: 'self',
     },
   },
@@ -311,8 +311,8 @@ export const permissionScreens: PermissionScreen[] = [
     description: 'Tạo đơn và theo dõi trạng thái xử lý của cá nhân.',
     access: {
       ROLE_ADMIN: 'self',
-      ROLE_HR: 'none',
-      ROLE_MANAGER: 'none',
+      ROLE_HR: 'self',
+      ROLE_MANAGER: 'self',
       ROLE_EMPLOYEE: 'self',
     },
   },
