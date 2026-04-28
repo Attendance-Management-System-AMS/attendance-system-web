@@ -17,6 +17,7 @@ const FACE_SCORE_THRESHOLD = 0.45
 const FACE_HOLD_MS = 700
 const SCAN_DELAY_MS = 120
 const RESET_DELAY_MS = 3500
+const KIOSK_DEVICE_ID_KEY = 'attendance-kiosk-device-id'
 
 // --- State ---
 const time = useDateFormat(useNow(), 'HH:mm:ss')
@@ -24,6 +25,7 @@ const date = useDateFormat(useNow(), 'DD/MM/YYYY')
 
 const state = reactive({
   locked: false,
+  kioskReady: false,
   errorMsg: '' as string,
 
   success: {
@@ -35,6 +37,26 @@ const state = reactive({
     status: '',
   }
 })
+
+function getKioskDeviceId(): string {
+  const existing = window.localStorage.getItem(KIOSK_DEVICE_ID_KEY)
+  if (existing && existing.trim() !== '') {
+    return existing
+  }
+
+  const generated = typeof window.crypto?.randomUUID === 'function'
+    ? window.crypto.randomUUID()
+    : `kiosk-${Date.now()}`
+
+  window.localStorage.setItem(KIOSK_DEVICE_ID_KEY, generated)
+  return generated
+}
+
+function createKioskNonce(): string {
+  return typeof window.crypto?.randomUUID === 'function'
+    ? window.crypto.randomUUID()
+    : `nonce-${Date.now()}`
+}
 
 // --- Helpers ---
 function employeeFromBrief(row: AttendanceCheckInResult, brief: AttendanceEmployeeBrief): Employee {
@@ -130,7 +152,20 @@ const handleCheckIn = async (descriptor: Float32Array) => {
   state.errorMsg = ''
 
   try {
-    const data = await attendanceApi.scanByFace(Array.from(descriptor))
+    const deviceId = getKioskDeviceId()
+    const session = await attendanceApi.createKioskSession(deviceId)
+    const sessionToken = session.result?.token
+
+    if (!sessionToken) {
+      throw new Error('Không lấy được phiên kiosk hợp lệ.')
+    }
+
+    const data = await attendanceApi.scanByFace(Array.from(descriptor), {
+      deviceId,
+      sessionToken,
+      nonce: createKioskNonce(),
+      timestamp: Date.now(),
+    })
     await showSuccess(data.result)
   } catch (err) {
     state.errorMsg = getApiErrorMessage(err, 'Không thể chấm công.')
@@ -146,7 +181,7 @@ const handleCheckIn = async (descriptor: Float32Array) => {
 }
 
 const runScanner = async () => {
-  if (state.locked || !isLoaded.value) {
+  if (state.locked || !state.kioskReady || !isLoaded.value) {
     faceHoldStart = null
     scanTimer = window.setTimeout(runScanner, SCAN_DELAY_MS)
     return
@@ -174,10 +209,13 @@ onMounted(async () => {
   try {
     await loadModels()
     await setupCamera()
+    await attendanceApi.createKioskSession(getKioskDeviceId())
+    state.kioskReady = true
     runScanner()
   } catch (err) {
     console.error('Khởi tạo lỗi:', err)
-    state.errorMsg = getApiErrorMessage(err, 'Lỗi truy cập Camera hoặc AI!')
+    state.kioskReady = false
+    state.errorMsg = getApiErrorMessage(err, 'Kiosk cần phiên vận hành hợp lệ hoặc không thể truy cập Camera/AI!')
   }
 })
 
@@ -202,7 +240,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div v-if="isLoaded && !state.locked" class="flex-1 flex items-center justify-center">
+        <div v-if="isLoaded && state.kioskReady && !state.locked" class="flex-1 flex items-center justify-center">
           <div class="w-48 h-48 sm:w-80 sm:h-80 relative">
             <div class="absolute -top-1 -left-1 w-8 h-8 sm:w-12 sm:h-12 border-t-4 border-l-4 border-indigo-500 rounded-tl-2xl opacity-50"></div>
             <div class="absolute -top-1 -right-1 w-8 h-8 sm:w-12 sm:h-12 border-t-4 border-r-4 border-indigo-500 rounded-tr-2xl opacity-50"></div>

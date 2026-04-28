@@ -57,6 +57,21 @@ export interface AttendanceCheckInResult {
   employeeSnapshotPositionName?: string | null
 }
 
+export interface KioskSessionResult {
+  token: string
+  tokenType: string
+  deviceId: string
+  expiresIn: number
+  expiresAt: string
+}
+
+export interface KioskScanAuth {
+  deviceId: string
+  sessionToken: string
+  nonce: string
+  timestamp: number
+}
+
 export interface MyAttendanceFilters {
   fromDate?: string
   toDate?: string
@@ -85,10 +100,31 @@ export const attendanceApi = {
     api.get<ApiResponse<Page<Attendance>>>('/attendance/me', { params }),
   getTodayMe: () => api.get<ApiResponse<Attendance | null>>('/attendance/today/me'),
   getMySchedules: () => api.get<ApiResponse<EmployeeScheduleResponse[]>>('/attendance/schedules/me'),
+  createKioskSession: (deviceId: string) =>
+    api.post<ApiResponse<KioskSessionResult>>(
+      '/attendance/kiosk/session',
+      {},
+      {
+        headers: {
+          'X-Kiosk-Device-Id': deviceId,
+        },
+      },
+    ).then((res) => res.data),
 
-  scanByFace: (descriptor: number[]) =>
+  scanByFace: (descriptor: number[], kioskAuth: KioskScanAuth) =>
     api
-      .post<ApiResponse<AttendanceCheckInResult>>('/attendance/scan-by-face', { descriptor })
+      .post<ApiResponse<AttendanceCheckInResult>>(
+        '/attendance/scan-by-face',
+        { descriptor },
+        {
+          headers: {
+            'X-Kiosk-Session': kioskAuth.sessionToken,
+            'X-Kiosk-Device-Id': kioskAuth.deviceId,
+            'X-Kiosk-Nonce': kioskAuth.nonce,
+            'X-Kiosk-Timestamp': String(kioskAuth.timestamp),
+          },
+        },
+      )
       .then((res) => res.data),
   checkIn: (employeeId: number) =>
     api.post<ApiResponse<AttendanceCheckInResult>>(`/attendance/check-in/${employeeId}`),
