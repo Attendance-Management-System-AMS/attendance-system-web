@@ -55,9 +55,8 @@ export function useLeaves() {
       const response = await leaveApi.getAll()
       return normalizeLeaveList(response.data?.result as LeaveListResult)
     },
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: false,
   })
 
   const leaveTypesQuery = useQuery<LeaveType[]>({
