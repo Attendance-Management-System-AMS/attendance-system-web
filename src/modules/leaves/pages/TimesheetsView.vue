@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Check, X, Plus, Clock, CheckCircle2, Loader2, XCircle } from 'lucide-vue-next'
+import { Check, X, Plus, Clock, CheckCircle2, Loader2, XCircle, Eye } from 'lucide-vue-next'
 import { useLeaves } from '@/modules/leaves/composables/useLeaves'
 import type { CreateLeaveRequest, LeaveRequest } from '@/modules/leaves/types/leave.types'
 import { isPendingLeave, normalizeLeaveStatus } from '@/modules/leaves/utils/leaveStatus'
@@ -13,6 +13,8 @@ import { Badge } from '@/shared/ui/badge'
 import DataTable from '@/shared/ui/DataTable.vue'
 import { Card } from '@/shared/ui/card'
 import PageHeader from '@/shared/ui/PageHeader.vue'
+import { Separator } from '@/shared/ui/separator'
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { toast } from 'vue-sonner'
 
 const filterStatus = ref('')
@@ -63,9 +65,123 @@ const columns = [
 const isCreateModalOpen = ref(false)
 const processingLeaveId = ref<string | number | null>(null)
 const processingAction = ref<'approve' | 'reject' | null>(null)
+const isDetailOpen = ref(false)
+const selectedLeaveId = ref<string | number | null>(null)
+
+const selectedLeave = computed<LeaveRequest | null>(() => {
+  if (selectedLeaveId.value == null) {
+    return null
+  }
+
+  return (
+    leaves.value.find((item) => String(item.id) === String(selectedLeaveId.value)) ?? null
+  )
+})
 
 const isActionLoading = (id: string | number, action: 'approve' | 'reject') =>
   processingLeaveId.value === id && processingAction.value === action
+
+const openLeaveDetail = (leave: LeaveRequest) => {
+  selectedLeaveId.value = leave.id
+  isDetailOpen.value = true
+}
+
+const handleDetailOpenChange = (open: boolean) => {
+  isDetailOpen.value = open
+  if (!open) {
+    selectedLeaveId.value = null
+  }
+}
+
+const getLeaveTypeLabel = (leave: LeaveRequest | null) => {
+  if (!leave) {
+    return '—'
+  }
+
+  if (leave.leaveType && typeof leave.leaveType === 'object') {
+    return leave.leaveType.name
+  }
+
+  return leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType || 'Nghỉ phép'
+}
+
+const getStatusLabel = (status: LeaveRequest['status']) => {
+  const normalized = normalizeLeaveStatus(status)
+  if (normalized === 'approved') return 'Đã duyệt'
+  if (normalized === 'rejected') return 'Từ chối'
+  return 'Chờ duyệt'
+}
+
+const getStatusBadgeClass = (status: LeaveRequest['status']) => {
+  const normalized = normalizeLeaveStatus(status)
+  if (normalized === 'approved') {
+    return 'border-emerald-300/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+  }
+  if (normalized === 'rejected') {
+    return 'border-rose-300/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+  }
+  return 'border-amber-300/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+}
+
+const parseDateValue = (value?: string) => {
+  if (!value) {
+    return null
+  }
+
+  const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch
+    return new Date(Number(year), Number(month) - 1, Number(day))
+  }
+
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const formatDisplayDate = (value?: string) => {
+  const parsed = parseDateValue(value)
+  if (!parsed) {
+    return value || '—'
+  }
+
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(parsed)
+}
+
+const formatDisplayDateTime = (value?: string) => {
+  const parsed = parseDateValue(value)
+  if (!parsed) {
+    return value || '—'
+  }
+
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(parsed)
+}
+
+const getLeaveDayCount = (leave: LeaveRequest | null) => {
+  if (!leave) {
+    return '—'
+  }
+
+  const dayCount = leave.totalDays ?? leave.days
+  if (dayCount == null) {
+    return '—'
+  }
+
+  if (Number.isInteger(dayCount)) {
+    return `${dayCount} ngày`
+  }
+
+  return `${dayCount.toFixed(1)} ngày`
+}
 
 const handleApprove = async (id: string | number) => {
   if (processingLeaveId.value !== null) return
@@ -166,8 +282,15 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
         <template #cell-type="{ row }">
             <Badge variant="outline" class="bg-primary/10/50 text-primary border-primary/20 font-bold text-[9px] px-1.5 ">
-                {{ (row.leaveType && typeof row.leaveType === 'object') ? row.leaveType.name : (row.leaveTypeName || row.leaveType || 'Nghỉ phép') }}
+                {{ getLeaveTypeLabel(row) }}
             </Badge>
+        </template>
+
+        <template #cell-departmentName="{ row }">
+            <div class="py-1">
+              <p class="font-medium text-primary-text leading-tight">{{ row.departmentName || '—' }}</p>
+              <p class="text-[9px] text-secondary-text leading-tight">{{ row.positionName || '—' }}</p>
+            </div>
         </template>
 
         <template #cell-dateRange="{ row }">
@@ -180,13 +303,23 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
         <template #cell-status="{ value }">
            <Badge variant="outline"
-                class="px-2 py-0.5 text-[9px] font-bold border-primary/20 bg-primary/10 text-primary ">
-                {{ normalizeLeaveStatus(value) === 'approved' ? 'Đã duyệt' : normalizeLeaveStatus(value) === 'rejected' ? 'Từ chối' : 'Chờ duyệt' }}
+                :class="['px-2 py-0.5 text-[9px] font-bold', getStatusBadgeClass(value)]">
+                {{ getStatusLabel(value) }}
            </Badge>
         </template>
 
         <template #cell-actions="{ row }">
-            <div v-if="isPendingLeave(row.status)" class="flex justify-end gap-1.5">
+            <div class="flex justify-end gap-1.5">
+                <Button
+                    size="sm"
+                    variant="outline"
+                    class="h-8 px-3 text-[10px] font-semibold border-border hover:bg-muted"
+                    @click="openLeaveDetail(row)"
+                >
+                    <Eye class="mr-1.5 h-3.5 w-3.5" />
+                    Chi tiết
+                </Button>
+                <template v-if="isPendingLeave(row.status)">
                 <Button
                     size="icon"
                     variant="outline"
@@ -209,11 +342,135 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
                     <Loader2 v-if="isActionLoading(row.id, 'reject')" class="h-4 w-4 animate-spin" />
                     <X v-else class="h-4 w-4" />
                 </Button>
+                </template>
             </div>
-            <span v-else class="text-[10px] font-semibold  tracking-normal text-tertiary-text mr-2">Hoàn thành</span>
         </template>
       </DataTable>
     </div>
+
+    <Sheet :open="isDetailOpen" @update:open="handleDetailOpenChange">
+      <SheetContent side="right" class="w-full max-w-full gap-0 border-l border-border bg-background p-0 sm:max-w-lg">
+        <SheetHeader class="border-b border-border bg-card px-5 py-5">
+          <div class="flex items-start justify-between gap-3 pr-8">
+            <div class="space-y-1">
+              <SheetTitle class="text-base">Chi tiết đơn nghỉ</SheetTitle>
+              <SheetDescription>
+                Kiểm tra đầy đủ thông tin trước khi duyệt hoặc từ chối đơn.
+              </SheetDescription>
+            </div>
+            <Badge
+              v-if="selectedLeave"
+              variant="outline"
+              :class="['px-2.5 py-1 text-[10px] font-semibold', getStatusBadgeClass(selectedLeave.status)]"
+            >
+              {{ getStatusLabel(selectedLeave.status) }}
+            </Badge>
+          </div>
+
+          <div
+            v-if="selectedLeave"
+            class="mt-4 rounded-lg border border-border bg-background px-4 py-4"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="space-y-1">
+                <p class="text-base font-semibold text-primary-text">{{ selectedLeave.employeeName }}</p>
+                <p class="text-[11px] font-mono font-semibold text-primary">{{ selectedLeave.employeeCode || '—' }}</p>
+              </div>
+              <div class="min-w-0 text-right">
+                <p class="text-[11px] font-medium text-secondary-text">{{ selectedLeave.departmentName || 'Chưa có phòng ban' }}</p>
+                <p class="text-[11px] text-tertiary-text">{{ selectedLeave.positionName || 'Chưa có chức vụ' }}</p>
+              </div>
+            </div>
+          </div>
+        </SheetHeader>
+
+        <div v-if="selectedLeave" class="flex-1 overflow-y-auto px-5 py-5">
+          <div class="rounded-lg border border-border bg-card">
+            <div class="px-4 py-3">
+              <p class="text-xs font-medium text-tertiary-text">Thông tin đơn</p>
+            </div>
+            <Separator />
+            <div class="divide-y divide-border">
+              <div class="flex items-start justify-between gap-4 px-4 py-3">
+                <span class="text-xs font-medium text-tertiary-text">Loại nghỉ</span>
+                <span class="text-right text-sm font-semibold text-primary-text">{{ getLeaveTypeLabel(selectedLeave) }}</span>
+              </div>
+              <div class="flex items-start justify-between gap-4 px-4 py-3">
+                <span class="text-xs font-medium text-tertiary-text">Thời gian</span>
+                <div class="text-right text-sm font-semibold text-primary-text">
+                  <p>{{ formatDisplayDate(selectedLeave.fromDate || selectedLeave.startDate) }}</p>
+                  <p class="text-xs font-medium text-tertiary-text">đến {{ formatDisplayDate(selectedLeave.toDate || selectedLeave.endDate) }}</p>
+                </div>
+              </div>
+              <div class="flex items-start justify-between gap-4 px-4 py-3">
+                <span class="text-xs font-medium text-tertiary-text">Số ngày nghỉ</span>
+                <span class="text-right text-sm font-semibold text-primary-text">{{ getLeaveDayCount(selectedLeave) }}</span>
+              </div>
+              <div class="flex items-start justify-between gap-4 px-4 py-3">
+                <span class="text-xs font-medium text-tertiary-text">Trạng thái</span>
+                <Badge
+                  variant="outline"
+                  :class="['px-2 py-0.5 text-[10px] font-semibold', getStatusBadgeClass(selectedLeave.status)]"
+                >
+                  {{ getStatusLabel(selectedLeave.status) }}
+                </Badge>
+              </div>
+              <div class="flex items-start justify-between gap-4 px-4 py-3">
+                <span class="text-xs font-medium text-tertiary-text">Người duyệt</span>
+                <span class="text-right text-sm font-semibold text-primary-text">{{ selectedLeave.approvedByName || 'Chưa duyệt' }}</span>
+              </div>
+              <div class="flex items-start justify-between gap-4 px-4 py-3">
+                <span class="text-xs font-medium text-tertiary-text">Ngày tạo đơn</span>
+                <span class="text-right text-sm font-semibold text-primary-text">{{ formatDisplayDateTime(selectedLeave.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-lg border border-border bg-card">
+            <div class="px-4 py-3">
+              <p class="text-xs font-medium text-tertiary-text">Lý do nghỉ phép</p>
+            </div>
+            <Separator />
+            <div class="px-4 py-4">
+              <p class="whitespace-pre-line text-sm leading-6 text-primary-text">
+                {{ selectedLeave.reason || 'Không có ghi chú thêm.' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="flex flex-1 items-center justify-center px-6 py-16 text-sm text-secondary-text">
+          Không tìm thấy dữ liệu của đơn nghỉ này.
+        </div>
+
+        <SheetFooter class="border-t border-border bg-card px-5 py-4 sm:flex-row sm:justify-end">
+          <Button variant="outline" class="h-9 px-4" @click="handleDetailOpenChange(false)">
+            Đóng
+          </Button>
+          <template v-if="selectedLeave && isPendingLeave(selectedLeave.status)">
+            <Button
+              variant="outline"
+              class="h-9 px-4 border-primary/20 text-primary hover:bg-primary/10"
+              :disabled="processingLeaveId !== null"
+              @click="handleReject(selectedLeave.id)"
+            >
+              <Loader2 v-if="isActionLoading(selectedLeave.id, 'reject')" class="mr-2 h-4 w-4 animate-spin" />
+              <X v-else class="mr-2 h-4 w-4" />
+              Từ chối
+            </Button>
+            <Button
+              class="h-9 px-4 bg-primary hover:bg-primary/90"
+              :disabled="processingLeaveId !== null"
+              @click="handleApprove(selectedLeave.id)"
+            >
+              <Loader2 v-if="isActionLoading(selectedLeave.id, 'approve')" class="mr-2 h-4 w-4 animate-spin" />
+              <Check v-else class="mr-2 h-4 w-4" />
+              Phê duyệt
+            </Button>
+          </template>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
 
     <LeaveCreateModal
       :open="isCreateModalOpen"
