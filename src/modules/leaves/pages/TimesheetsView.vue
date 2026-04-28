@@ -170,6 +170,13 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
             </Badge>
         </template>
 
+        <template #cell-departmentName="{ row }">
+            <div class="py-1">
+              <p class="font-medium text-primary-text leading-tight">{{ row.departmentName || '—' }}</p>
+              <p class="text-[9px] text-secondary-text leading-tight">{{ row.positionName || '—' }}</p>
+            </div>
+        </template>
+
         <template #cell-dateRange="{ row }">
             <div class="text-[10px] sm:text-[11px] font-medium text-secondary-text flex flex-col gap-0.5">
                 <span>{{ row.fromDate || row.startDate }}</span>

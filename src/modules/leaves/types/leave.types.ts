@@ -9,6 +9,7 @@ export interface LeaveRequest {
   employeeName: string
   employeeCode?: string
   departmentName?: string
+  positionName?: string
   reason: string
   leaveType?: LeaveType | string
   leaveTypeName?: string
