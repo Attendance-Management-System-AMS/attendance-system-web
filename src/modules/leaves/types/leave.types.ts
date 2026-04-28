@@ -14,6 +14,7 @@ export interface LeaveRequest {
   leaveType?: LeaveType | string
   leaveTypeName?: string
   leaveTypeCode?: string
+  totalDays?: number
   /** Backend mới */
   fromDate?: string
   toDate?: string

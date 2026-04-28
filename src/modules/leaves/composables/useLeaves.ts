@@ -17,6 +17,8 @@ function normalizeLeave(raw: LeaveRequest): LeaveRequest {
   return {
     ...raw,
     departmentName: raw.departmentName,
+    totalDays: raw.totalDays ?? raw.days,
+    days: raw.days ?? raw.totalDays,
     leaveType:
       raw.leaveType ??
       raw.leaveTypeName ??
