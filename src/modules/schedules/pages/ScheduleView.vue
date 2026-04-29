@@ -18,6 +18,7 @@ import { Card } from '@/shared/ui/card'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import { toast } from 'vue-sonner'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
+import { formatScheduleConflictError } from '@/modules/schedules/utils/scheduleConflictError'
 
 import { useEmployees } from '@/modules/employees/composables/useEmployees'
 import { useSchedules } from '@/modules/schedules/composables/useSchedules'
@@ -274,16 +275,8 @@ const handleActionSubmit = async () => {
 
     toast.success(mode === 'edit' ? 'Đã cập nhật ca làm việc' : 'Đã phân ca thành công')
     closeActionModal()
-  } catch (err: any) {
-    const respData = err?.response?.data?.data
-    if (Array.isArray(respData) && respData.length > 0 && respData[0].newShiftName) {
-      const conflictsStr = respData
-        .map((c: any) => `${c.dayOfWeek === 7 ? 'Chủ nhật' : 'Thứ ' + c.dayOfWeek}: ${c.newShiftName} trùng với ${c.existingShiftName}`)
-        .join(', ')
-      toast.error(`Xung đột: ${conflictsStr}`)
-    } else {
-      toast.error(getApiErrorMessage(err, 'Thao tác thất bại'))
-    }
+  } catch (err: unknown) {
+    toast.error(formatScheduleConflictError(err, 'Xung đột') ?? getApiErrorMessage(err, 'Thao tác thất bại'))
   } finally {
     isActionLoading.value = false
   }

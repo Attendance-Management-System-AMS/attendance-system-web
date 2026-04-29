@@ -34,11 +34,14 @@ const reason = ref('')
 const leaveTypeCode = ref('')
 const fromDate = ref('')
 const toDate = ref('')
+const correctedCheckIn = ref('')
+const correctedCheckOut = ref('')
 
 const error = ref<string | null>(null)
 const availableTypes = computed(() => props.leaveTypes ?? [])
 const employees = computed(() => employeesQuery.data.value?.content ?? [])
 const isLoadingEmployees = computed(() => employeesQuery.isLoading.value)
+const isAttendanceCorrection = computed(() => leaveTypeCode.value === 'AC')
 
 watch(
   () => availableTypes.value,
@@ -51,12 +54,20 @@ watch(
   { immediate: true },
 )
 
+watch([leaveTypeCode, fromDate], ([nextLeaveTypeCode, nextFromDate]) => {
+  if (nextLeaveTypeCode === 'AC' && nextFromDate) {
+    toDate.value = nextFromDate
+  }
+})
+
 const resetForm = () => {
   employeeId.value = null
   reason.value = ''
   leaveTypeCode.value = ''
   fromDate.value = ''
   toDate.value = ''
+  correctedCheckIn.value = ''
+  correctedCheckOut.value = ''
   error.value = null
 }
 
@@ -76,7 +87,7 @@ const handleSubmit = () => {
     error.value = 'Lý do là bắt buộc'
     return
   }
-  if (!fromDate.value || !toDate.value) {
+  if (!fromDate.value || (!isAttendanceCorrection.value && !toDate.value)) {
     error.value = 'Vui lòng chọn thời gian bắt đầu/kết thúc'
     return
   }
@@ -84,9 +95,17 @@ const handleSubmit = () => {
     error.value = 'Vui lòng chọn loại nghỉ'
     return
   }
-  if (new Date(toDate.value) < new Date(fromDate.value)) {
+  if (!isAttendanceCorrection.value && new Date(toDate.value) < new Date(fromDate.value)) {
     error.value = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu'
     return
+  }
+
+  if (isAttendanceCorrection.value) {
+    toDate.value = fromDate.value
+    if (!correctedCheckIn.value && !correctedCheckOut.value) {
+      error.value = 'Đơn giải trình công phải có ít nhất giờ vào hoặc giờ ra bổ sung'
+      return
+    }
   }
 
   const payload: CreateLeaveRequest = {
@@ -95,6 +114,8 @@ const handleSubmit = () => {
     fromDate: fromDate.value,
     toDate: toDate.value,
     reason: reason.value.trim(),
+    correctedCheckIn: correctedCheckIn.value || null,
+    correctedCheckOut: correctedCheckOut.value || null,
   }
 
   emit('created', payload)
@@ -161,17 +182,40 @@ const handleSubmit = () => {
           <div class="grid grid-cols-2 gap-3">
             <div class="space-y-1.5">
               <label class="px-1 text-[10px] font-semibold  tracking-normal text-primary flex items-center gap-1.5">
-                Từ ngày
+                {{ isAttendanceCorrection ? 'Ngày giải trình' : 'Từ ngày' }}
               </label>
               <input v-model="fromDate" type="date"
                 class="w-full h-10 rounded-lg border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
             </div>
-            <div class="space-y-1.5">
+            <div v-if="!isAttendanceCorrection" class="space-y-1.5">
               <label class="px-1 text-[10px] font-semibold  tracking-normal text-primary flex items-center gap-1.5">
                 Đến ngày
               </label>
               <input v-model="toDate" type="date"
                 class="w-full h-10 rounded-lg border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" />
+            </div>
+          </div>
+
+          <div v-if="isAttendanceCorrection" class="grid grid-cols-2 gap-3">
+            <div class="space-y-1.5">
+              <label class="px-1 text-[10px] font-semibold tracking-normal text-primary flex items-center gap-1.5">
+                Giờ vào thực tế
+              </label>
+              <input
+                v-model="correctedCheckIn"
+                type="time"
+                class="w-full h-10 rounded-lg border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <label class="px-1 text-[10px] font-semibold tracking-normal text-primary flex items-center gap-1.5">
+                Giờ ra thực tế
+              </label>
+              <input
+                v-model="correctedCheckOut"
+                type="time"
+                class="w-full h-10 rounded-lg border border-primary/20 bg-primary/10 px-3 text-xs font-bold text-primary-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+              />
             </div>
           </div>
 

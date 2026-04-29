@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CheckCircle2, Clock, Star, TrendingUp, ChevronRight, Download, Timer } from 'lucide-vue-next'
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  ClipboardList,
+  Timer,
+  TrendingUp,
+} from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -29,12 +38,69 @@ const filters = computed(() => ({
   size: 100,
 }))
 
-const { historyQuery, todayQuery } = useMyAttendance(filters)
+const { historyQuery, todayQuery, scheduleQuery } = useMyAttendance(filters)
 const { leavesQuery } = useMyLeaves()
 
 const userProfile = computed(() => ({
   fullName: user.value?.fullName || 'Nhân viên'
 }))
+
+const todayKey = formatDateStr(today)
+const todayDayOfWeek = today.getDay() === 0 ? 7 : today.getDay()
+
+const formatTime = (value?: string | null) => {
+  if (!value) return '--:--'
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(value))
+}
+
+const getAttendanceTimestamp = (key: 'checkIn' | 'checkOut') => {
+  const record = todayQuery.data.value
+  if (!record) return null
+  return key === 'checkIn'
+    ? record.checkIn || record.checkInTime || record.check_in_time || null
+    : record.checkOut || record.checkOutTime || record.check_out_time || null
+}
+
+const todayStatus = computed(() => {
+  const status = String(todayQuery.data.value?.status || '').toUpperCase()
+  switch (status) {
+    case 'PRESENT':
+      return { label: 'Đúng giờ', tone: 'text-emerald-400', helper: 'Bạn đã hoàn tất check-in hôm nay.' }
+    case 'LATE':
+      return { label: 'Đi muộn', tone: 'text-amber-400', helper: 'Hôm nay có ghi nhận đi muộn.' }
+    case 'ABSENT':
+      return { label: 'Vắng mặt', tone: 'text-rose-400', helper: 'Chưa có bản ghi chấm công hợp lệ.' }
+    case 'ON_LEAVE':
+      return { label: 'Nghỉ phép', tone: 'text-sky-400', helper: 'Hôm nay bạn đang có lịch nghỉ phép.' }
+    case 'MISSING_CHECKOUT':
+      return { label: 'Thiếu giờ ra', tone: 'text-rose-400', helper: 'Bạn đã vào ca nhưng chưa ghi nhận giờ ra.' }
+    default:
+      return { label: 'Chưa chấm công', tone: 'text-primary', helper: 'Sẵn sàng ghi nhận ca làm hôm nay.' }
+  }
+})
+
+const currentShift = computed(() => {
+  const schedules = scheduleQuery.data.value ?? []
+  return schedules
+    .filter((item) => item.isActive && item.dayOfWeek === todayDayOfWeek)
+    .filter((item) => item.effectiveFrom <= todayKey && (!item.effectiveTo || item.effectiveTo >= todayKey))
+    .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))[0] ?? null
+})
+
+const workingDaysInMonth = computed(() => {
+  const start = getStartOfMonth(today)
+  const end = getEndOfMonth(today)
+  let count = 0
+  for (let day = new Date(start); day <= end; day.setDate(day.getDate() + 1)) {
+    const dow = day.getDay()
+    if (dow !== 0 && dow !== 6) count++
+  }
+  return count
+})
 
 const attendanceStats = computed(() => {
   const data = historyQuery.data.value?.content || []
@@ -44,10 +110,10 @@ const attendanceStats = computed(() => {
 })
 
 const stats = computed(() => [
-  { label: 'Công', value: `${attendanceStats.value.present}/22`, icon: CheckCircle2, status: 'Trong tháng' },
+  { label: 'Công', value: `${attendanceStats.value.present}/${workingDaysInMonth.value}`, icon: CheckCircle2, status: 'Ngày làm dự kiến' },
   { label: 'Muộn', value: String(attendanceStats.value.late), icon: Clock, status: 'Số lần' },
-  { label: 'Phép', value: String(leavesQuery.data.value?.totalElements || 0), icon: Star, status: 'Đã gửi' },
-  { label: 'Trạng thái', value: todayQuery.data.value?.status || 'Chưa có', icon: TrendingUp, status: 'Hôm nay' },
+  { label: 'Đơn từ', value: String(leavesQuery.data.value?.totalElements || 0), icon: ClipboardList, status: 'Tổng đơn đã gửi' },
+  { label: 'Trạng thái', value: todayStatus.value.label, icon: TrendingUp, status: 'Hôm nay' },
 ])
 
 const dailyBars = computed(() => {
@@ -60,7 +126,7 @@ const dailyBars = computed(() => {
     const row = data.find((item) => item.workDate === key)
     return {
       label,
-      value: row?.checkInTime ? 100 : 0,
+      value: row?.checkIn || row?.checkInTime || row?.check_in_time ? 100 : 0,
     }
   })
   return days
@@ -97,17 +163,69 @@ const recentActivities = computed(() => {
     >
       <template #actions>
         <div class="flex items-center gap-2">
-          <Button variant="outline" size="sm" class="h-8 text-[10px] font-bold  tracking-normal gap-2">
-            <Download class="h-3 w-3" />
-            Báo cáo
+          <Button as-child variant="outline" size="sm" class="h-8 text-xs font-semibold gap-2">
+            <RouterLink to="/my/attendance">
+              Xem bảng công
+            </RouterLink>
           </Button>
-          <Button size="sm" class="h-8 bg-primary hover:bg-primary/90 text-[10px] font-bold  tracking-normal gap-2">
+          <Button as-child size="sm" class="h-8 bg-primary hover:bg-primary/90 text-xs font-semibold gap-2">
+            <RouterLink to="/kiosk">
             <Timer class="h-3 w-3" />
-            Ghi danh
+              Chấm công
+            </RouterLink>
           </Button>
         </div>
       </template>
     </PageHeader>
+
+    <Card class="overflow-hidden border-border-standard bg-card shadow-none">
+      <div class="relative grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.4fr_1fr]">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.22),transparent_36%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent)]"></div>
+        <div class="relative space-y-5">
+          <div class="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+            Trạng thái hôm nay
+          </div>
+          <div>
+            <p class="text-sm font-medium text-secondary-text">{{ todayStatus.helper }}</p>
+            <h2 class="mt-2 text-3xl font-semibold text-primary-text sm:text-4xl">
+              <span :class="todayStatus.tone">{{ todayStatus.label }}</span>
+            </h2>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-lg border border-border-subtle bg-background/50 p-3">
+              <p class="text-[11px] font-medium text-tertiary-text">Giờ vào</p>
+              <p class="mt-1 font-mono text-lg font-semibold text-primary-text">{{ formatTime(getAttendanceTimestamp('checkIn')) }}</p>
+            </div>
+            <div class="rounded-lg border border-border-subtle bg-background/50 p-3">
+              <p class="text-[11px] font-medium text-tertiary-text">Giờ ra</p>
+              <p class="mt-1 font-mono text-lg font-semibold text-primary-text">{{ formatTime(getAttendanceTimestamp('checkOut')) }}</p>
+            </div>
+            <div class="rounded-lg border border-border-subtle bg-background/50 p-3">
+              <p class="text-[11px] font-medium text-tertiary-text">Ca hôm nay</p>
+              <p class="mt-1 truncate text-lg font-semibold text-primary-text">{{ currentShift?.shiftName || 'Chưa có ca' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative flex flex-col justify-between rounded-xl border border-primary/20 bg-primary/10 p-5">
+          <div>
+            <CalendarDays class="h-8 w-8 text-primary" />
+            <h3 class="mt-4 text-xl font-semibold text-primary-text">
+              {{ currentShift?.startTime?.substring(0, 5) || '--:--' }} - {{ currentShift?.endTime?.substring(0, 5) || '--:--' }}
+            </h3>
+            <p class="mt-2 text-sm text-secondary-text">
+              {{ currentShift ? 'Theo lịch phân ca đang hiệu lực hôm nay.' : 'Bạn chưa có lịch làm việc hiệu lực trong hôm nay.' }}
+            </p>
+          </div>
+          <Button as-child variant="ghost" class="mt-5 justify-between rounded-lg bg-card/70 text-primary hover:bg-card">
+            <RouterLink to="/my/schedule">
+              Xem lịch cá nhân
+              <ArrowRight class="h-4 w-4" />
+            </RouterLink>
+          </Button>
+        </div>
+      </div>
+    </Card>
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">

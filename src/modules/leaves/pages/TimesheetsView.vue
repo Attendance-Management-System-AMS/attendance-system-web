@@ -105,6 +105,9 @@ const getLeaveTypeLabel = (leave: LeaveRequest | null) => {
   return leave.leaveTypeName || leave.leaveTypeCode || leave.leaveType || 'Nghỉ phép'
 }
 
+const isAttendanceCorrection = (leave: LeaveRequest | null) =>
+  leave?.leaveTypeCode === 'AC' || getLeaveTypeLabel(leave).toLowerCase().includes('giải trình')
+
 const getStatusLabel = (status: LeaveRequest['status']) => {
   const normalized = normalizeLeaveStatus(status)
   if (normalized === 'approved') return 'Đã duyệt'
@@ -188,11 +191,16 @@ const handleApprove = async (id: string | number) => {
 
   processingLeaveId.value = id
   processingAction.value = 'approve'
+  const leave = leaves.value.find((item) => String(item.id) === String(id)) ?? null
 
   try {
     await approveLeave.mutateAsync(id)
     await leavesQuery.refetch()
-    toast.success('Đã phê duyệt đơn. Bảng công các ngày chưa có chấm công đã được cập nhật sang nghỉ phép.')
+    toast.success(
+      isAttendanceCorrection(leave)
+        ? 'Đã phê duyệt đơn giải trình công và đồng bộ lại giờ chấm công.'
+        : 'Đã phê duyệt đơn. Bảng công các ngày chưa có chấm công đã được cập nhật sang nghỉ phép.',
+    )
   } catch (err) {
     toast.error(getApiErrorMessage(err, 'Không thể phê duyệt đơn này.'))
   } finally {
@@ -223,7 +231,11 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
   try {
     await createLeave.mutateAsync(payload)
     await leavesQuery.refetch()
-    toast.success('Gửi đơn nghỉ phép thành công')
+    toast.success(
+      payload.leaveTypeCode === 'AC'
+        ? 'Gửi đơn giải trình công thành công'
+        : 'Gửi đơn nghỉ phép thành công',
+    )
     isCreateModalOpen.value = false
   } catch (err) {
     toast.error(getApiErrorMessage(err, 'Gửi đơn thất bại'))
@@ -353,7 +365,7 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
         <SheetHeader class="border-b border-border bg-card px-5 py-5">
           <div class="flex items-start justify-between gap-3 pr-8">
             <div class="space-y-1">
-              <SheetTitle class="text-base">Chi tiết đơn nghỉ</SheetTitle>
+              <SheetTitle class="text-base">Chi tiết đơn từ</SheetTitle>
               <SheetDescription>
                 Kiểm tra đầy đủ thông tin trước khi duyệt hoặc từ chối đơn.
               </SheetDescription>
@@ -402,6 +414,16 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
                   <p class="text-xs font-medium text-tertiary-text">đến {{ formatDisplayDate(selectedLeave.toDate || selectedLeave.endDate) }}</p>
                 </div>
               </div>
+              <div
+                v-if="isAttendanceCorrection(selectedLeave)"
+                class="flex items-start justify-between gap-4 px-4 py-3"
+              >
+                <span class="text-xs font-medium text-tertiary-text">Giờ bổ sung</span>
+                <div class="text-right text-sm font-semibold text-primary-text">
+                  <p>{{ selectedLeave.correctedCheckIn || '--:--' }}</p>
+                  <p class="text-xs font-medium text-tertiary-text">đến {{ selectedLeave.correctedCheckOut || '--:--' }}</p>
+                </div>
+              </div>
               <div class="flex items-start justify-between gap-4 px-4 py-3">
                 <span class="text-xs font-medium text-tertiary-text">Số ngày nghỉ</span>
                 <span class="text-right text-sm font-semibold text-primary-text">{{ getLeaveDayCount(selectedLeave) }}</span>
@@ -428,7 +450,7 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
 
           <div class="mt-4 rounded-lg border border-border bg-card">
             <div class="px-4 py-3">
-              <p class="text-xs font-medium text-tertiary-text">Lý do nghỉ phép</p>
+              <p class="text-xs font-medium text-tertiary-text">Lý do</p>
             </div>
             <Separator />
             <div class="px-4 py-4">

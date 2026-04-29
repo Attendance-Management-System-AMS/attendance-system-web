@@ -58,6 +58,10 @@ export default [
     },
   },
   {
+    path: '/my',
+    redirect: '/my/dashboard',
+  },
+  {
     path: '/my/dashboard',
     name: 'my-dashboard',
     component: () => import('@/modules/employee-portal/pages/MyDashboardView.vue'),
