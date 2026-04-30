@@ -3,15 +3,11 @@ import PageHeader from '@/shared/ui/PageHeader.vue'
 import { ref, computed } from 'vue'
 import { useAttendance } from '@/modules/attendance/composables/useAttendance'
 import { useDepartments } from '@/modules/departments/composables/useDepartments'
-import type { Attendance } from '@/modules/attendance/types/attendance.types'
 import { Badge } from '@/shared/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import SearchToolbar from '@/shared/ui/SearchToolbar.vue'
 import FilterSelect from '@/shared/ui/FilterSelect.vue'
-import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
 import DataTable from '@/shared/ui/DataTable.vue'
-import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
-import { toast } from 'vue-sonner'
 import { Monitor, X } from 'lucide-vue-next'
 
 const search = ref('')
@@ -27,7 +23,7 @@ const attendanceFilters = computed(() => ({
   status: filterStatus.value,
 }))
 
-const { attendanceQuery, deleteAttendance } = useAttendance(attendanceFilters)
+const { attendanceQuery } = useAttendance(attendanceFilters)
 const { data: records, isLoading } = attendanceQuery
 
 const columns = [
@@ -35,7 +31,6 @@ const columns = [
   { key: 'checkIn', label: 'Giờ vào' },
   { key: 'checkOut', label: 'Giờ ra' },
   { key: 'status', label: 'Trạng thái' },
-  { key: 'actions', label: 'Hành động', align: 'right' as const },
 ]
 
 const departments = computed(
@@ -63,33 +58,6 @@ const statuses = [
   { label: 'Vắng mặt', value: 'ABSENT' },
   { label: 'Thiếu checkout', value: 'MISSING_CHECKOUT' },
 ]
-
-const deleteTarget = ref<Attendance | null>(null)
-const isAlertOpen = ref(false)
-const deleteTargetName = computed(() => deleteTarget.value?.employee?.fullName ?? '')
-
-const handleDelete = (id: string | number) => {
-  const record = records.value?.find(r => String(r.id) === String(id))
-  if (record?.isRecorded) {
-    deleteTarget.value = record
-    isAlertOpen.value = true
-  }
-}
-
-const confirmDelete = () => {
-  if (deleteTarget.value) {
-    deleteAttendance.mutate(deleteTarget.value.id, {
-      onSuccess: () => {
-        toast.success('Đã xóa hồ sơ chấm công thành công')
-        isAlertOpen.value = false
-        deleteTarget.value = null
-      },
-      onError: () => {
-        toast.error('Không thể xóa hồ sơ chấm công')
-      }
-    })
-  }
-}
 
 const getInitials = (name?: string) => {
   if (!name) return '??'
@@ -218,16 +186,7 @@ const qrCodeUrl = computed(
             {{ value }}
           </Badge>
         </template>
-
-        <template #cell-actions="{ row }">
-          <ActionDropdown v-if="row.isRecorded" :item-id="row.id" @delete="handleDelete" />
-          <span v-else class="text-xs text-tertiary-text">—</span>
-        </template>
       </DataTable>
     </div>
-
-    <DeleteConfirmDialog :open="isAlertOpen" title="Xác nhận xóa bản ghi"
-      description="Lịch sử chấm công của ngày này sẽ bị gỡ bỏ khỏi hệ thống."
-      :item-name="deleteTargetName" @confirm="confirmDelete" @cancel="isAlertOpen = false" />
   </div>
 </template>

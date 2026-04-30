@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/vue-query'
 import {
   ArrowLeft,
   Building2,
+  CalendarDays,
   Pencil,
   ScanFace,
   ShieldCheck,
@@ -138,6 +139,21 @@ const systemRows = computed(() => {
     { label: 'Ngày tạo hồ sơ', value: formatDateTime(data.createdAt) },
   ]
 })
+
+const openMonthlyAttendance = () => {
+  if (!employee.value) return
+
+  router.push({
+    name: 'attendance-employee-monthly',
+    params: { id: employee.value.id },
+    query: {
+      name: employee.value.fullName || undefined,
+      code: employee.value.employeeCode || undefined,
+      department: employee.value.departmentName || undefined,
+      position: employee.value.positionName || undefined,
+    },
+  })
+}
 </script>
 
 <template>
@@ -153,6 +169,14 @@ const systemRows = computed(() => {
         >
           <ArrowLeft class="h-4 w-4" />
           Quay lại
+        </button>
+        <button
+          v-if="employee"
+          @click="openMonthlyAttendance"
+          class="flex h-10 items-center gap-2 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-primary-text shadow-sm transition-colors hover:bg-surface dark:border-border dark:bg-card dark:text-primary-text dark:hover:bg-elevated"
+        >
+          <CalendarDays class="h-4 w-4" />
+          Bảng công tháng
         </button>
         <button
           v-if="employee"
@@ -199,7 +223,7 @@ const systemRows = computed(() => {
           class="overflow-hidden rounded-xl border border-border-standard bg-card shadow-sm dark:border-border dark:bg-card"
         >
           <div class="relative p-6">
-            <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent"></div>
+            <div class="absolute inset-x-0 top-0 h-28 bg-linear-to-r from-primary/15 via-primary/5 to-transparent"></div>
 
             <div class="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div class="flex items-start gap-4">
@@ -274,7 +298,7 @@ const systemRows = computed(() => {
                 class="rounded-lg border border-border-standard bg-surface/60 px-4 py-3 dark:border-border dark:bg-elevated/50"
               >
                 <p class="text-xs font-semibold text-tertiary-text">{{ row.label }}</p>
-                <p class="mt-1 text-sm font-medium text-primary-text break-words">{{ row.value }}</p>
+                <p class="mt-1 text-sm font-medium text-primary-text wrap-break-word">{{ row.value }}</p>
               </div>
             </div>
           </section>

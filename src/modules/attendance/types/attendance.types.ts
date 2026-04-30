@@ -14,6 +14,10 @@ export interface Attendance {
   id: string | number
   employeeId?: number
   employee?: Employee
+  employeeFullName?: string | null
+  employeeSnapshotCode?: string | null
+  employeeSnapshotDepartmentName?: string | null
+  employeeSnapshotPositionName?: string | null
   checkIn?: string
   checkInTime?: string
   check_in_time?: string
@@ -27,5 +31,6 @@ export interface Attendance {
   earlyLeaveMinutes?: number
   workedMinutes?: number
   expectedMinutes?: number
+  createdAt?: string
   isRecorded?: boolean
 }

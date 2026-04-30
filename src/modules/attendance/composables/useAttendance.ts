@@ -1,6 +1,7 @@
 import { attendanceApi } from '@/modules/attendance/api/attendance.api'
 import type { AttendanceTodayFilters } from '@/modules/attendance/api/attendance.api'
 import { employeeApi } from '@/modules/employees/api/employee.api'
+import axios from 'axios'
 import {
     createUnrecordedTodayAttendance,
     mapAttendanceStatusFromApi,
@@ -67,6 +68,21 @@ async function fetchAllEmployees() {
     return employees
 }
 
+async function fetchEmployeesForAttendanceView() {
+    try {
+        return await fetchAllEmployees()
+    } catch (error) {
+        // Manager can access attendance operations but not the HR employee directory.
+        // In that case we still show recorded attendance rows using snapshot data
+        // returned by attendance-service instead of failing the whole screen.
+        if (axios.isAxiosError(error) && error.response?.status === 403) {
+            return null
+        }
+
+        throw error
+    }
+}
+
 function normalizeText(value: unknown) {
     return String(value ?? '').trim().toLowerCase()
 }
@@ -119,13 +135,18 @@ export function useAttendance(filters?: MaybeRefOrGetter<AttendanceTodayFilters>
             const workDate = activeFilters.date ?? formatLocalDate()
             const [attRes, empRes] = await Promise.all([
                 attendanceApi.getToday({ date: workDate }),
-                fetchAllEmployees(),
+                fetchEmployeesForAttendanceView(),
             ])
             const result = attRes.data?.result
             const rows = Array.isArray(result) ? result : (result?.content ?? [])
-            const employees = empRes
+            const employees = empRes ?? []
             const byEmployeeId = new Map(employees.map((e) => [e.id, e]))
             const recordedRows = mergeTodayAttendance(rows, byEmployeeId)
+
+            if (!empRes) {
+                return applyTodayFilters(recordedRows, activeFilters)
+            }
+
             const recordedByEmployeeId = new Map(
                 recordedRows
                     .filter((row) => row.employeeId != null)
