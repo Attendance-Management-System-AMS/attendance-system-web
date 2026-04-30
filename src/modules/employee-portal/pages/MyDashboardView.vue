@@ -170,9 +170,9 @@ const recentActivities = computed(() => {
             </RouterLink>
           </Button>
           <Button as-child size="sm" class="h-8 bg-primary hover:bg-primary/90 text-xs font-semibold gap-2">
-            <RouterLink to="/kiosk">
-            <Timer class="h-3 w-3" />
-              Chấm công
+            <RouterLink to="/my/attendance">
+              <Timer class="h-3 w-3" />
+              Bảng công
             </RouterLink>
           </Button>
         </div>

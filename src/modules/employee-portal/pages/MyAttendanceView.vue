@@ -136,7 +136,6 @@ const logs = computed(() => {
     const resolvedStatus = (() => {
       const status = resolveAttendanceStatus(logEntry, dateStr, todayStr)
       if (status) return status
-      if (dateStr < todayStr && hasSchedule) return 'ABSENT'
       return ''
     })()
 
@@ -203,7 +202,7 @@ const summary = computed(() => {
 const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) => {
   if (!status) {
     if (isToday) return { label: 'Đang đợi', class: 'bg-primary/10 text-primary' }
-    return { label: 'Trống', class: 'bg-surface text-tertiary-text italic' }
+    return { label: 'Chưa ghi nhận', class: 'bg-surface text-tertiary-text italic' }
   }
 
   switch (String(status || '').toUpperCase()) {

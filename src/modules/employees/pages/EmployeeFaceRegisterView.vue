@@ -161,21 +161,17 @@ const submitDescriptor = async (descriptor: number[]) => {
     throw new Error('Descriptor khuôn mặt không hợp lệ.')
   }
 
-  try {
-    await registerFaceDescriptor.mutateAsync({
-      id: employeeId.value,
-      body: { descriptor },
-    })
-    ui.justSavedFace = true
-    ui.lastSuccessAt = Date.now()
-    ui.feedback = {
-      status: 'success',
-      msg: 'Đã lưu khuôn mặt thành công. Hệ thống đã lấy mẫu nhìn thẳng, quay trái, quay phải và cúi nhẹ để lưu descriptor ổn định hơn.',
-    }
-    await employeeQuery.refetch()
-  } catch (err) {
-    throw err
+  await registerFaceDescriptor.mutateAsync({
+    id: employeeId.value,
+    body: { descriptor },
+  })
+  ui.justSavedFace = true
+  ui.lastSuccessAt = Date.now()
+  ui.feedback = {
+    status: 'success',
+    msg: 'Đã lưu khuôn mặt thành công. Hệ thống đã lấy mẫu nhìn thẳng, quay trái, quay phải và cúi nhẹ để lưu descriptor ổn định hơn.',
   }
+  await employeeQuery.refetch()
 
   if (successAutoHideTimer) window.clearTimeout(successAutoHideTimer)
   successAutoHideTimer = window.setTimeout(() => {

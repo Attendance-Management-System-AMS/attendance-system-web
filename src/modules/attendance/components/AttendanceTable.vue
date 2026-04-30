@@ -38,7 +38,11 @@ const badgeVariantByStatus: Record<Attendance['status'], 'success' | 'warning' |
         <TableCell>
           <div class="flex items-center gap-3">
             <Avatar class="size-9">
-              <AvatarImage :src="record.employee?.avatarUrl ?? ''" :alt="record.employee?.fullName ?? ''" />
+              <AvatarImage
+                v-if="record.employee?.avatarUrl"
+                :src="record.employee.avatarUrl"
+                :alt="record.employee?.fullName ?? ''"
+              />
               <AvatarFallback>
                 {{ (record.employee?.fullName ?? '?').slice(0, 2).toUpperCase() }}
               </AvatarFallback>

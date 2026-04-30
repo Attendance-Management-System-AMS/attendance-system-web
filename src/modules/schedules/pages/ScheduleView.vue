@@ -12,7 +12,6 @@ import {
   TrendingUp,
 } from 'lucide-vue-next'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
-import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import PageHeader from '@/shared/ui/PageHeader.vue'
@@ -116,6 +115,44 @@ const enrichedSchedules = computed<ScheduleWithShift[]>(() => {
     ...schedule,
     shift: shifts.value.find((s: Shift) => String(s.id) === String(schedule.shiftId)),
   }))
+})
+
+const minutesFromTime = (value?: string): number | null => {
+  if (!value) return null
+  const [hourText, minuteText] = value.split(':')
+  const hour = Number(hourText)
+  const minute = Number(minuteText)
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null
+  return hour * 60 + minute
+}
+
+const shiftDurationMinutes = (shift?: Shift): number => {
+  const start = minutesFromTime(shift?.startTime)
+  let end = minutesFromTime(shift?.endTime)
+  if (start == null || end == null) return 0
+  if (end < start) end += 24 * 60
+  return Math.max(end - start, 0)
+}
+
+const formatHours = (minutes: number) => {
+  const hours = Math.round(minutes / 60)
+  return `${new Intl.NumberFormat('vi-VN').format(hours)}h`
+}
+
+const scheduleStats = computed(() => {
+  const activeSchedules = enrichedSchedules.value.filter((schedule) => schedule.isActive !== false)
+  const scheduledEmployeeIds = new Set(activeSchedules.map((schedule) => schedule.employeeId))
+  const expectedMinutes = activeSchedules.reduce(
+    (total, schedule) => total + shiftDurationMinutes(schedule.shift),
+    0,
+  )
+
+  return [
+    { label: 'Tổng lịch', value: activeSchedules.length, icon: CalendarDays, color: 'indigo' },
+    { label: 'Nhân viên', value: scheduledEmployeeIds.size, icon: Users, color: 'emerald' },
+    { label: 'Giờ công', value: formatHours(expectedMinutes), icon: Clock, color: 'amber' },
+    { label: 'Ca làm', value: shifts.value.length, icon: TrendingUp, color: 'rose' },
+  ]
 })
 
 const filteredEmployees = computed(() => {
@@ -384,12 +421,7 @@ const isReadOnlyPastAction = computed(() =>
     <!-- Stats Section -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
       <StatCard
-        v-for="s in [
-          { label: 'Tổng số ca', value: 124, icon: CalendarDays, color: 'indigo' },
-          { label: 'Nhân viên', value: 48, icon: Users, color: 'emerald' },
-          { label: 'Giờ công', value: '1,024h', icon: Clock, color: 'amber' },
-          { label: 'Kế hoạch', value: 'đ 52M', icon: TrendingUp, color: 'rose' },
-        ]"
+        v-for="s in scheduleStats"
         :key="s.label"
         :label="s.label"
         :value="s.value"
@@ -468,7 +500,7 @@ const isReadOnlyPastAction = computed(() =>
               <td class="sticky left-0 z-10 bg-card border-r border-border px-6 py-5">
                 <div class="flex items-center gap-4">
                   <Avatar class="h-10 w-10 border border-border-subtle shadow-sm">
-                    <AvatarImage :src="`/api/avatar/${employee.id}`" />
+                    <AvatarImage v-if="employee.avatarUrl" :src="employee.avatarUrl" />
                     <AvatarFallback class="bg-surface text-tertiary-text text-[11px] font-semibold">
                       {{
                         employee.fullName

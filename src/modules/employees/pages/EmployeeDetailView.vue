@@ -228,7 +228,7 @@ const openMonthlyAttendance = () => {
             <div class="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div class="flex items-start gap-4">
                 <Avatar class="h-16 w-16 border border-primary/20 shadow-sm dark:border-primary/25">
-                  <AvatarImage :src="employee.avatarUrl || `/api/avatar/${employee.id}`" />
+                  <AvatarImage v-if="employee.avatarUrl" :src="employee.avatarUrl" />
                   <AvatarFallback class="bg-primary/10 text-sm font-bold text-primary">
                     {{ getInitials(employee.fullName) }}
                   </AvatarFallback>

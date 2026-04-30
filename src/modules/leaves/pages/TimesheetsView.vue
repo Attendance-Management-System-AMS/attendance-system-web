@@ -4,6 +4,7 @@ import { Check, X, Plus, Clock, CheckCircle2, Loader2, XCircle, Eye } from 'luci
 import { useLeaves } from '@/modules/leaves/composables/useLeaves'
 import type { CreateLeaveRequest, LeaveRequest } from '@/modules/leaves/types/leave.types'
 import { isPendingLeave, normalizeLeaveStatus } from '@/modules/leaves/utils/leaveStatus'
+import { useAuth } from '@/modules/auth/composables/useAuth'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 import FilterSelect from '@/shared/ui/FilterSelect.vue'
 import SearchToolbar from '@/shared/ui/SearchToolbar.vue'
@@ -20,11 +21,13 @@ import { toast } from 'vue-sonner'
 const filterStatus = ref('')
 const filterDept = ref('')
 const search = ref('')
+const { isAdmin, isHR } = useAuth()
 
 const { leavesQuery, leaveTypesQuery, approveLeave, rejectLeave, createLeave } = useLeaves()
 const { data: leavesRaw, isLoading } = leavesQuery
 const leaves = computed<LeaveRequest[]>(() => leavesRaw.value ?? [])
 const leaveTypes = computed(() => leaveTypesQuery.data.value ?? [])
+const canCreateLeave = computed(() => Boolean(isAdmin.value || isHR.value))
 
 const departments = computed(() => {
   const all = leaves.value.map((item) => item.departmentName).filter(Boolean) as string[]
@@ -250,7 +253,7 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
       description="Phê duyệt và theo dõi đơn từ nhân viên"
     >
       <template #actions>
-        <Button @click="isCreateModalOpen = true" class="h-9 px-4 bg-primary hover:bg-primary/90 font-semibold text-[10px] tracking-normal gap-2 shadow-lg shadow-primary/20 rounded">
+        <Button v-if="canCreateLeave" @click="isCreateModalOpen = true" class="h-9 px-4 bg-primary hover:bg-primary/90 font-semibold text-[10px] tracking-normal gap-2 shadow-lg shadow-primary/20 rounded">
           <Plus class="h-3.5 w-3.5" /> Tạo đơn mới
         </Button>
       </template>
@@ -495,6 +498,7 @@ const handleCreated = async (payload: CreateLeaveRequest) => {
     </Sheet>
 
     <LeaveCreateModal
+      v-if="canCreateLeave"
       :open="isCreateModalOpen"
       :is-submitting="createLeave.isPending.value"
       :leave-types="leaveTypes"

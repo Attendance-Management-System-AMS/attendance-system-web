@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import StatCard from '@/shared/ui/StatCard.vue'
 import { useAttendance } from '@/modules/attendance/composables/useAttendance'
-import { useLeaves } from '@/modules/leaves/composables/useLeaves'
+import { usePendingLeaveCount } from '@/modules/leaves/composables/useLeaves'
 import ExportReportDialog from '../components/ExportReportDialog.vue'
 
 const showExportDialog = ref(false)
@@ -15,12 +15,10 @@ const today = new Date()
 const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
 const { attendanceQuery } = useAttendance({ date: todayKey })
-const { leavesQuery } = useLeaves()
+const pendingLeaveCountQuery = usePendingLeaveCount()
 
 const rows = computed(() => attendanceQuery.data.value ?? [])
-const pendingLeaves = computed(() =>
-  (leavesQuery.data.value ?? []).filter((leave) => String(leave.status).toUpperCase() === 'PENDING').length,
-)
+const pendingLeaves = computed(() => pendingLeaveCountQuery.data.value ?? 0)
 const present = computed(() =>
   rows.value.filter((row) =>
     ['PRESENT', 'LATE', 'EARLY_LEAVE', 'LATE_AND_EARLY_LEAVE', 'MISSING_CHECKOUT'].includes(String(row.status).toUpperCase()),
@@ -120,4 +118,3 @@ const liveStats = computed(() => [
     <ExportReportDialog v-model:open="showExportDialog" />
   </div>
 </template>
-

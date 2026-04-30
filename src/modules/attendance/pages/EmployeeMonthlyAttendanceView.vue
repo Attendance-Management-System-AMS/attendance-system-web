@@ -296,7 +296,6 @@ const logs = computed(() => {
     const resolvedStatus = (() => {
       const status = resolveAttendanceStatus(logEntry, dateStr, todayStr)
       if (status) return status
-      if (dateStr < todayStr && hasSchedule) return 'ABSENT'
       return ''
     })()
 
@@ -362,7 +361,7 @@ const summary = computed(() => {
 const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) => {
   if (!status) {
     if (isToday) return { label: 'Đang đợi', class: 'bg-primary/10 text-primary' }
-    return { label: 'Trống', class: 'bg-surface text-tertiary-text italic' }
+    return { label: 'Chưa ghi nhận', class: 'bg-surface text-tertiary-text italic' }
   }
 
   switch (String(status || '').toUpperCase()) {
@@ -502,7 +501,7 @@ const openEmployeeProfile = () => {
       >
         <div class="relative p-6">
           <div
-            class="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-primary/15 via-primary/5 to-transparent"
+            class="absolute inset-x-0 top-0 h-28 bg-linear-to-r from-primary/15 via-primary/5 to-transparent"
           ></div>
 
           <div class="relative grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_340px]">

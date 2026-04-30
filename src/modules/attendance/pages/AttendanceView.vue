@@ -12,14 +12,12 @@ import { Monitor, X } from 'lucide-vue-next'
 
 const search = ref('')
 const filterDept = ref('')
-const filterShift = ref('')
 const filterStatus = ref('')
 const { departmentsQuery } = useDepartments({ size: 200, sort: 'name', sortDir: 'asc' })
 
 const attendanceFilters = computed(() => ({
   search: search.value,
   department: filterDept.value,
-  shift: filterShift.value,
   status: filterStatus.value,
 }))
 
@@ -41,12 +39,6 @@ const departments = computed(
     })) ?? [],
 )
 
-const shifts = [
-  { label: 'Ca sáng', value: 'morning' },
-  { label: 'Ca chiều', value: 'afternoon' },
-  { label: 'Ca đêm', value: 'night' },
-]
-
 const statuses = [
   { label: 'Chưa chấm công', value: 'UNRECORDED' },
   { label: 'Có mặt', value: 'PRESENT' },
@@ -57,6 +49,7 @@ const statuses = [
   { label: 'Ngày lễ', value: 'HOLIDAY' },
   { label: 'Vắng mặt', value: 'ABSENT' },
   { label: 'Thiếu checkout', value: 'MISSING_CHECKOUT' },
+  { label: 'Chưa đủ công', value: 'INCOMPLETE' },
 ]
 
 const getInitials = (name?: string) => {
@@ -110,7 +103,7 @@ const qrCodeUrl = computed(
                 </div>
                 <div>
                   <p class="text-sm font-bold text-primary-text">Kết nối máy chấm công</p>
-                  <p class="text-[10px] text-tertiary-text">Quét mã QR bằng thiết bị cần kết nối</p>
+                  <p class="text-[10px] text-tertiary-text">Quét mã QR và đăng nhập tài khoản vận hành</p>
                 </div>
               </div>
               <button @click="showKioskDialog = false"
@@ -124,7 +117,9 @@ const qrCodeUrl = computed(
               <div class="rounded-xl border border-border-standard p-3 bg-white">
                 <img :src="qrCodeUrl" alt="Máy chấm công QR" class="h-48 w-48" />
               </div>
-              <p class="text-xs text-secondary-text text-center">Mở camera của thiết bị và quét mã QR để kết nối</p>
+              <p class="text-xs text-secondary-text text-center">
+                Thiết bị kiosk cần đăng nhập bằng tài khoản Admin, HR hoặc Quản lý trước khi dùng.
+              </p>
             </div>
           </div>
         </div>
@@ -134,7 +129,6 @@ const qrCodeUrl = computed(
     <SearchToolbar v-model="search" placeholder="Tìm theo tên, mã nhân viên...">
       <template #filters>
         <FilterSelect v-model="filterDept" label="Phòng ban" :options="departments" />
-        <FilterSelect v-model="filterShift" label="Ca" :options="shifts" />
         <FilterSelect v-model="filterStatus" label="Trạng thái" :options="statuses" />
       </template>
     </SearchToolbar>
@@ -144,7 +138,7 @@ const qrCodeUrl = computed(
         <template #cell-employee="{ row }">
           <div class="flex items-center gap-3">
             <Avatar class="size-9 h-9 w-9 border border-primary/20 dark:border-primary/20">
-              <AvatarImage :src="`/api/avatar/${row.employee?.id}`" />
+              <AvatarImage v-if="row.employee?.avatarUrl" :src="row.employee.avatarUrl" />
               <AvatarFallback class="bg-primary/10 text-primary text-[10px] font-bold">
                 {{ getInitials(row.employee?.fullName) }}
               </AvatarFallback>
@@ -181,6 +175,7 @@ const qrCodeUrl = computed(
               'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn' || value === 'Muộn + về sớm',
               'bg-primary/10 text-primary hover:bg-primary/10 dark:bg-primary/10': value === 'Về sớm',
               'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt' || value === 'Thiếu checkout',
+              'bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-950/30': value === 'Chưa đủ công',
               'bg-muted text-secondary-text hover:bg-muted dark:bg-elevated': value === 'Chưa chấm công' || value === 'Nghỉ phép' || value === 'Ngày lễ'
             }">
             {{ value }}

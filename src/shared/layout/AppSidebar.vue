@@ -75,7 +75,7 @@ const navGroups: NavGroup[] = [
         label: 'Lịch làm việc',
         to: '/schedule',
         icon: CalendarDays,
-        roles: roleGroups.operations,
+        roles: roleGroups.adminHr,
         children: [
           { label: 'Phân công lịch', to: '/schedule/assignments', roles: roleGroups.adminHr },
           { label: 'Mẫu lịch làm việc', to: '/schedule/templates', roles: roleGroups.adminHr },

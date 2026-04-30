@@ -25,7 +25,6 @@ export interface AttendanceTodayFilters {
   date?: string
   search?: string
   department?: string
-  shift?: string
   status?: string
 }
 

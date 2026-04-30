@@ -153,7 +153,7 @@ const confirmDelete = () => {
         <template #cell-employee="{ row }">
           <div class="flex items-center gap-3">
             <Avatar class="size-9 h-9 w-9 border border-primary/20 dark:border-primary/20/50">
-              <AvatarImage :src="`/api/avatar/${row.id}`" />
+              <AvatarImage v-if="row.avatarUrl" :src="row.avatarUrl" />
               <AvatarFallback class="bg-primary/10 text-primary text-[10px] font-bold">
                 {{ getInitials(row.fullName) }}
               </AvatarFallback>

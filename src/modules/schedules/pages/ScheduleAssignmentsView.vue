@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { ArrowLeft, CalendarRange, LayoutGrid, Trash2, Check, X, Calendar as CalendarIcon, Info, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, CalendarRange, LayoutGrid, Trash2, Check, X, Calendar as CalendarIcon, Info } from 'lucide-vue-next'
 import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
 import FormCard from '@/shared/ui/FormCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'

@@ -122,7 +122,6 @@ watchEffect(() => {
 })
 
 const submitError = ref('')
-const hasErrors = computed(() => Object.values(errors).some((value) => Boolean(value)))
 
 const validateForm = () => {
   errors.fullName = form.fullName.trim() ? '' : 'Vui lòng nhập họ và tên'

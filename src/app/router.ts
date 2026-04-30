@@ -107,7 +107,7 @@ router.beforeEach(async (to) => {
           if (retryResp.result) {
             setUser(retryResp.result)
           }
-        } catch (e) {
+        } catch {
           // Refresh cũng thất bại → token thực sự hết hạn → logout
           clearAuthToken()
           setUser(null)

@@ -115,7 +115,7 @@ const fmtTime = (t?: string | null) => (t ? String(t).slice(0, 5) : '—')
         </template>
 
         <!-- Custom Status Column -->
-        <template #cell-status="{ row }">
+        <template #cell-status>
           <Badge 
             variant="default"
             class="font-bold flex-shrink-0 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30"

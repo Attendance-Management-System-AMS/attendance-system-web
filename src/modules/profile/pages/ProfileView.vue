@@ -42,7 +42,7 @@ const notifyPush = ref(false)
   <div class="space-y-6">
     <PageHeader
       title="Hồ sơ cá nhân"
-      description="Thông tin tài khoản và tùy chọn hiển thị trong TimeMaster AMS"
+      description=""
     />
 
     <div class="grid gap-6 lg:grid-cols-3">

@@ -26,7 +26,7 @@ export default defineConfigWithVueTs(
 
   {
     name: 'app/ui-primitives',
-    files: ['**/src/components/ui/**/*.vue'],
+    files: ['**/src/components/ui/**/*.vue', '**/src/shared/ui/**/*.vue'],
     rules: {
       'vue/multi-word-component-names': 'off',
     },

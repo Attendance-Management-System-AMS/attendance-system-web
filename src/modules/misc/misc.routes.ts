@@ -20,7 +20,7 @@ export default [
     path: '/schedule',
     name: 'schedule',
     component: () => import('@/modules/schedules/pages/ScheduleView.vue'),
-    meta: { title: 'Lịch làm việc', roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'] },
+    meta: { title: 'Lịch làm việc', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
   },
   {
     path: '/schedule/assignments',
@@ -53,7 +53,7 @@ export default [
     component: () => import('@/modules/attendance/components/AttendanceKiosk.vue'),
     meta: {
       hideLayout: true,
-      public: true,
+      roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'],
       title: 'Máy chấm công',
     },
   },

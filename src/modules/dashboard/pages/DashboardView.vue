@@ -16,6 +16,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/card'
 import DataTable from '@/shared/ui/DataTable.vue'
 import StatCard from '@/shared/ui/StatCard.vue'
 import { useAttendance } from '@/modules/attendance/composables/useAttendance'
+import { usePendingLeaveCount } from '@/modules/leaves/composables/useLeaves'
 
 // Live clock
 const now = ref(new Date())
@@ -37,6 +38,7 @@ const dateString = computed(() =>
 
 const todayFilter = computed(() => ({ date: formatLocalDate(now.value) }))
 const { attendanceQuery } = useAttendance(todayFilter)
+const pendingLeaveCountQuery = usePendingLeaveCount()
 const isLoading = computed(() => attendanceQuery.isLoading.value)
 
 const columns = [
@@ -62,27 +64,55 @@ function formatTime(value?: string | null) {
 }
 
 function normalizeStatus(status?: string | null) {
-    const value = String(status ?? '').toUpperCase()
-    if (value === 'PRESENT') return 'present'
-    if (value === 'LATE' || value === 'LATE_AND_EARLY_LEAVE') return 'late'
-    if (value === 'ABSENT') return 'absent'
-    if (value === 'ON_LEAVE') return 'leave'
-    if (value === 'MISSING_CHECKOUT') return 'working'
-    return value ? value.toLowerCase() : 'absent'
+    const value = String(status ?? '').trim().toUpperCase()
+    if (['PRESENT', 'CÓ MẶT', 'ĐÚNG GIỜ'].includes(value)) return 'present'
+    if (['LATE', 'LATE_AND_EARLY_LEAVE', 'ĐI MUỘN', 'MUỘN + VỀ SỚM'].includes(value)) return 'late'
+    if (['EARLY_LEAVE', 'VỀ SỚM'].includes(value)) return 'early'
+    if (['ABSENT', 'VẮNG MẶT'].includes(value)) return 'absent'
+    if (['ON_LEAVE', 'LEAVE', 'NGHỈ PHÉP'].includes(value)) return 'leave'
+    if (['HOLIDAY', 'NGÀY LỄ'].includes(value)) return 'holiday'
+    if (['MISSING_CHECKOUT', 'THIẾU CHECKOUT'].includes(value)) return 'working'
+    if (['INCOMPLETE', 'CHƯA ĐỦ CÔNG'].includes(value)) return 'incomplete'
+    if (['UNRECORDED', 'CHƯA CHẤM CÔNG'].includes(value)) return 'unrecorded'
+    return value ? 'unknown' : 'unrecorded'
+}
+
+function getStatusLabel(status: string) {
+    switch (status) {
+        case 'present':
+            return 'Đúng giờ'
+        case 'late':
+            return 'Muộn'
+        case 'early':
+            return 'Về sớm'
+        case 'leave':
+            return 'Nghỉ phép'
+        case 'holiday':
+            return 'Ngày lễ'
+        case 'working':
+            return 'Đang làm'
+        case 'incomplete':
+            return 'Chưa đủ'
+        case 'unrecorded':
+            return 'Chưa chấm'
+        default:
+            return 'Khác'
+    }
 }
 
 const rows = computed(() => attendanceQuery.data.value ?? [])
 const presentCount = computed(() =>
-    rows.value.filter((row) => ['PRESENT', 'LATE', 'EARLY_LEAVE', 'LATE_AND_EARLY_LEAVE', 'MISSING_CHECKOUT'].includes(String(row.status))).length,
+    rows.value.filter((row) => ['present', 'late', 'early', 'working'].includes(normalizeStatus(row.status))).length,
 )
 const lateCount = computed(() =>
-    rows.value.filter((row) => ['LATE', 'LATE_AND_EARLY_LEAVE'].includes(String(row.status))).length,
+    rows.value.filter((row) => normalizeStatus(row.status) === 'late').length,
 )
 const absentCount = computed(() =>
-    rows.value.filter((row) => String(row.status).toUpperCase() === 'ABSENT').length,
+    rows.value.filter((row) => normalizeStatus(row.status) === 'absent').length,
 )
 const totalCount = computed(() => rows.value.length)
 const presentRate = computed(() => totalCount.value ? `${Math.round((presentCount.value / totalCount.value) * 100)}%` : '0%')
+const pendingLeaveCount = computed(() => pendingLeaveCountQuery.data.value ?? 0)
 
 const statCards = computed(() => [
     { label: 'Tổng nhân viên', value: String(totalCount.value), change: 'Theo dữ liệu hôm nay', changeType: 'neutral' as const, icon: Users, color: 'indigo' as const },
@@ -95,7 +125,7 @@ const attendanceData = computed(() =>
     rows.value.slice(0, 8).map((row) => ({
         name: row.employee?.fullName ?? `NV #${row.employeeId ?? ''}`,
         dept: row.employee?.departmentName ?? '--',
-        shift: row.shiftName ?? row.employee?.positionName ?? '--',
+        shift: row.shiftName ?? '--',
         checkIn: formatTime(row.checkInTime),
         checkOut: formatTime(row.checkOutTime),
         status: normalizeStatus(row.status),
@@ -113,7 +143,7 @@ const weeklyData = computed(() => {
         <PageHeader title="Dashboard" description="Tổng quan chấm công hệ thống TimeMaster">
             <template #actions>
                 <Button variant="outline" as-child class="gap-2">
-                    <RouterLink to="/export">
+                    <RouterLink to="/reports">
                         <Download class="h-4 w-4" />
                         Xuất báo cáo
                     </RouterLink>
@@ -164,10 +194,11 @@ const weeklyData = computed(() => {
                                 :class="{
                                     'bg-emerald-50 text-emerald-600 border-none': row.status === 'present',
                                     'bg-amber-50 text-amber-600 border-none': row.status === 'late',
-                                    'bg-muted text-secondary-text border-none': row.status === 'absent' || row.status === 'leave'
+                                    'bg-primary/10 text-primary border-none': row.status === 'early' || row.status === 'working',
+                                    'bg-muted text-secondary-text border-none': row.status === 'absent' || row.status === 'leave' || row.status === 'holiday' || row.status === 'unrecorded' || row.status === 'incomplete'
                                 }"
                             >
-                                {{ row.status === 'present' ? 'Đúng giờ' : row.status === 'late' ? 'Muộn' : row.status === 'working' ? 'Đang làm' : 'Vắng' }}
+                                {{ getStatusLabel(row.status) }}
                             </Badge>
                         </template>
                     </DataTable>
@@ -187,9 +218,11 @@ const weeklyData = computed(() => {
                             </p>
                             <p class="mt-2 text-xs font-bold text-tertiary-text">{{ dateString }}</p>
                         </div>
-                        <Button class="w-full mt-4 bg-primary hover:bg-primary shadow-md shadow-primary/20 dark:shadow-none gap-2">
-                            <CheckCircle2 class="h-4 w-4" />
-                            Check-in ngay
+                        <Button as-child class="w-full mt-4 bg-primary hover:bg-primary shadow-md shadow-primary/20 dark:shadow-none gap-2">
+                            <RouterLink to="/attendance">
+                                <CheckCircle2 class="h-4 w-4" />
+                                Mở chấm công
+                            </RouterLink>
                         </Button>
                     </CardContent>
                 </Card>
@@ -220,11 +253,11 @@ const weeklyData = computed(() => {
                     <CardContent class="space-y-3">
                         <div class="flex items-center gap-3 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50">
                             <div class="h-2 w-2 rounded-full bg-amber-500"></div>
-                            <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">5 đơn xin nghỉ chờ phê duyệt</p>
+                            <p class="text-[11px] font-bold text-amber-700 dark:text-amber-400">{{ pendingLeaveCount }} đơn xin nghỉ chờ phê duyệt</p>
                         </div>
                         <div class="flex items-center gap-3 p-2.5 rounded-lg bg-primary/10 dark:bg-primary/10/20 border border-primary/20 dark:border-primary/20/50">
                             <div class="h-2 w-2 rounded-full bg-primary"></div>
-                            <p class="text-[11px] font-bold text-primary dark:text-primary">Tỷ lệ đúng giờ: 96%</p>
+                            <p class="text-[11px] font-bold text-primary dark:text-primary">Tỷ lệ có mặt: {{ presentRate }}</p>
                         </div>
                     </CardContent>
                 </Card>

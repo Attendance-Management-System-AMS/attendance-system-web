@@ -9,6 +9,7 @@ export type AttendanceStatus =
   | 'Ngày lễ'
   | 'Vắng mặt'
   | 'Thiếu checkout'
+  | 'Chưa đủ công'
 
 export interface Attendance {
   id: string | number
