@@ -11,6 +11,7 @@ import { useSchedules } from '@/modules/schedules/composables/useSchedules'
 import { useShifts } from '@/modules/schedules/composables/useShifts'
 import { useScheduleTemplates } from '@/modules/schedules/composables/useScheduleTemplates'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
+import { formatScheduleConflictError } from '@/modules/schedules/utils/scheduleConflictError'
 import { scheduleApi } from '@/modules/schedules/api/schedule.api'
 import type { Page } from '@/shared/types/api'
 import type { Schedule } from '@/modules/schedules/types/schedule.types'
@@ -369,17 +370,9 @@ const submitAssignment = async () => {
 
     // Refetch data ngầm (không block UI)
     assignedSchedulesQuery.refetch()
-  } catch (err: any) {
-    const respData = err?.response?.data?.data
-    if (Array.isArray(respData) && respData.length > 0 && respData[0].newShiftName) {
-      // Parse conflict details from backend
-      const conflictsStr = respData
-        .map((c: any) => `${c.dayOfWeek === 7 ? 'Chủ nhật' : 'Thứ ' + c.dayOfWeek}: ${c.newShiftName} trùng với ${c.existingShiftName}`)
-        .join(', ')
-      assignmentError.value = `Xung đột lịch: ${conflictsStr}`
-    } else {
-      assignmentError.value = getApiErrorMessage(err, 'Thao tác thất bại. Vui lòng thử lại.')
-    }
+  } catch (err: unknown) {
+    assignmentError.value =
+      formatScheduleConflictError(err) ?? getApiErrorMessage(err, 'Thao tác thất bại. Vui lòng thử lại.')
     toast.error(assignmentError.value)
   } finally {
     isSubmitting.value = false

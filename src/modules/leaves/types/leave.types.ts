@@ -25,6 +25,8 @@ export interface LeaveRequest {
   status: LeaveStatus
   approvedByName?: string
   createdAt?: string
+  correctedCheckIn?: string | null
+  correctedCheckOut?: string | null
 }
 
 export interface CreateLeaveRequest {
@@ -33,6 +35,8 @@ export interface CreateLeaveRequest {
   fromDate: string
   toDate: string
   reason: string
+  correctedCheckIn?: string | null
+  correctedCheckOut?: string | null
 }
 
 export type CreateMyLeaveRequest = Omit<CreateLeaveRequest, 'employeeId'>

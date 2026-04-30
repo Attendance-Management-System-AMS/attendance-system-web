@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,6 +20,13 @@ import type { EmployeeScheduleResponse } from '@/modules/schedules/types/schedul
 const today = new Date()
 const currentMonth = ref(today.getMonth())
 const currentYear = ref(today.getFullYear())
+
+const router = useRouter()
+
+const handleCorrection = (dateObj: Date) => {
+  const d = formatDateStr(dateObj)
+  router.push({ path: '/my/requests', query: { type: 'AC', date: d } })
+}
 
 const formatDateStr = (date: Date) => {
   const y = date.getFullYear()
@@ -85,6 +93,9 @@ const resolveAttendanceStatus = (
   return logEntry.status || ''
 }
 
+const canCreateCorrection = (status: string) =>
+  ['ABSENT', 'INCOMPLETE', 'MISSING_CHECKOUT'].includes(String(status || '').toUpperCase())
+
 const logs = computed(() => {
   const apiData = (historyQuery.data.value?.content || []) as Attendance[]
   const scheduleData = (scheduleQuery.data.value || []) as EmployeeScheduleResponse[]
@@ -95,6 +106,8 @@ const logs = computed(() => {
   for (let i = 1; i <= daysInMonth; i++) {
     const dateObj = new Date(currentYear.value, currentMonth.value, i)
     const dateStr = formatDateStr(dateObj)
+    const dayOfWeek = dateObj.getDay() // 0 = CN, 6 = T7
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
     const logEntry = apiData.find((item) => {
       const itemDate = item.workDate ? formatDateStr(new Date(item.workDate)) : null
@@ -107,15 +120,35 @@ const logs = computed(() => {
     const checkInDate = checkInValue ? new Date(checkInValue) : null
     const checkOutDate = checkOutValue ? new Date(checkOutValue) : null
 
+    const hasSchedule = (() => {
+      const backendDay = dayOfWeek === 0 ? 7 : dayOfWeek
+      return scheduleData.some(
+        (s) =>
+          s.dayOfWeek === backendDay &&
+          s.isActive &&
+          s.effectiveFrom <= dateStr &&
+          (!s.effectiveTo || s.effectiveTo >= dateStr),
+      )
+    })()
+
+    if (isWeekend && !logEntry && !hasSchedule) continue
+
+    const resolvedStatus = (() => {
+      const status = resolveAttendanceStatus(logEntry, dateStr, todayStr)
+      if (status) return status
+      if (dateStr < todayStr && hasSchedule) return 'ABSENT'
+      return ''
+    })()
+
     allDays.push({
       id: logEntry?.id || `empty-${dateStr}`,
       date: new Intl.DateTimeFormat('vi-VN', { day: '2-digit' }).format(dateObj),
       month: new Intl.DateTimeFormat('vi-VN', { month: '2-digit' }).format(dateObj),
       dayLabel: new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(dateObj),
       dateObj: dateObj,
+      isWeekend,
       shift: (() => {
-        const jsDay = dateObj.getDay()
-        const backendDay = jsDay === 0 ? 7 : jsDay
+        const backendDay = dayOfWeek === 0 ? 7 : dayOfWeek
         const matchedSchedule = scheduleData
           .filter(
             (s) =>
@@ -146,28 +179,24 @@ const logs = computed(() => {
             hour12: false,
           }).format(checkOutDate)
         : '—',
-      status: resolveAttendanceStatus(logEntry, dateStr, todayStr),
+      status: resolvedStatus,
       lateMinutes: logEntry?.lateMinutes || 0,
+      canCreateCorrection: canCreateCorrection(resolvedStatus),
       isToday: dateStr === todayStr,
     })
   }
 
-  return allDays
+  return allDays.reverse()
 })
 
 const summary = computed(() => {
-  const data = (historyQuery.data.value?.content || []) as Attendance[]
-  const todayStr = formatDateStr(new Date())
-  const statusOf = (logEntry: Attendance) => {
-    const dateStr = logEntry.workDate ? formatDateStr(new Date(logEntry.workDate)) : ''
-    return resolveAttendanceStatus(logEntry, dateStr, todayStr)
-  }
+  const data = logs.value
 
   return {
-    present: data.filter((l) => statusOf(l) === 'PRESENT').length,
-    late: data.filter((l) => statusOf(l) === 'LATE').length,
-    absent: data.filter((l) => statusOf(l) === 'ABSENT').length,
-    incomplete: data.filter((l) => ['EARLY_LEAVE', 'MISSING_CHECKOUT'].includes(statusOf(l))).length,
+    present: data.filter((row) => row.status === 'PRESENT').length,
+    late: data.filter((row) => row.status === 'LATE').length,
+    absent: data.filter((row) => row.status === 'ABSENT').length,
+    correctionNeeded: data.filter((row) => ['INCOMPLETE', 'MISSING_CHECKOUT'].includes(row.status)).length,
   }
 })
 
@@ -179,21 +208,25 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
 
   switch (String(status || '').toUpperCase()) {
     case 'PRESENT':
-      return { label: 'Đúng giờ', class: 'bg-emerald-50 text-emerald-600' }
+      return { label: 'Đúng giờ', class: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' }
     case 'LATE':
-      return { label: `Muộn (${lateMinutes || 0}p)`, class: 'bg-amber-50 text-amber-600' }
+      return { label: `Muộn (${lateMinutes || 0}p)`, class: 'bg-amber-500/10 text-amber-500 border border-amber-500/20' }
     case 'ABSENT':
-      return { label: 'Vắng mặt', class: 'bg-rose-50 text-rose-600' }
+      return { label: 'Vắng mặt', class: 'bg-rose-500/10 text-rose-500 border border-rose-500/20' }
     case 'EARLY_LEAVE':
       return { label: 'Về sớm', class: 'bg-primary/10 text-primary' }
     case 'LATE_AND_EARLY_LEAVE':
-      return { label: 'Muộn + sớm', class: 'bg-amber-50 text-amber-600' }
+      return { label: 'Muộn + sớm', class: 'bg-amber-500/10 text-amber-500 border border-amber-500/20' }
     case 'ON_LEAVE':
       return { label: 'Nghỉ phép', class: 'bg-surface text-secondary-text' }
     case 'HOLIDAY':
       return { label: 'Ngày lễ', class: 'bg-surface text-secondary-text' }
     case 'MISSING_CHECKOUT':
-      return { label: 'Thiếu ra', class: 'bg-rose-50 text-rose-600' }
+      return { label: 'Thiếu ra', class: 'bg-rose-500/10 text-rose-500 border border-rose-500/20' }
+    case 'LEAVE':
+      return { label: 'Nghỉ phép', class: 'bg-sky-500/10 text-sky-500 border border-sky-500/20' }
+    case 'INCOMPLETE':
+      return { label: 'Chưa đủ', class: 'bg-orange-500/10 text-orange-500 border border-orange-500/20' }
     default:
       return { label: status, class: 'bg-muted text-secondary-text' }
   }
@@ -201,11 +234,10 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
 </script>
 
 <template>
-  <div class="space-y-4 lg:space-y-6 px-0 md:px-0 font-bold">
+  <div class="space-y-5 lg:space-y-6">
     <PageHeader
       title="Bảng công tháng"
-      description="Lịch sử chi tiết chấm công."
-      class="px-4 md:px-0"
+      description="Theo dõi ca làm, giờ vào/ra và trạng thái từng ngày."
     >
       <template #actions>
         <div
@@ -215,7 +247,7 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
             <ChevronLeft class="h-4 w-4" />
           </Button>
           <div
-            class="px-2 text-[10px] md:text-xs font-semibold  tracking-normal text-primary-text min-w-[100px] md:min-w-[120px] text-center"
+            class="min-w-[132px] px-3 text-center text-xs font-semibold text-primary-text"
           >
             {{ monthLabel }}
           </div>
@@ -234,65 +266,60 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
     </div>
 
     <!-- Summary Statistics -->
-    <div v-else class="grid grid-cols-4 gap-2 md:gap-4 px-4 md:px-0">
+    <div v-else class="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <Card
         v-for="item in [
           {
             label: 'Đúng giờ',
-            labelShort: 'Đúng',
             value: summary.present,
             icon: CheckCircle2,
             color: 'text-emerald-500',
-            bg: 'bg-emerald-50/50',
+            bg: 'bg-emerald-500/10',
           },
           {
             label: 'Đi muộn',
-            labelShort: 'Muộn',
             value: summary.late,
             icon: Clock,
             color: 'text-amber-500',
-            bg: 'bg-amber-50/50',
+            bg: 'bg-amber-500/10',
           },
           {
             label: 'Vắng mặt',
-            labelShort: 'Vắng',
             value: summary.absent,
             icon: XCircle,
             color: 'text-rose-500',
-            bg: 'bg-rose-50/50',
+            bg: 'bg-rose-500/10',
           },
           {
-            label: 'Về sớm',
-            labelShort: 'Sớm',
-            value: summary.incomplete,
+            label: 'Thiếu công',
+            value: summary.correctionNeeded,
             icon: HelpCircle,
             color: 'text-primary',
-            bg: 'bg-primary/10/50',
+            bg: 'bg-primary/10',
           },
         ]"
         :key="item.label"
-        class="border-none shadow-sm rounded-lg md:rounded-lg overflow-hidden"
+        class="overflow-hidden rounded-xl border-border-subtle bg-card shadow-none"
       >
         <CardContent
-          class="p-2 md:p-5 flex flex-col md:flex-row items-center md:gap-4 text-center md:text-left"
+          class="flex items-center gap-4 p-4 sm:p-5"
         >
           <div
             :class="[
               item.bg,
               item.color,
-              'h-7 w-7 md:h-10 md:w-10 rounded-lg md:rounded-lg flex items-center justify-center border border-current opacity-20 hidden md:flex',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-current/20',
             ]"
           >
-            <component :is="item.icon" class="h-4 w-4 md:h-5 md:w-5" />
+            <component :is="item.icon" class="h-5 w-5" />
           </div>
           <div>
             <p
-              class="text-[7px] md:text-[10px] font-semibold text-tertiary-text  tracking-normal md:tracking-normal leading-none mb-1"
+              class="mb-1 text-xs font-medium leading-none text-tertiary-text"
             >
-              <span class="md:hidden">{{ item.labelShort }}</span>
-              <span class="hidden md:inline">{{ item.label }}</span>
+              {{ item.label }}
             </p>
-            <p class="text-xs md:text-xl font-semibold text-primary-text leading-none">
+            <p class="text-2xl font-semibold leading-none text-primary-text tabular-nums">
               {{ item.value }}
             </p>
           </div>
@@ -300,153 +327,203 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
       </Card>
     </div>
 
-    <!-- Main Attendance Table -->
+    <!-- Main Attendance Detail -->
     <div
       v-if="!historyQuery.isLoading.value && !scheduleQuery.isLoading.value"
-      class="overflow-hidden md:rounded-lg border-y md:border border-border bg-card shadow-sm"
     >
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr class="bg-surface/50 border-b border-border">
-              <th
-                class="px-3 md:px-6 py-3 text-left text-[10px] md:text-[11px] font-semibold  tracking-normal text-secondary-text"
-              >
-                Ngày
-              </th>
-              <th
-                class="hidden md:table-cell px-6 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text"
-              >
-                Ca làm việc
-              </th>
-              <th
-                class="px-3 md:px-6 py-3 text-left text-[10px] md:text-[11px] font-semibold  tracking-normal text-secondary-text"
-              >
-                <span class="md:hidden">Check In/Out</span>
-                <span class="hidden md:inline">Giờ vào</span>
-              </th>
-              <th
-                class="hidden md:table-cell px-6 py-3 text-left text-[11px] font-semibold  tracking-normal text-secondary-text"
-              >
-                Giờ ra
-              </th>
-              <th
-                class="px-3 md:px-6 py-3 text-center text-[10px] md:text-[11px] font-semibold  tracking-normal text-secondary-text"
-              >
-                Trạng thái
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-border text-center md:text-left">
-            <tr
-              v-for="row in logs"
-              :key="row.id"
-              class="group hover:bg-surface/50 transition-colors"
-              :class="{ 'bg-primary/10/20': row.isToday }"
-            >
-              <!-- Date Column -->
-              <td class="px-3 md:px-6 py-3">
-                <div class="flex items-center gap-2 md:gap-3">
-                  <div
+      <!-- ===== MOBILE: Card List (visible < lg) ===== -->
+      <div class="space-y-2 lg:hidden">
+        <div class="px-1 pb-1">
+          <p class="text-sm font-semibold text-primary-text">Chi tiết theo ngày</p>
+        </div>
+        <div
+          v-for="row in logs"
+          :key="'m-' + row.id"
+          class="rounded-xl border bg-card px-4 py-3 transition-colors"
+          :class="row.isToday ? 'border-primary/40 bg-primary/5' : 'border-border-subtle'"
+        >
+          <!-- Row 1: Date + Status -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div
+                v-if="row.isToday"
+                class="h-8 w-1 shrink-0 rounded-full bg-primary"
+              ></div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-sm font-semibold"
+                    :class="row.isToday ? 'text-primary' : 'text-primary-text'"
+                  >
+                    {{ row.dayLabel }}, {{ row.date }}/{{ row.month }}
+                  </span>
+                  <span
                     v-if="row.isToday"
-                    class="w-1 md:w-1.5 h-6 md:h-8 bg-primary rounded-full shrink-0"
-                  ></div>
-                  <div class="flex flex-col text-left">
-                    <div class="flex items-center gap-1.5 md:gap-2">
-                      <span
-                        class="text-xs md:text-sm font-semibold  leading-none"
-                        :class="row.isToday ? 'text-primary' : 'text-primary-text'"
-                      >
-                        {{ row.date }}<span class="md:hidden">/{{ row.month }}</span>
-                      </span>
-                      <div
-                        v-if="row.isToday"
-                        class="h-3 md:h-4 px-1 flex items-center bg-primary text-[6px] md:text-[8px] font-semibold text-white rounded border-none  whitespace-nowrap"
-                      >
-                        Nay
-                      </div>
-                    </div>
-                    <span
-                      class="text-[8px] md:text-[10px] font-bold text-tertiary-text  tracking-normal mt-0.5 md:mt-1"
-                      >{{ row.dayLabel }}</span
-                    >
-                  </div>
+                    class="inline-flex h-5 items-center rounded-full bg-primary px-2 text-[10px] font-semibold text-primary-foreground"
+                  >
+                    Hôm nay
+                  </span>
                 </div>
-              </td>
-
-              <!-- Shift Column -->
-              <td class="hidden md:table-cell px-6 py-3">
                 <span
-                  class="text-xs font-semibold "
-                  :class="row.shift !== '—' && row.shift !== 'Ngày nghỉ' ? 'text-primary-text' : 'text-tertiary-text'"
-                >
-                  {{ row.shift }}
-                </span>
-              </td>
+                  v-if="row.shift !== '—'"
+                  class="text-xs text-tertiary-text"
+                >{{ row.shift }}</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1.5">
+              <Badge
+                :class="[
+                  getStatusBadge(row.status, row.lateMinutes, row.isToday).class,
+                  'h-6 rounded-lg px-2.5 text-[11px] font-semibold whitespace-nowrap',
+                ]"
+              >
+                {{ getStatusBadge(row.status, row.lateMinutes, row.isToday).label }}
+              </Badge>
+              <Button 
+                v-if="row.canCreateCorrection"
+                variant="outline" 
+                size="sm" 
+                class="h-6 text-[10px] px-2 whitespace-nowrap"
+                @click="handleCorrection(row.dateObj)"
+              >
+                Giải trình
+              </Button>
+            </div>
+          </div>
 
-              <!-- Time In/Out Column -->
-              <td class="px-3 md:px-6 py-2 md:py-3 text-left">
-                <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center gap-1.5">
-                    <span
-                      class="md:hidden text-[6px] font-semibold text-tertiary-text  w-5 shrink-0"
-                      >Vào:</span
-                    >
-                    <code
-                      v-if="row.displayCheckIn !== '—'"
-                      class="text-[9px] md:text-[11px] font-mono font-semibold bg-surface md:bg-muted px-1 md:px-2 py-0.5 md:py-1 rounded text-secondary-text"
-                    >
-                      {{ row.displayCheckIn }}
-                    </code>
-                    <span v-else class="text-muted-foreground/40 font-mono text-[9px] md:text-xs"
-                      >--:--:--</span
-                    >
+          <!-- Row 2: Check-in / Check-out (only show if there's data) -->
+          <div
+            v-if="row.displayCheckIn !== '—' || row.displayCheckOut !== '—'"
+            class="mt-2.5 flex gap-4"
+          >
+            <div class="flex-1 rounded-lg bg-surface/60 px-3 py-2">
+              <span class="block text-[10px] font-medium uppercase tracking-wider text-tertiary-text">Giờ vào</span>
+              <code
+                v-if="row.displayCheckIn !== '—'"
+                class="text-sm font-semibold tabular-nums text-primary-text"
+              >{{ row.displayCheckIn }}</code>
+              <span v-else class="text-sm text-muted-foreground/50">--:--:--</span>
+            </div>
+            <div class="flex-1 rounded-lg bg-surface/60 px-3 py-2">
+              <span class="block text-[10px] font-medium uppercase tracking-wider text-tertiary-text">Giờ ra</span>
+              <code
+                v-if="row.displayCheckOut !== '—'"
+                class="text-sm font-semibold tabular-nums text-primary-text"
+              >{{ row.displayCheckOut }}</code>
+              <span v-else class="text-sm text-muted-foreground/50">--:--:--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DESKTOP: Table (visible >= lg) ===== -->
+      <div class="hidden lg:block overflow-hidden rounded-xl border border-border-standard bg-card shadow-none">
+        <div class="border-b border-border-subtle bg-surface/40 px-4 py-3">
+          <p class="text-sm font-semibold text-primary-text">Chi tiết theo ngày</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-surface/50 border-b border-border">
+                <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Ngày</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Ca làm việc</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Giờ vào</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Giờ ra</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border-subtle">
+              <tr
+                v-for="row in logs"
+                :key="'d-' + row.id"
+                class="group transition-colors hover:bg-elevated/60"
+                :class="{ 'bg-primary/5': row.isToday }"
+              >
+                <!-- Date Column -->
+                <td class="px-5 py-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      v-if="row.isToday"
+                      class="h-9 w-1.5 shrink-0 rounded-full bg-primary"
+                    ></div>
+                    <div class="flex flex-col text-left">
+                      <div class="flex items-center gap-2">
+                        <span
+                          class="text-sm font-semibold leading-none"
+                          :class="row.isToday ? 'text-primary' : 'text-primary-text'"
+                        >
+                          {{ row.date }}/{{ row.month }}
+                        </span>
+                        <div
+                          v-if="row.isToday"
+                          class="flex h-5 items-center rounded-full bg-primary px-2 text-[10px] font-semibold text-primary-foreground"
+                        >
+                          Hôm nay
+                        </div>
+                      </div>
+                      <span class="mt-1 text-xs font-medium text-tertiary-text">{{ row.dayLabel }}</span>
+                    </div>
                   </div>
-                  <div class="md:hidden flex items-center gap-1.5 border-t border-border-subtle pt-1.5">
-                    <span class="text-[6px] font-semibold text-tertiary-text  w-5 shrink-0"
-                      >Ra :</span
+                </td>
+
+                <!-- Shift Column -->
+                <td class="px-5 py-4">
+                  <span
+                    class="text-sm font-medium"
+                    :class="row.shift !== '—' && row.shift !== 'Ngày nghỉ' ? 'text-primary-text' : 'text-tertiary-text'"
+                  >
+                    {{ row.shift }}
+                  </span>
+                </td>
+
+                <!-- Time In Column -->
+                <td class="px-5 py-4">
+                  <code
+                    v-if="row.displayCheckIn !== '—'"
+                    class="rounded-lg bg-surface px-2.5 py-1 font-mono text-xs font-semibold text-secondary-text"
+                  >
+                    {{ row.displayCheckIn }}
+                  </code>
+                  <span v-else class="font-mono text-xs text-muted-foreground/50">--:--:--</span>
+                </td>
+
+                <!-- Out Column -->
+                <td class="px-5 py-4">
+                  <code
+                    v-if="row.displayCheckOut !== '—'"
+                    class="rounded-lg bg-surface px-2.5 py-1 font-mono text-xs font-semibold text-secondary-text"
+                  >
+                    {{ row.displayCheckOut }}
+                  </code>
+                  <span v-else class="font-mono text-xs text-muted-foreground/50">--:--:--</span>
+                </td>
+
+                <!-- Status Column -->
+                <td class="px-5 py-4">
+                  <div class="flex items-center gap-2">
+                    <Badge
+                      :class="[
+                        getStatusBadge(row.status, row.lateMinutes, row.isToday).class,
+                        'h-7 rounded-lg px-3 text-xs font-semibold whitespace-nowrap',
+                      ]"
                     >
-                    <code
-                      v-if="row.displayCheckOut !== '—'"
-                      class="text-[9px] font-mono font-semibold bg-surface px-1 py-0.5 rounded text-secondary-text"
+                      {{ getStatusBadge(row.status, row.lateMinutes, row.isToday).label }}
+                    </Badge>
+                    <Button 
+                      v-if="row.canCreateCorrection"
+                      variant="outline" 
+                      size="sm" 
+                      class="h-7 text-[10px] px-2 whitespace-nowrap"
+                      @click="handleCorrection(row.dateObj)"
                     >
-                      {{ row.displayCheckOut }}
-                    </code>
-                    <span v-else class="text-muted-foreground/40 font-mono text-[9px]">--:--:--</span>
+                      Giải trình
+                    </Button>
                   </div>
-                </div>
-              </td>
-
-              <!-- Out Column (Desktop only) -->
-              <td class="hidden md:table-cell px-6 py-3">
-                <code
-                  v-if="row.displayCheckOut !== '—'"
-                  class="text-[11px] font-mono font-semibold bg-muted px-2 py-1 rounded-lg text-secondary-text"
-                >
-                  {{ row.displayCheckOut }}
-                </code>
-                <span v-else class="text-muted-foreground/40 font-mono text-xs">--:--:--</span>
-              </td>
-
-              <!-- Status Column -->
-              <td class="px-3 md:px-6 py-3 text-center">
-                <Badge
-                  :class="[
-                    getStatusBadge(row.status, row.lateMinutes, row.isToday).class,
-                    'h-5 md:h-6 px-1 md:px-3 rounded md:rounded-lg font-semibold  text-[7px] md:text-[9px] tracking-normal border-none whitespace-nowrap',
-                  ]"
-                >
-                  <span class="md:hidden text-[6px]">{{
-                    getStatusBadge(row.status, row.lateMinutes, row.isToday).label.substring(0, 4)
-                  }}</span>
-                  <span class="hidden md:inline">{{
-                    getStatusBadge(row.status, row.lateMinutes, row.isToday).label
-                  }}</span>
-                </Badge>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

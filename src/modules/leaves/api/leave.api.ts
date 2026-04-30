@@ -2,13 +2,20 @@ import api from '@/shared/api/client'
 import type { ApiResponse, Page } from '@/shared/types/api'
 import type { CreateLeaveRequest, CreateMyLeaveRequest, LeaveRequest, LeaveType } from '@/modules/leaves/types/leave.types'
 
-function buildCreateLeaveBody(data: CreateLeaveRequest): Record<string, unknown> {
+function normalizeOptionalTime(value?: string | null): string | null {
+  const normalized = value?.trim()
+  return normalized ? normalized : null
+}
+
+function buildCreateLeaveBody(data: CreateLeaveRequest | CreateMyLeaveRequest): Record<string, unknown> {
   return {
-    employeeId: data.employeeId,
+    ...('employeeId' in data ? { employeeId: data.employeeId } : {}),
     leaveTypeCode: data.leaveTypeCode.trim(),
     fromDate: data.fromDate,
     toDate: data.toDate,
-    reason: data.reason,
+    reason: data.reason.trim(),
+    correctedCheckIn: normalizeOptionalTime(data.correctedCheckIn),
+    correctedCheckOut: normalizeOptionalTime(data.correctedCheckOut),
   }
 }
 
@@ -27,5 +34,6 @@ export const leaveApi = {
   // Các API dành cho cá nhân (/me)
   getMyLeaves: (params?: { status?: string }) =>
     api.get<ApiResponse<Page<LeaveRequest>>>('/leaves/me', { params }),
-  createMe: (data: CreateMyLeaveRequest) => api.post<ApiResponse<LeaveRequest>>('/leaves/me', data),
+  createMe: (data: CreateMyLeaveRequest) =>
+    api.post<ApiResponse<LeaveRequest>>('/leaves/me', buildCreateLeaveBody(data)),
 }

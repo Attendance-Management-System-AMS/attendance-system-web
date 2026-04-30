@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Plus, FileText, Plane, Stethoscope, Briefcase, ChevronRight, Calendar, Info } from 'lucide-vue-next'
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Plus, FileText, Plane, Stethoscope, Briefcase, ChevronRight, Calendar, Info, Clock } from 'lucide-vue-next'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -25,37 +26,122 @@ import {
 import { Label } from '@/shared/ui/label'
 import { toast } from 'vue-sonner'
 import { useMyLeaves } from '@/modules/leaves/composables/useMyLeaves'
+import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 
 const { leavesQuery, createMe, leaveTypesQuery } = useMyLeaves()
 
+const route = useRoute()
+const router = useRouter()
+
 const isCreateModalOpen = ref(false)
 
-const newRequest = ref({
+type MyRequestForm = {
+  leaveTypeCode: string
+  fromDate: string
+  toDate: string
+  reason: string
+  correctedCheckIn: string
+  correctedCheckOut: string
+}
+
+const createEmptyRequest = (): MyRequestForm => ({
   leaveTypeCode: '',
   fromDate: '',
   toDate: '',
-  reason: ''
+  reason: '',
+  correctedCheckIn: '',
+  correctedCheckOut: '',
+})
+
+const newRequest = ref<MyRequestForm>(createEmptyRequest())
+
+const resetForm = () => {
+  newRequest.value = createEmptyRequest()
+}
+
+const getLeaveTypeLabel = (request: {
+  leaveType?: { name?: string } | string
+  leaveTypeName?: string
+  leaveTypeCode?: string
+}) => {
+  if (request.leaveType && typeof request.leaveType === 'object' && request.leaveType.name) {
+    return request.leaveType.name
+  }
+
+  if (typeof request.leaveType === 'string' && request.leaveType.trim()) {
+    return request.leaveType
+  }
+
+  return request.leaveTypeName || request.leaveTypeCode || 'Đơn từ'
+}
+
+const openCorrectionRequest = async (date: string) => {
+  resetForm()
+  newRequest.value.leaveTypeCode = 'AC'
+  newRequest.value.fromDate = date
+  newRequest.value.toDate = date
+  isCreateModalOpen.value = true
+
+  const nextQuery = { ...route.query }
+  delete nextQuery.type
+  delete nextQuery.date
+  await router.replace({ query: nextQuery })
+}
+
+watch(
+  () => [route.query.type, route.query.date] as const,
+  ([type, date]) => {
+    if (type === 'AC' && typeof date === 'string' && date) {
+      void openCorrectionRequest(date)
+    }
+  },
+  { immediate: true },
+)
+
+watch(() => newRequest.value.leaveTypeCode, (newVal) => {
+  if (newVal === 'AC' && newRequest.value.fromDate) {
+    newRequest.value.toDate = newRequest.value.fromDate
+  }
 })
 
 const leaves = computed(() => leavesQuery.data.value?.content || [])
 
 const handleCreateRequest = () => {
+  resetForm()
   isCreateModalOpen.value = true
 }
 
 const handleSubmit = async () => {
-  if (!newRequest.value.leaveTypeCode || !newRequest.value.fromDate || !newRequest.value.toDate || !newRequest.value.reason) {
+  if (!newRequest.value.leaveTypeCode || !newRequest.value.fromDate || !newRequest.value.reason) {
     toast.error('Vui lòng điền đầy đủ thông tin')
     return
   }
 
+  if (newRequest.value.leaveTypeCode === 'AC') {
+    newRequest.value.toDate = newRequest.value.fromDate; // Force toDate = fromDate
+    if (!newRequest.value.correctedCheckIn && !newRequest.value.correctedCheckOut) {
+      toast.error('Vui lòng điền ít nhất giờ vào hoặc giờ ra bổ sung')
+      return
+    }
+  } else if (!newRequest.value.toDate) {
+    toast.error('Vui lòng điền ngày kết thúc')
+    return
+  }
+
   try {
-    await createMe.mutateAsync(newRequest.value)
+    await createMe.mutateAsync({
+      leaveTypeCode: newRequest.value.leaveTypeCode,
+      fromDate: newRequest.value.fromDate,
+      toDate: newRequest.value.toDate,
+      reason: newRequest.value.reason,
+      correctedCheckIn: newRequest.value.correctedCheckIn || null,
+      correctedCheckOut: newRequest.value.correctedCheckOut || null,
+    })
     isCreateModalOpen.value = false
     toast.success('Gửi đơn thành công! Đang chờ duyệt.')
-    newRequest.value = { leaveTypeCode: '', fromDate: '', toDate: '', reason: '' }
-  } catch {
-    toast.error('Có lỗi xảy ra khi gửi đơn')
+    resetForm()
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Có lỗi xảy ra khi gửi đơn'))
   }
 }
 
@@ -70,6 +156,7 @@ const getStatusLabel = (status: string) => {
 
 const getCategoryIcon = (type: string) => {
   const t = String(type).toLowerCase()
+  if (t.includes('giải trình') || t.includes('attendance correction') || t === 'ac') return Clock
   if (t.includes('phép')) return Plane
   if (t.includes('ốm')) return Stethoscope
   if (t.includes('tác')) return Briefcase
@@ -86,16 +173,16 @@ const formatDateRange = (from?: string, to?: string) => {
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-5">
     <PageHeader
       title="Đơn từ"
-      description="Danh sách yêu cầu nghỉ phép của bạn"
+      description="Theo dõi yêu cầu nghỉ phép và giải trình công của bạn"
     >
       <template #actions>
         <Button
           @click="handleCreateRequest"
           data-testid="my-requests-create"
-          class="bg-primary hover:bg-primary/90 h-8 px-3 text-[10px] font-bold  tracking-normal gap-2 rounded shadow-none"
+          class="h-9 rounded-lg bg-primary px-4 text-xs font-semibold shadow-none hover:bg-primary/90"
         >
           <Plus class="h-3.5 w-3.5" />
           Tạo đơn
@@ -107,37 +194,37 @@ const formatDateRange = (from?: string, to?: string) => {
        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
 
-    <div v-else-if="leaves.length === 0" class="text-center py-20 bg-surface/50 rounded-lg border-2 border-dashed border-border-subtle">
+    <div v-else-if="leaves.length === 0" class="rounded-xl border-2 border-dashed border-border-subtle bg-surface/50 py-20 text-center">
        <FileText class="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-       <p class="text-xs font-bold text-tertiary-text  tracking-normal">Bạn chưa có đơn từ nào</p>
+       <p class="text-sm font-semibold text-tertiary-text">Bạn chưa có đơn từ nào</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
+    <div v-else class="grid grid-cols-1 gap-3 lg:grid-cols-2">
       <Card v-for="request in leaves" :key="request.id"
-        class="shadow-none border-border rounded overflow-hidden transition-all hover:bg-primary/5 bg-card border-l-2 border-l-transparent hover:border-l-primary/40">
-        <CardContent class="p-2 sm:p-3">
+        class="overflow-hidden rounded-xl border-border-standard bg-card shadow-none transition-all hover:border-primary/30 hover:bg-primary/5">
+        <CardContent class="p-4">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2 min-w-0">
-              <div class="h-8 w-8 shrink-0 rounded bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                <component :is="getCategoryIcon(String(request.leaveType))" class="h-4 w-4" />
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                <component :is="getCategoryIcon(getLeaveTypeLabel(request))" class="h-5 w-5" />
               </div>
               <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5">
-                  <h3 class="text-[11px] sm:text-sm font-semibold text-primary-text truncate  leading-none">
-                    {{ typeof request.leaveType === 'string' ? request.leaveType : request.leaveType?.name || 'Đơn nghỉ' }}
+                <div class="flex items-center gap-2">
+                  <h3 class="truncate text-sm font-semibold leading-none text-primary-text">
+                    {{ getLeaveTypeLabel(request) }}
                   </h3>
                   <Badge variant="outline" 
                     :class="[
-                       'text-[7px] sm:text-[8px] font-bold  px-1 h-3.5 border-none shrink-0',
-                       String(request.status).toLowerCase() === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
-                       String(request.status).toLowerCase() === 'rejected' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
+                       'h-5 shrink-0 rounded-md border-none px-2 text-[10px] font-semibold',
+                       String(request.status).toLowerCase() === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
+                       String(request.status).toLowerCase() === 'rejected' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
                     ]"
                   >
                     {{ getStatusLabel(request.status) }}
                   </Badge>
                 </div>
                 <div class="flex items-center gap-1.5 mt-1">
-                  <span class="text-[8px] sm:text-[9px] text-tertiary-text font-bold  tracking-normal">
+                  <span class="text-xs font-medium text-tertiary-text">
                     {{ formatDateRange(request.fromDate || request.startDate, request.toDate || request.endDate) }}
                   </span>
                 </div>
@@ -148,15 +235,32 @@ const formatDateRange = (from?: string, to?: string) => {
                <ChevronRight class="h-4 w-4" />
             </Button>
           </div>
-          <div class="mt-1 pl-10">
-            <p class="text-[9px] sm:text-[10px] text-secondary-text line-clamp-1 font-medium tracking-normal italic">"{{ request.reason }}"</p>
+          <div class="mt-3 pl-12">
+            <p class="line-clamp-1 text-xs font-medium italic text-secondary-text">"{{ request.reason }}"</p>
+            <p
+              v-if="request.leaveTypeCode === 'AC' && (request.correctedCheckIn || request.correctedCheckOut)"
+              class="mt-2 text-[11px] font-medium text-tertiary-text"
+            >
+              Bổ sung công:
+              {{ request.correctedCheckIn || '--:--' }}
+              -
+              {{ request.correctedCheckOut || '--:--' }}
+            </p>
           </div>
         </CardContent>
       </Card>
     </div>
 
     <!-- Create Request Dialog -->
-    <Dialog :open="isCreateModalOpen" @update:open="isCreateModalOpen = $event">
+    <Dialog
+      :open="isCreateModalOpen"
+      @update:open="
+        (open) => {
+          isCreateModalOpen = open
+          if (!open) resetForm()
+        }
+      "
+    >
       <DialogContent class="max-w-[calc(100vw-32px)] sm:max-w-112.5 rounded-lg p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader class="p-4 sm:p-6 bg-card border-b border-primary/10">
           <div class="flex items-center gap-3">
@@ -164,8 +268,8 @@ const formatDateRange = (from?: string, to?: string) => {
               <Plus class="h-5 w-5 text-primary" />
             </div>
             <div>
-              <DialogTitle class="text-lg font-semibold  tracking-normal text-primary-text">Tạo đơn mới</DialogTitle>
-              <DialogDescription class="text-[10px] text-tertiary-text  font-bold tracking-normal mt-0.5">Vui lòng điền đầy đủ thông tin</DialogDescription>
+              <DialogTitle class="text-lg font-semibold text-primary-text">Tạo đơn mới</DialogTitle>
+              <DialogDescription class="mt-0.5 text-xs font-medium text-tertiary-text">Vui lòng điền đầy đủ thông tin</DialogDescription>
             </div>
           </div>
         </DialogHeader>
@@ -192,19 +296,21 @@ const formatDateRange = (from?: string, to?: string) => {
           </div>
 
           <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1.5">
+            <div class="space-y-1.5" :class="{ 'col-span-2': newRequest.leaveTypeCode === 'AC' }">
               <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
                 <Calendar class="h-3 w-3 text-tertiary-text" />
-                Từ ngày
+                <span v-if="newRequest.leaveTypeCode === 'AC'">Ngày giải trình</span>
+                <span v-else>Từ ngày</span>
               </Label>
               <Input
                 v-model="newRequest.fromDate"
+                @change="() => { if (newRequest.leaveTypeCode === 'AC') newRequest.toDate = newRequest.fromDate }"
                 data-testid="my-requests-from-date"
                 type="date"
                 class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
               />
             </div>
-            <div class="space-y-1.5">
+            <div class="space-y-1.5" v-if="newRequest.leaveTypeCode !== 'AC'">
               <Label class="text-[10px] font-semibold  tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
                 <Calendar class="h-3 w-3 text-tertiary-text" />
                 Đến ngày
@@ -213,6 +319,29 @@ const formatDateRange = (from?: string, to?: string) => {
                 v-model="newRequest.toDate"
                 data-testid="my-requests-to-date"
                 type="date"
+                class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
+              />
+            </div>
+          </div>
+
+          <div v-if="newRequest.leaveTypeCode === 'AC'" class="grid grid-cols-2 gap-4">
+             <div class="space-y-1.5">
+              <Label class="text-[10px] font-semibold tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
+                Giờ vào thực tế
+              </Label>
+              <Input
+                v-model="newRequest.correctedCheckIn"
+                type="time"
+                class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
+              />
+            </div>
+             <div class="space-y-1.5">
+              <Label class="text-[10px] font-semibold tracking-normal text-tertiary-text flex items-center gap-1.5 px-0.5">
+                Giờ ra thực tế
+              </Label>
+              <Input
+                v-model="newRequest.correctedCheckOut"
+                type="time"
                 class="h-10 rounded-lg border-border-subtle bg-surface shadow-none focus:ring-1 focus:ring-primary text-primary-text font-bold"
               />
             </div>

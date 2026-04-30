@@ -173,7 +173,7 @@ const selectDay = (day: CalendarDay) => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-5 lg:space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -208,21 +208,21 @@ const selectDay = (day: CalendarDay) => {
       </CardContent>
     </Card>
 
-    <div v-else class="grid lg:grid-cols-3 gap-6">
+    <div v-else class="grid gap-6 lg:grid-cols-3">
       <!-- Calendar Grid -->
-      <Card class="lg:col-span-2 overflow-hidden border-border shadow-none">
-        <div class="grid grid-cols-7 border-b bg-surface/50 dark:bg-card/50">
+      <Card class="overflow-hidden border-border-standard shadow-none lg:col-span-2">
+        <div class="grid grid-cols-7 border-b border-border-subtle bg-surface/50">
           <div v-for="d in ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']" :key="d"
-            class="py-3 text-center text-[10px] font-semibold  tracking-normal text-tertiary-text">
+            class="py-3 text-center text-xs font-semibold text-tertiary-text">
             {{ d }}
           </div>
         </div>
         <div class="grid grid-cols-7">
           <div v-for="day in calendarDays" :key="day.key" @click="selectDay(day)"
             :class="[
-              'relative min-h-[80px] p-2 border-b border-r border-border-subtle dark:border-border transition-all cursor-pointer',
-              day.isToday ? 'bg-primary/10 dark:bg-primary/10/20' : '',
-              selectedKey === day.key ? 'bg-primary/10 dark:bg-primary/10 ring-1 ring-inset ring-primary' : '',
+              'relative min-h-[76px] cursor-pointer border-b border-r border-border-subtle p-1.5 transition-all hover:bg-elevated/60 sm:min-h-[96px] sm:p-2.5',
+              day.isToday ? 'bg-primary/5' : '',
+              selectedKey === day.key ? 'bg-primary/10 ring-1 ring-inset ring-primary' : '',
               !day.date ? 'bg-surface/20 pointer-events-none' : ''
             ]">
             <span v-if="day.date"
@@ -231,12 +231,12 @@ const selectDay = (day: CalendarDay) => {
             </span>
 
             <div v-if="day.schedule" class="mt-2">
-              <Badge class="w-full text-[9px] font-bold px-1.2 py-0 h-4 justify-center bg-primary/10 text-primary border-none">
+              <Badge class="h-5 w-full justify-center rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0 text-[10px] font-semibold text-primary">
                 {{ day.schedule.short }}
               </Badge>
             </div>
             <div v-if="day.isWeekend && day.date && !day.schedule" class="mt-2">
-               <Badge variant="secondary" class="w-full text-[9px] font-bold px-1.2 py-0 h-4 justify-center opacity-50 border-none">OFF</Badge>
+               <Badge variant="secondary" class="h-5 w-full justify-center rounded-md border-none px-1.5 py-0 text-[10px] font-semibold opacity-60">OFF</Badge>
             </div>
           </div>
         </div>
@@ -244,18 +244,18 @@ const selectDay = (day: CalendarDay) => {
 
       <!-- Sidebar Info -->
       <div class="space-y-4">
-        <Card class="border-primary/20 dark:border-primary/20/50 bg-primary/10 dark:bg-primary/10/10 shadow-none">
+        <Card class="border-primary/20 bg-primary/10 shadow-none">
           <CardHeader class="py-4">
-            <CardTitle class="text-[10px] font-bold  tracking-normal text-primary">Chi tiết ngày {{ selectedKey?.split('-').reverse().join('/') }}</CardTitle>
+            <CardTitle class="text-xs font-semibold text-primary">Chi tiết ngày {{ selectedKey?.split('-').reverse().join('/') }}</CardTitle>
           </CardHeader>
           <CardContent>
             <div v-if="selectedShift" class="space-y-4">
               <h3 class="text-xl font-semibold text-primary-text dark:text-primary-text">{{ selectedShift.name }}</h3>
               <div class="grid gap-3">
-                <div class="flex items-center gap-3 p-3 rounded-lg bg-card dark:bg-background border border-primary/20 dark:border-primary/20/50">
+                <div class="flex items-center gap-3 rounded-lg border border-primary/20 bg-card p-3">
                    <Clock class="h-4 w-4 text-primary" />
                    <div>
-                     <p class="text-[10px] font-bold text-tertiary-text  tracking-normal">Thời gian</p>
+                     <p class="text-xs font-medium text-tertiary-text">Thời gian</p>
                      <p class="text-sm font-semibold text-primary-text dark:text-primary-text">{{ selectedShift.start }} — {{ selectedShift.end }}</p>
                    </div>
                 </div>
@@ -269,15 +269,15 @@ const selectDay = (day: CalendarDay) => {
         </Card>
 
         <!-- Legend Card -->
-        <Card class="shadow-none border-border">
+        <Card class="border-border-standard shadow-none">
           <CardHeader class="py-4">
-            <CardTitle class="text-[10px] font-bold  tracking-normal text-tertiary-text">Ca làm việc của bạn</CardTitle>
+            <CardTitle class="text-xs font-semibold text-tertiary-text">Ca làm việc của bạn</CardTitle>
           </CardHeader>
           <CardContent class="space-y-3">
              <div v-if="visibleSchedules.length === 0" class="text-xs text-tertiary-text italic">Chưa có dữ liệu ca làm việc trong tháng này</div>
-             <div v-for="item in visibleSchedules" :key="item.id" class="flex items-center justify-between text-xs font-bold">
+             <div v-for="item in visibleSchedules" :key="item.id" class="flex items-center justify-between rounded-lg border border-border-subtle bg-surface/40 px-3 py-2 text-xs font-medium">
                <div class="flex items-center gap-3">
-                 <Badge class="h-4 w-10 bg-primary/10 text-primary border-none p-0 flex justify-center text-[8px]">
+                 <Badge class="flex h-5 w-10 justify-center border border-primary/20 bg-primary/10 p-0 text-[9px] text-primary">
                    {{ item.short }}
                  </Badge>
                  <span class="text-secondary-text dark:text-tertiary-text">{{ item.name }}</span>
