@@ -172,7 +172,7 @@ const columns = [
         </template>
 
         <template #cell-description="{ value }">
-          <p class="max-w-[250px] truncate text-sm text-secondary-text dark:text-tertiary-text font-medium" :title="String(value)">
+          <p class="max-w-62.5 truncate text-sm text-secondary-text dark:text-tertiary-text font-medium" :title="String(value)">
             {{ value || '—' }}
           </p>
         </template>

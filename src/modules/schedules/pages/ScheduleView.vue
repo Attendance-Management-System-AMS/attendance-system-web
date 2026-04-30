@@ -348,7 +348,7 @@ const isReadOnlyPastAction = computed(() =>
               <ChevronLeft class="h-4 w-4" />
             </Button>
 
-            <div class="px-6 flex flex-col items-center min-w-[180px] border-x border-border dark:border-border">
+            <div class="px-6 flex flex-col items-center min-w-45 border-x border-border dark:border-border">
               <span class="text-sm font-semibold text-primary tabular-nums tracking-normal">{{
                 weekRangeLabel
               }}</span>
@@ -440,7 +440,7 @@ const isReadOnlyPastAction = computed(() =>
                 v-for="day in weekDays"
                 :key="day.ymd"
                 :class="[
-                  'px-4 py-4 text-center border-r border-border min-w-[150px]',
+                  'px-4 py-4 text-center border-r border-border min-w-37.5',
                   day.isToday ? 'bg-muted/50' : '',
                 ]"
               >
@@ -568,7 +568,7 @@ const isReadOnlyPastAction = computed(() =>
       >
         <div
           v-if="actionModalOpen"
-          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-card/40 backdrop-blur-[2px]"
+          class="fixed inset-0 z-100 flex items-center justify-center p-4 bg-card/40 backdrop-blur-[2px]"
           @click.self="!isActionLoading && closeActionModal()"
         >
           <Transition

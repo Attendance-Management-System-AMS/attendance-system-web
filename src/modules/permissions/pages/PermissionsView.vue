@@ -104,11 +104,11 @@ function getLevelBadgeClass(level: PermissionLevel) {
     <Card class="overflow-hidden border-border shadow-none">
       <CardContent class="p-0">
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[980px] text-sm">
+          <table class="w-full min-w-245 text-sm">
             <thead>
               <tr class="border-b bg-surface/60 dark:bg-card/60">
                 <th
-                  class="min-w-[320px] px-6 py-4 text-left text-[10px] font-semibold tracking-normal text-tertiary-text"
+                  class="min-w-80 px-6 py-4 text-left text-[10px] font-semibold tracking-normal text-tertiary-text"
                 >
                   Màn hình
                 </th>
@@ -171,7 +171,7 @@ function getLevelBadgeClass(level: PermissionLevel) {
                     <div class="flex justify-center">
                       <span
                         :class="[
-                          'inline-flex min-w-[88px] items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-semibold',
+                          'inline-flex min-w-22 items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-semibold',
                           getLevelBadgeClass(screen.access[role.key]),
                         ]"
                         :title="permissionLevelMeta[screen.access[role.key]].description"
@@ -219,7 +219,7 @@ function getLevelBadgeClass(level: PermissionLevel) {
               <div class="flex items-center gap-2">
                 <span
                   :class="[
-                    'inline-flex min-w-[88px] items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-semibold',
+                    'inline-flex min-w-22 items-center justify-center rounded-full border px-2.5 py-1 text-[11px] font-semibold',
                     getLevelBadgeClass(level as PermissionLevel),
                   ]"
                 >

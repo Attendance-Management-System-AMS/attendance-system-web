@@ -247,7 +247,7 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
             <ChevronLeft class="h-4 w-4" />
           </Button>
           <div
-            class="min-w-[132px] px-3 text-center text-xs font-semibold text-primary-text"
+            class="min-w-33 px-3 text-center text-xs font-semibold text-primary-text"
           >
             {{ monthLabel }}
           </div>

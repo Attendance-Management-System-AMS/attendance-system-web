@@ -129,7 +129,7 @@ const handleExport = async () => {
 
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
-    <DialogContent class="sm:max-w-[600px] gap-0 p-0 overflow-hidden">
+    <DialogContent class="sm:max-w-150 gap-0 p-0 overflow-hidden">
       <DialogHeader class="p-6 border-b">
         <div class="flex items-center gap-3">
           <div

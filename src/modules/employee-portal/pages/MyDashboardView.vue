@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   ClipboardList,
+  Star,
   Timer,
   TrendingUp,
 } from 'lucide-vue-next'
@@ -270,7 +271,7 @@ const recentActivities = computed(() => {
           </div>
         </CardHeader>
         <CardContent class="p-4 sm:p-8">
-          <div class="h-[200px] flex items-end justify-between gap-2 sm:gap-4 px-2">
+          <div class="h-50 flex items-end justify-between gap-2 sm:gap-4 px-2">
             <div
               v-for="bar in dailyBars"
               :key="bar.label"

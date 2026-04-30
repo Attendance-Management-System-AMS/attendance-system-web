@@ -220,7 +220,7 @@ const selectDay = (day: CalendarDay) => {
         <div class="grid grid-cols-7">
           <div v-for="day in calendarDays" :key="day.key" @click="selectDay(day)"
             :class="[
-              'relative min-h-[76px] cursor-pointer border-b border-r border-border-subtle p-1.5 transition-all hover:bg-elevated/60 sm:min-h-[96px] sm:p-2.5',
+              'relative min-h-19 cursor-pointer border-b border-r border-border-subtle p-1.5 transition-all hover:bg-elevated/60 sm:min-h-24 sm:p-2.5',
               day.isToday ? 'bg-primary/5' : '',
               selectedKey === day.key ? 'bg-primary/10 ring-1 ring-inset ring-primary' : '',
               !day.date ? 'bg-surface/20 pointer-events-none' : ''

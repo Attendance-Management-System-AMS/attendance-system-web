@@ -180,7 +180,7 @@ const applyDarkMode = (t: 'light' | 'dark' | 'system') => {
                         <label class="flex items-center gap-2 text-[10px] font-medium tracking-normal text-tertiary-text">
                             <Laptop class="h-3 w-3" /> Danh sách IP cho phép
                         </label>
-                        <textarea class="min-h-[50px] w-full rounded-lg border border-border bg-card p-4 font-mono text-sm font-semibold text-primary-text outline-none focus:ring-1 focus:ring-primary" placeholder="192.168.1.1, 10.0.0.*"></textarea>
+                        <textarea class="min-h-12.5 w-full rounded-lg border border-border bg-card p-4 font-mono text-sm font-semibold text-primary-text outline-none focus:ring-1 focus:ring-primary" placeholder="192.168.1.1, 10.0.0.*"></textarea>
                         <p class="text-[10px] font-medium italic text-tertiary-text">Mỗi IP/Dải IP cách nhau bởi dấu phẩy</p>
                     </div>
                 </div>

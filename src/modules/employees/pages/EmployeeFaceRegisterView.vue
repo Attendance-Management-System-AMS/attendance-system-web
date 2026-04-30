@@ -378,10 +378,10 @@ onUnmounted(() => {
                 class="absolute inset-0 h-full w-full object-cover opacity-95 transform-[scaleX(-1)]"
               />
               <div
-                class="pointer-events-none absolute inset-0 flex items-center justify-center border-[3px] border-white/10"
+                class="pointer-events-none absolute inset-0 flex items-center justify-center border-3 border-white/10"
               >
                 <div
-                  class="h-[68%] max-h-[min(420px,70vw)] w-[55%] max-w-[min(340px,85vw)] rounded-[50%] border-2 border-dashed shadow-[0_0_0_9999px_rgba(0,0,0,0.42)]"
+                  class="h-[68%] max-h-[min(420px,70vw)] w-[55%] max-w-[min(340px,85vw)] rounded-full border-2 border-dashed shadow-[0_0_0_9999px_rgba(0,0,0,0.42)]"
                   :class="ui.faceReady || ui.busy ? 'border-emerald-300/80' : 'border-white/45'"
                 />
               </div>
