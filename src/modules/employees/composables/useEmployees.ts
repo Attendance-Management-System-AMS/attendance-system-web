@@ -71,8 +71,11 @@ export function useEmployees(params?: UseEmployeesParams) {
     mutationFn: ({ id, data }: { id: number, data: UpdateEmployee }) =>
       employeeApi.update(id, data).then(res => res.data.result),
 
-    onSettled: () => {
+    onSettled: (_data, _err, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() })
+      if (vars?.id != null) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.detail(vars.id) })
+      }
     },
   })
 
@@ -96,11 +99,23 @@ export function useEmployees(params?: UseEmployeesParams) {
     },
   })
 
+  const deleteFaceDescriptor = useMutation({
+    mutationFn: (id: number) =>
+      employeeApi.deleteFaceDescriptor(id).then((res) => res.data.result),
+    onSettled: (_data, _err, employeeId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() })
+      if (employeeId != null) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.detail(employeeId) })
+      }
+    },
+  })
+
   return {
     employeesQuery,
     createEmployee,
     updateEmployee,
     deleteEmployee,
     registerFaceDescriptor,
+    deleteFaceDescriptor,
   }
 }

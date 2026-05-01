@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FormCard from '@/shared/ui/FormCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
-import { computed, reactive, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, reactive, ref, watch, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Briefcase, RefreshCw, Save, User } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
@@ -47,6 +47,8 @@ const form = reactive({
   isActive: true,
 })
 
+const isHydratingForm = ref(false)
+
 const filteredPositions = computed(() => {
   const deptId = form.departmentId
   if (!deptId) return []
@@ -56,6 +58,9 @@ const filteredPositions = computed(() => {
 watch(
   () => form.departmentId,
   (next, prev) => {
+    if (isHydratingForm.value) {
+      return
+    }
     if (next !== prev) {
       form.positionId = ''
     }
@@ -110,6 +115,7 @@ watchEffect(() => {
   const e = employeeQuery.data.value
   if (!e) return
 
+  isHydratingForm.value = true
   form.fullName = e.fullName ?? ''
   form.employeeCode = e.employeeCode ?? ''
   form.gender = e.gender ?? ''
@@ -119,6 +125,10 @@ watchEffect(() => {
   form.positionId = e.positionId != null ? String(e.positionId) : ''
   form.managerId = e.managerId != null ? String(e.managerId) : ''
   form.isActive = (e.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE'
+
+  nextTick(() => {
+    isHydratingForm.value = false
+  })
 })
 
 const submitError = ref('')

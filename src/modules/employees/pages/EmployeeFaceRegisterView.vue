@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
-import { ArrowLeft, Camera, CheckCircle2, ScanFace, ShieldCheck, X, XCircle } from 'lucide-vue-next'
+import { ArrowLeft, Camera, CheckCircle2, ScanFace, ShieldCheck, Trash2, X, XCircle } from 'lucide-vue-next'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 import { queryKeys } from '@/shared/lib/queryKeys'
 import { employeeApi } from '@/modules/employees/api/employee.api'
@@ -48,7 +48,7 @@ const CAPTURE_SAMPLE_COUNT = CAPTURE_SEQUENCE.length
 
 const route = useRoute()
 const router = useRouter()
-const { registerFaceDescriptor } = useEmployees()
+const { registerFaceDescriptor, deleteFaceDescriptor } = useEmployees()
 
 const employeeId = computed(() => Number(route.params.id))
 
@@ -71,7 +71,6 @@ const ui = reactive({
   capturePoseIndex: -1,
   capturePoseLabel: '',
   feedback: { status: 'idle' as 'idle' | 'success' | 'error', msg: '' },
-  /** Đặt true sau khi API lưu thành công — giữ UI “đã đăng ký” kể cả khi GET chưa kịp trả faceRegistered */
   justSavedFace: false,
   lastSuccessAt: null as number | null,
   hint: 'Căn giữa khuôn mặt trong khung. Khi bắt đầu, hướng dẫn sẽ hiện trực tiếp trên màn hình camera.',
@@ -83,6 +82,8 @@ let successAutoHideTimer: number | undefined
 const effectiveFaceRegistered = computed(
   () => !!(employee.value?.faceRegistered || ui.justSavedFace),
 )
+
+const isDeletingFace = computed(() => deleteFaceDescriptor.isPending.value)
 
 const successTimeLabel = computed(() => {
   if (!ui.lastSuccessAt) return ''
@@ -180,7 +181,7 @@ const submitDescriptor = async (descriptor: number[]) => {
 }
 
 const handleSaveFace = async () => {
-  if (ui.busy || !isLoaded.value) return
+  if (ui.busy || isDeletingFace.value || !isLoaded.value) return
 
   if (scanTimer) {
     window.clearTimeout(scanTimer)
@@ -213,6 +214,43 @@ const handleSaveFace = async () => {
     ui.capturePoseIndex = -1
     ui.capturePoseLabel = ''
     scanTimer = window.setTimeout(runScanner, 400)
+  }
+}
+
+const handleDeleteFace = async () => {
+  if (!employee.value || isDeletingFace.value || ui.busy || !effectiveFaceRegistered.value) {
+    return
+  }
+
+  const confirmed = window.confirm(
+    `Xóa mẫu khuôn mặt hiện tại của ${employee.value.fullName}? Sau khi xóa, hồ sơ này sẽ không thể chấm công bằng nhận diện cho đến khi đăng ký lại.`,
+  )
+  if (!confirmed) {
+    return
+  }
+
+  dismissFeedback()
+
+  try {
+    await deleteFaceDescriptor.mutateAsync(employee.value.id)
+    ui.justSavedFace = false
+    ui.lastSuccessAt = null
+    ui.feedback = {
+      status: 'success',
+      msg: 'Đã xóa mẫu khuôn mặt. Bây giờ bạn có thể đăng ký khuôn mặt này cho hồ sơ nhân viên khác.',
+    }
+    ui.hint = 'Mẫu khuôn mặt đã được gỡ khỏi hồ sơ này. Nếu cần, bạn có thể đăng ký lại bất cứ lúc nào.'
+    await employeeQuery.refetch()
+
+    if (successAutoHideTimer) window.clearTimeout(successAutoHideTimer)
+    successAutoHideTimer = window.setTimeout(() => {
+      if (ui.feedback.status === 'success') dismissFeedback()
+    }, 20000)
+  } catch (err) {
+    ui.feedback = {
+      status: 'error',
+      msg: getApiErrorMessage(err, 'Không thể xóa khuôn mặt.'),
+    }
   }
 }
 
@@ -465,13 +503,25 @@ onUnmounted(() => {
                   ? 'bg-emerald-600 hover:bg-emerald-700'
                   : 'bg-elevated hover:bg-card dark:bg-elevated dark:hover:bg-elevated'
               "
-              :disabled="ui.busy || !isLoaded"
+              :disabled="ui.busy || isDeletingFace || !isLoaded"
               @click="handleSaveFace"
             >
               <Camera class="h-4 w-4 shrink-0" />
               <span v-if="ui.busy">Đang lấy mẫu {{ ui.capturePoseIndex + 1 }}/{{ CAPTURE_SAMPLE_COUNT }}</span>
               <span v-else-if="effectiveFaceRegistered">Đăng ký lại khuôn mặt</span>
               <span v-else>Bắt đầu đăng ký</span>
+            </button>
+
+            <button
+              v-if="effectiveFaceRegistered"
+              type="button"
+              class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
+              :disabled="ui.busy || isDeletingFace"
+              @click="handleDeleteFace"
+            >
+              <Trash2 class="h-4 w-4 shrink-0" />
+              <span v-if="isDeletingFace">Đang xóa khuôn mặt...</span>
+              <span v-else>Xóa khuôn mặt hiện tại</span>
             </button>
           </div>
 
