@@ -161,7 +161,7 @@ const qrCodeUrl = computed(
                 <img :src="qrCodeUrl" alt="Máy chấm công QR" class="h-48 w-48" />
               </div>
               <p class="text-xs text-secondary-text text-center">
-                Thiết bị kiosk cần đăng nhập bằng tài khoản Admin, HR hoặc Quản lý trước khi dùng.
+                Không cần thiết bị camera chuyên dụng. Chỉ cần mở kiosk trên thiết bị có camera và đăng nhập bằng tài khoản Admin, HR hoặc Quản lý trước khi dùng.
               </p>
             </div>
           </div>
