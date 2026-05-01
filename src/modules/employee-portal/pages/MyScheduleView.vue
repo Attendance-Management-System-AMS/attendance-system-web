@@ -143,24 +143,6 @@ const calendarDays = computed(() => {
   return days
 })
 
-const visibleSchedules = computed(() => {
-  const monthStart = new Date(currentYear.value, currentMonth.value, 1)
-  const monthEnd = new Date(currentYear.value, currentMonth.value + 1, 0)
-  const schedulesByDay = new Map<number, UserShift>()
-
-  normalizedSchedules.value
-    .filter((item) => toDateOnly(item.effectiveFrom).getTime() <= monthEnd.getTime())
-    .filter((item) => !item.effectiveTo || toDateOnly(item.effectiveTo).getTime() >= monthStart.getTime())
-    .sort((left, right) => right.effectiveFrom.localeCompare(left.effectiveFrom))
-    .forEach((item) => {
-      if (!schedulesByDay.has(item.dayOfWeek)) {
-        schedulesByDay.set(item.dayOfWeek, item)
-      }
-    })
-
-  return Array.from(schedulesByDay.values()).sort((left, right) => left.dayOfWeek - right.dayOfWeek)
-})
-
 const selectedKey = ref<string | null>(todayKey)
 const selectedDayData = computed(() => calendarDays.value.find(d => d.key === selectedKey.value))
 const selectedShift = computed(() => selectedDayData.value?.schedule)

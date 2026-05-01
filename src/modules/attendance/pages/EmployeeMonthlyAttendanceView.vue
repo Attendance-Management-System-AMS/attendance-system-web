@@ -107,6 +107,16 @@ const formatDisplayDate = (value?: string | null) => {
   }).format(parsed)
 }
 
+const formatMinutes = (minutes?: number | null) => {
+  const value = minutes ?? 0
+  const hours = Math.floor(value / 60)
+  const rest = value % 60
+  if (!value) return '—'
+  if (!hours) return `${rest}p`
+  if (!rest) return `${hours}h`
+  return `${hours}h ${rest}p`
+}
+
 const getStartOfMonth = (year: number, month: number) => new Date(year, month, 1)
 const getEndOfMonth = (year: number, month: number) => new Date(year, month + 1, 0)
 
@@ -340,6 +350,9 @@ const logs = computed(() => {
         : '—',
       status: resolvedStatus,
       lateMinutes: logEntry?.lateMinutes || 0,
+      actualOvertimeMinutes: logEntry?.actualOvertimeMinutes || 0,
+      payableOvertimeMinutes: logEntry?.payableOvertimeMinutes || 0,
+      overtimeStatus: logEntry?.overtimeStatus || 'NONE',
       isToday: dateStr === todayStr,
     })
   }
@@ -355,6 +368,7 @@ const summary = computed(() => {
     late: data.filter((row) => ['LATE', 'LATE_AND_EARLY_LEAVE'].includes(row.status)).length,
     absent: data.filter((row) => row.status === 'ABSENT').length,
     leave: data.filter((row) => ['LEAVE', 'ON_LEAVE'].includes(row.status)).length,
+    overtimeMinutes: data.reduce((sum, row) => sum + row.payableOvertimeMinutes, 0),
   }
 })
 
@@ -601,7 +615,7 @@ const openEmployeeProfile = () => {
         </div>
       </section>
 
-      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <Card class="overflow-hidden rounded-xl border-border-subtle bg-card shadow-none">
           <CardContent class="flex items-center gap-4 p-4 sm:p-5">
             <div
@@ -661,6 +675,22 @@ const openEmployeeProfile = () => {
               <p class="mb-1 text-xs font-medium leading-none text-tertiary-text">Nghỉ phép</p>
               <p class="text-2xl font-semibold leading-none text-primary-text tabular-nums">
                 {{ summary.leave }}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card class="overflow-hidden rounded-xl border-border-subtle bg-card shadow-none">
+          <CardContent class="flex items-center gap-4 p-4 sm:p-5">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-indigo-500/10 text-indigo-500"
+            >
+              <Clock class="h-5 w-5" />
+            </div>
+            <div>
+              <p class="mb-1 text-xs font-medium leading-none text-tertiary-text">Tăng ca</p>
+              <p class="text-2xl font-semibold leading-none text-primary-text tabular-nums">
+                {{ formatMinutes(summary.overtimeMinutes) }}
               </p>
             </div>
           </CardContent>
@@ -756,6 +786,12 @@ const openEmployeeProfile = () => {
                 <span v-else class="text-sm text-muted-foreground/50">--:--:--</span>
               </div>
             </div>
+            <div
+              v-if="row.payableOvertimeMinutes > 0"
+              class="mt-2 rounded-lg bg-indigo-500/10 px-3 py-2 text-xs font-semibold text-indigo-500"
+            >
+              Tăng ca tính công: {{ formatMinutes(row.payableOvertimeMinutes) }}
+            </div>
           </div>
         </div>
 
@@ -773,6 +809,7 @@ const openEmployeeProfile = () => {
                   <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Ca làm việc</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Giờ vào</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Giờ ra</th>
+                  <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Tăng ca</th>
                   <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Trạng thái</th>
                 </tr>
               </thead>
@@ -845,6 +882,15 @@ const openEmployeeProfile = () => {
                     </code>
                     <span v-else class="font-mono text-xs text-muted-foreground/50">
                       --:--:--
+                    </span>
+                  </td>
+
+                  <td class="px-5 py-4">
+                    <span
+                      class="text-sm font-semibold"
+                      :class="row.payableOvertimeMinutes > 0 ? 'text-indigo-500' : 'text-tertiary-text'"
+                    >
+                      {{ formatMinutes(row.payableOvertimeMinutes) }}
                     </span>
                   </td>
 

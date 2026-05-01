@@ -28,6 +28,7 @@ const columns = [
   { key: 'employee', label: 'Nhân viên' },
   { key: 'checkIn', label: 'Giờ vào' },
   { key: 'checkOut', label: 'Giờ ra' },
+  { key: 'overtime', label: 'Tăng ca' },
   { key: 'status', label: 'Trạng thái' },
 ]
 
@@ -61,6 +62,48 @@ const getInitials = (name?: string) => {
     return (first + last).toUpperCase() || '??'
   }
   return (parts[0]?.charAt(0) || '?').toUpperCase()
+}
+
+const formatOvertimeMinutes = (minutes?: number | null) => {
+  const value = minutes ?? 0
+  const hours = Math.floor(value / 60)
+  const rest = value % 60
+  if (!value) return '0p'
+  if (!hours) return `${rest}p`
+  if (!rest) return `${hours}h`
+  return `${hours}h ${rest}p`
+}
+
+const getOvertimeStatusLabel = (status?: string | null) => {
+  switch (String(status || '').toUpperCase()) {
+    case 'APPROVED':
+      return 'Đã tính'
+    case 'PENDING_APPROVAL':
+      return 'Chờ duyệt'
+    case 'NO_CHECKOUT':
+      return 'Thiếu checkout'
+    case 'UNAPPROVED':
+      return 'Chưa duyệt'
+    case 'REJECTED':
+      return 'Không tính'
+    default:
+      return 'Không có'
+  }
+}
+
+const getOvertimeStatusClass = (status?: string | null) => {
+  switch (String(status || '').toUpperCase()) {
+    case 'APPROVED':
+      return 'bg-indigo-500/10 text-indigo-500'
+    case 'PENDING_APPROVAL':
+      return 'bg-amber-500/10 text-amber-500'
+    case 'NO_CHECKOUT':
+      return 'bg-orange-500/10 text-orange-500'
+    case 'REJECTED':
+      return 'bg-rose-500/10 text-rose-500'
+    default:
+      return 'bg-muted text-secondary-text dark:bg-elevated'
+  }
 }
 
 // --- Kiosk Device Connection ---
@@ -166,6 +209,28 @@ const qrCodeUrl = computed(
             class="text-[11px] font-mono font-bold bg-muted dark:bg-elevated px-1.5 py-0.5 rounded text-secondary-text dark:text-tertiary-text">
                         {{ value || '—:—' }}
                     </code>
+        </template>
+
+        <template #cell-overtime="{ row }">
+          <div
+            v-if="
+              row.actualOvertimeMinutes ||
+              row.payableOvertimeMinutes ||
+              String(row.overtimeStatus || 'NONE').toUpperCase() !== 'NONE'
+            "
+            class="space-y-1"
+          >
+            <Badge
+              class="border-none px-2.5 py-0.5 text-[10px] font-bold"
+              :class="getOvertimeStatusClass(row.overtimeStatus)"
+            >
+              {{ getOvertimeStatusLabel(row.overtimeStatus) }}
+            </Badge>
+            <p class="text-[11px] text-tertiary-text">
+              Tính công {{ formatOvertimeMinutes(row.payableOvertimeMinutes) }}
+            </p>
+          </div>
+          <span v-else class="text-xs text-tertiary-text">—</span>
         </template>
 
         <template #cell-status="{ value }">

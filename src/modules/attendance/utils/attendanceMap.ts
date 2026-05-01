@@ -67,6 +67,10 @@ export function mergeTodayAttendance(
     earlyLeaveMinutes: row.earlyLeaveMinutes ?? undefined,
     workedMinutes: row.workedMinutes ?? undefined,
     expectedMinutes: row.expectedMinutes ?? undefined,
+    actualOvertimeMinutes: row.actualOvertimeMinutes ?? undefined,
+    approvedOvertimeMinutes: row.approvedOvertimeMinutes ?? undefined,
+    payableOvertimeMinutes: row.payableOvertimeMinutes ?? undefined,
+    overtimeStatus: row.overtimeStatus ?? undefined,
     isRecorded: true,
   }))
 }

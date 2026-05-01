@@ -32,6 +32,10 @@ export interface Attendance {
   earlyLeaveMinutes?: number
   workedMinutes?: number
   expectedMinutes?: number
+  actualOvertimeMinutes?: number
+  approvedOvertimeMinutes?: number
+  payableOvertimeMinutes?: number
+  overtimeStatus?: string
   createdAt?: string
   isRecorded?: boolean
 }

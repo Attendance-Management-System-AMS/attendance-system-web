@@ -14,6 +14,10 @@ export interface AttendanceTodayApiRecord {
   earlyLeaveMinutes?: number | null
   workedMinutes?: number | null
   expectedMinutes?: number | null
+  actualOvertimeMinutes?: number | null
+  approvedOvertimeMinutes?: number | null
+  payableOvertimeMinutes?: number | null
+  overtimeStatus?: string | null
   createdAt: string
   employeeFullName?: string | null
   employeeSnapshotCode?: string | null
@@ -47,6 +51,10 @@ export interface AttendanceCheckInResult {
   earlyLeaveMinutes?: number | null
   workedMinutes?: number | null
   expectedMinutes?: number | null
+  actualOvertimeMinutes?: number | null
+  approvedOvertimeMinutes?: number | null
+  payableOvertimeMinutes?: number | null
+  overtimeStatus?: string | null
   createdAt?: string
   /** Có khi backend trả kèm (check-in bằng mặt) — tránh gọi thêm GET /employees. */
   employee?: AttendanceEmployeeBrief | null
