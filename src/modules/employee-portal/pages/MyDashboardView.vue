@@ -32,14 +32,25 @@ const formatDateStr = (date: Date) => {
 const getStartOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
 const getEndOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
 
-const filters = computed(() => ({
+const monthlyFilters = computed(() => ({
   fromDate: formatDateStr(getStartOfMonth(today)),
   toDate: formatDateStr(getEndOfMonth(today)),
   page: 0,
   size: 100,
 }))
 
-const { historyQuery, todayQuery, scheduleQuery } = useMyAttendance(filters)
+const recentStart = new Date(today)
+recentStart.setDate(recentStart.getDate() - 6)
+
+const recentFilters = computed(() => ({
+  fromDate: formatDateStr(recentStart),
+  toDate: formatDateStr(today),
+  page: 0,
+  size: 20,
+}))
+
+const { historyQuery, todayQuery, scheduleQuery } = useMyAttendance(monthlyFilters)
+const { historyQuery: recentHistoryQuery } = useMyAttendance(recentFilters)
 const { leavesQuery } = useMyLeaves()
 
 const userProfile = computed(() => ({
@@ -118,7 +129,7 @@ const stats = computed(() => [
 ])
 
 const dailyBars = computed(() => {
-  const data = historyQuery.data.value?.content || []
+  const data = recentHistoryQuery.data.value?.content || []
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = new Date()
     date.setDate(date.getDate() - (6 - index))

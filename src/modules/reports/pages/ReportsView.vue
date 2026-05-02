@@ -25,7 +25,9 @@ import {
 
 const showExportDialog = ref(false)
 const currentYear = new Date().getFullYear()
+const currentMonth = new Date().getMonth() + 1
 const reportYear = ref(String(currentYear))
+const selectedMonth = ref(String(currentMonth))
 const reportScope = ref<'company' | 'employee'>('company')
 const selectedDepartmentId = ref('')
 const selectedEmployeeId = ref('')
@@ -48,6 +50,10 @@ const selectedEmployee = computed(() =>
 )
 
 const parsedYear = computed(() => Number(reportYear.value))
+const selectedMonthNumber = computed(() => {
+  const parsed = Number(selectedMonth.value)
+  return Number.isFinite(parsed) && parsed >= 1 && parsed <= 12 ? parsed : currentMonth
+})
 const canQuery = computed(() =>
   Number.isFinite(parsedYear.value)
   && parsedYear.value >= 2000
@@ -135,6 +141,53 @@ const attendanceCards = computed(() => [
 
 const monthlyAttendanceRows = computed(() => attendanceSummary.value?.months ?? [])
 const employeeAttendanceRows = computed(() => attendanceSummary.value?.employees ?? [])
+const monthOptions = computed(() => {
+  if (monthlyAttendanceRows.value.length > 0) {
+    return monthlyAttendanceRows.value.map((row) => ({ value: String(row.month), label: row.label }))
+  }
+
+  return Array.from({ length: 12 }, (_, index) => ({
+    value: String(index + 1),
+    label: `Tháng ${index + 1}`,
+  }))
+})
+const selectedMonthLabel = computed(() =>
+  monthOptions.value.find((item) => Number(item.value) === selectedMonthNumber.value)?.label
+  ?? `Tháng ${selectedMonthNumber.value}`,
+)
+const employeeMonthlyRows = computed(() =>
+  employeeAttendanceRows.value
+    .map((employee) => {
+      const monthSummary = employee.months?.find((item) => item.month === selectedMonthNumber.value) ?? {
+        month: selectedMonthNumber.value,
+        label: selectedMonthLabel.value,
+        workDays: 0,
+        lateDays: 0,
+        earlyLeaveDays: 0,
+        absentDays: 0,
+        leaveDays: 0,
+        holidayDays: 0,
+        missingCheckoutDays: 0,
+        incompleteDays: 0,
+        workedMinutes: 0,
+        overtimeMinutes: 0,
+      }
+
+      return {
+        employee,
+        month: monthSummary,
+      }
+    })
+    .sort((left, right) => {
+      if (right.month.workedMinutes !== left.month.workedMinutes) {
+        return right.month.workedMinutes - left.month.workedMinutes
+      }
+      if (right.month.workDays !== left.month.workDays) {
+        return right.month.workDays - left.month.workDays
+      }
+      return formatEmployeeLabel(left.employee).localeCompare(formatEmployeeLabel(right.employee), 'vi')
+    }),
+)
 
 const isLoading = computed(() =>
   annualAttendanceQuery.isLoading.value || overtimeSummaryQuery.isLoading.value,
@@ -180,11 +233,11 @@ function retryQueries() {
       </template>
     </PageHeader>
 
-    <Card class="shadow-none border-border-standard">
-      <CardHeader>
-        <CardTitle class="text-base font-bold text-primary-text">Bộ lọc báo cáo</CardTitle>
-      </CardHeader>
-      <CardContent class="grid gap-4 lg:grid-cols-[180px_220px_1fr]">
+      <Card class="shadow-none border-border-standard">
+        <CardHeader>
+          <CardTitle class="text-base font-bold text-primary-text">Bộ lọc báo cáo</CardTitle>
+        </CardHeader>
+      <CardContent class="grid gap-4 xl:grid-cols-[180px_220px_180px_1fr]">
         <div class="space-y-2">
           <label class="text-xs font-bold uppercase tracking-wider text-tertiary-text">Năm báo cáo</label>
           <input
@@ -220,6 +273,18 @@ function retryQueries() {
               Cá nhân
             </button>
           </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-bold uppercase tracking-wider text-tertiary-text">Tháng chi tiết</label>
+          <select
+            v-model="selectedMonth"
+            class="h-10 w-full rounded-md border border-border-standard bg-surface px-3 text-sm font-medium text-primary-text outline-none focus:border-primary focus:ring-2 focus:ring-ring/40 dark:bg-background"
+          >
+            <option v-for="month in monthOptions" :key="month.value" :value="month.value">
+              {{ month.label }}
+            </option>
+          </select>
         </div>
 
         <div class="space-y-2">
@@ -381,6 +446,47 @@ function retryQueries() {
                 <td class="px-4 py-3 text-right text-sm text-secondary-text">{{ formatCount(row.missingCheckoutDays) }}</td>
                 <td class="px-4 py-3 text-right text-sm font-semibold text-primary-text">{{ formatHours(row.workedMinutes) }}</td>
                 <td class="px-4 py-3 text-right text-sm font-semibold text-indigo-600">{{ formatHours(row.overtimeMinutes) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      <Card class="shadow-none border-border-standard">
+        <CardHeader>
+          <CardTitle class="text-base font-bold text-primary-text">
+            Tổng hợp theo nhân viên trong {{ selectedMonthLabel }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="overflow-x-auto">
+          <table class="w-full min-w-220 border-collapse">
+            <thead>
+              <tr class="border-b border-border bg-surface/50">
+                <th class="px-4 py-3 text-left text-xs font-semibold text-secondary-text">Nhân viên</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-secondary-text">Phòng ban</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">Ngày công</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">Muộn</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">Vắng</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">Nghỉ phép</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">Thiếu checkout</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">Giờ làm</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-secondary-text">OT</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border-subtle">
+              <tr v-for="row in employeeMonthlyRows" :key="`${row.employee.employeeId}-${row.month.month}`">
+                <td class="px-4 py-3">
+                  <p class="text-sm font-semibold text-primary-text">{{ formatEmployeeLabel(row.employee) }}</p>
+                  <p class="text-xs text-tertiary-text">{{ row.employee.positionName || 'Chưa gán chức vụ' }}</p>
+                </td>
+                <td class="px-4 py-3 text-sm text-secondary-text">{{ row.employee.departmentName || 'Chưa phân bổ' }}</td>
+                <td class="px-4 py-3 text-right text-sm text-primary-text">{{ formatCount(row.month.workDays) }}</td>
+                <td class="px-4 py-3 text-right text-sm text-secondary-text">{{ formatCount(row.month.lateDays) }}</td>
+                <td class="px-4 py-3 text-right text-sm text-secondary-text">{{ formatCount(row.month.absentDays) }}</td>
+                <td class="px-4 py-3 text-right text-sm text-secondary-text">{{ formatCount(row.month.leaveDays) }}</td>
+                <td class="px-4 py-3 text-right text-sm text-secondary-text">{{ formatCount(row.month.missingCheckoutDays) }}</td>
+                <td class="px-4 py-3 text-right text-sm font-semibold text-primary-text">{{ formatHours(row.month.workedMinutes) }}</td>
+                <td class="px-4 py-3 text-right text-sm font-semibold text-indigo-600">{{ formatHours(row.month.overtimeMinutes) }}</td>
               </tr>
             </tbody>
           </table>

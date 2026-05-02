@@ -39,6 +39,7 @@ export interface EmployeeAttendanceSummary {
   incompleteDays: number
   workedMinutes: number
   overtimeMinutes: number
+  months: AnnualAttendanceSummaryItem[]
 }
 
 export interface AnnualAttendanceSummary {
