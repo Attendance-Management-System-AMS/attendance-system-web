@@ -132,10 +132,6 @@ const attendanceData = computed(() =>
     })),
 )
 
-const weeklyData = computed(() => {
-    const todayLabel = new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(now.value)
-    return [{ day: todayLabel, present: presentCount.value, total: Math.max(totalCount.value, 1) }]
-})
 </script>
 
 <template>
@@ -188,7 +184,7 @@ const weeklyData = computed(() => {
                             </div>
                         </template>
                         <template #cell-status="{ row }">
-                            <Badge 
+                            <Badge
                                 :variant="row.status === 'present' ? 'default' : row.status === 'late' ? 'outline' : 'secondary'"
                                 class="px-2 py-0.5 text-[10px] font-bold  tracking-normal"
                                 :class="{
@@ -227,23 +223,6 @@ const weeklyData = computed(() => {
                     </CardContent>
                 </Card>
 
-                <!-- Weekly chart widget -->
-                <Card>
-                    <CardHeader class="py-4">
-                        <CardTitle class="text-[10px] font-bold  tracking-normal text-tertiary-text">Tỷ lệ có mặt tuần này</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="flex items-end gap-2 h-24">
-                            <div v-for="d in weeklyData" :key="d.day" class="flex flex-1 flex-col items-center gap-1.5">
-                                <div class="relative w-full h-16 rounded-t bg-muted dark:bg-elevated overflow-hidden">
-                                    <div class="absolute bottom-0 w-full bg-primary transition-all duration-700"
-                                        :style="{ height: `${(d.present / d.total) * 100}%` }"></div>
-                                </div>
-                                <span class="text-[9px] font-bold text-tertiary-text">{{ d.day }}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
 
                  <!-- Notification widget -->
                 <Card>
