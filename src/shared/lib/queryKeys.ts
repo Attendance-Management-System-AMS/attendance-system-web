@@ -33,6 +33,10 @@ export const queryKeys = {
   attendance: {
     today: () => ['attendance', 'today'] as const,
   },
+  permissions: {
+    roles: () => ['permissions', 'roles'] as const,
+    users: () => ['permissions', 'users'] as const,
+  },
   schedules: {
     all: () => ['schedules'] as const,
     byEmployee: (employeeId: string | number) => ['schedules', 'employee', employeeId] as const,

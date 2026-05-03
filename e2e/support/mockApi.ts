@@ -292,8 +292,21 @@ function createMockStore() {
     },
   ]
 
+  const authUsers = Object.values(USERS).map((user) => ({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    fullName: user.fullName,
+    departmentName: user.departmentName ?? null,
+    positionName: user.positionName ?? null,
+    enabled: true,
+    roles: [...user.roles],
+    createdAt: timestamp(),
+  }))
+
   return {
     nextId: 9000,
+    authUsers,
     departments,
     positions,
     employees,
@@ -448,6 +461,71 @@ async function handleApiRoute(route: Route, store: MockStore) {
       positionName: user.positionName,
       roles: user.roles,
     })
+  }
+
+  if (path === '/auth/roles' && method === 'GET') {
+    const roleDefinitions = [
+      { roleName: 'ROLE_ADMIN', description: 'Quản trị và kiểm toán hệ thống' },
+      { roleName: 'ROLE_HR', description: 'Nhân sự và vận hành chấm công' },
+      { roleName: 'ROLE_MANAGER', description: 'Quản lý phòng ban' },
+      { roleName: 'ROLE_EMPLOYEE', description: 'Nhân viên thông thường' },
+    ]
+
+    return json(
+      route,
+      roleDefinitions.map((role) => ({
+        ...role,
+        userCount: store.authUsers.filter((user) => user.roles.includes(role.roleName)).length,
+      })),
+    )
+  }
+
+  if (path === '/auth/admin/users' && method === 'GET') {
+    const keyword = String(url.searchParams.get('keyword') ?? '').trim().toLowerCase()
+    const enabled = url.searchParams.get('enabled')
+    const role = String(url.searchParams.get('role') ?? '').trim()
+
+    let filtered = [...store.authUsers]
+
+    if (keyword) {
+      filtered = filtered.filter((user) =>
+        user.username.toLowerCase().includes(keyword)
+        || String(user.email ?? '').toLowerCase().includes(keyword))
+    }
+
+    if (enabled === 'true') {
+      filtered = filtered.filter((user) => user.enabled)
+    } else if (enabled === 'false') {
+      filtered = filtered.filter((user) => !user.enabled)
+    }
+
+    if (role) {
+      filtered = filtered.filter((user) => user.roles.includes(role))
+    }
+
+    return json(route, pageResult(filtered))
+  }
+
+  if (path.startsWith('/auth/admin/users/') && path.endsWith('/access') && method === 'PUT') {
+    const id = parseId(path)
+    const body = safeJson(route)
+    const index = store.authUsers.findIndex((user) => user.id === id)
+
+    if (index < 0) {
+      return route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify(apiEnvelope(null, 'Khong tim thay tai khoan', 404)),
+      })
+    }
+
+    store.authUsers[index] = {
+      ...store.authUsers[index],
+      enabled: Boolean(body.enabled),
+      roles: Array.isArray(body.roles) ? body.roles.map(String) : store.authUsers[index].roles,
+    }
+
+    return json(route, store.authUsers[index], 'Cap nhat quyen truy cap thanh cong')
   }
 
   if (path === '/departments' && method === 'GET') {

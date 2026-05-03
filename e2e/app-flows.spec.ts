@@ -206,3 +206,19 @@ test('12. Admin can open report export flow and finish export preparation', asyn
   await page.getByRole('button', { name: 'Tải xuống .xls' }).click()
   await expect(page.getByText('Xuất bảng công tháng')).not.toBeVisible()
 })
+
+test('13. Admin can review accounts and update role assignments in permissions page', async ({ page }) => {
+  await installMockApi(page)
+  await openAs(page, 'admin', '/permissions')
+
+  await expect(page).toHaveTitle(/Phân quyền/)
+  await expect(page.getByText('Danh sách tài khoản và vai trò')).toBeVisible()
+  await expect(page.getByTestId('permissions-edit-1002')).toBeVisible()
+
+  await page.getByTestId('permissions-edit-1002').click()
+  await expect(page.getByText('Điều chỉnh quyền truy cập')).toBeVisible()
+  await page.getByTestId('permissions-role-ROLE_MANAGER').check()
+  await page.getByTestId('permissions-save-access').click()
+  await expect(page.getByText('Đã cập nhật quyền cho Nguyen Van Employee.')).toBeVisible()
+  await expect(page.getByTestId('permissions-user-1002-role-ROLE_MANAGER')).toBeVisible()
+})
