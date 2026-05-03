@@ -13,6 +13,7 @@ import employees from '@/modules/employees/employees.routes'
 import holidays from '@/modules/holidays/holidays.routes'
 import leaves from '@/modules/leaves/leaves.routes'
 import misc from '@/modules/misc/misc.routes'
+import overtime from '@/modules/overtime/overtime.routes'
 import positions from '@/modules/positions/positions.routes'
 import reports from '@/modules/reports/reports.routes'
 import shifts from '@/modules/schedules/shifts.routes'
@@ -26,6 +27,7 @@ const adminChildren: RouteRecordRaw[] = [
   ...shifts,
   ...holidays,
   ...leaves,
+  ...overtime,
   ...reports,
   ...misc.filter((route) => !route.meta?.hideLayout),
 ]
@@ -107,7 +109,7 @@ router.beforeEach(async (to) => {
           if (retryResp.result) {
             setUser(retryResp.result)
           }
-        } catch (e) {
+        } catch {
           // Refresh cũng thất bại → token thực sự hết hạn → logout
           clearAuthToken()
           setUser(null)

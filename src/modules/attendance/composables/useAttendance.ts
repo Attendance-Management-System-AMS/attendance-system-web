@@ -1,6 +1,7 @@
 import { attendanceApi } from '@/modules/attendance/api/attendance.api'
 import type { AttendanceTodayFilters } from '@/modules/attendance/api/attendance.api'
 import { employeeApi } from '@/modules/employees/api/employee.api'
+import axios from 'axios'
 import {
     createUnrecordedTodayAttendance,
     mapAttendanceStatusFromApi,
@@ -67,6 +68,21 @@ async function fetchAllEmployees() {
     return employees
 }
 
+async function fetchEmployeesForAttendanceView() {
+    try {
+        return await fetchAllEmployees()
+    } catch (error) {
+        // Manager can access attendance operations but not the HR employee directory.
+        // In that case we still show recorded attendance rows using snapshot data
+        // returned by attendance-service instead of failing the whole screen.
+        if (axios.isAxiosError(error) && error.response?.status === 403) {
+            return null
+        }
+
+        throw error
+    }
+}
+
 function normalizeText(value: unknown) {
     return String(value ?? '').trim().toLowerCase()
 }
@@ -106,26 +122,35 @@ export function useAttendance(filters?: MaybeRefOrGetter<AttendanceTodayFilters>
             date: raw?.date?.trim() || undefined,
             search: raw?.search?.trim() || undefined,
             department: raw?.department?.trim() || undefined,
-            shift: raw?.shift?.trim() || undefined,
             status: raw?.status?.trim() || undefined,
         }
     })
 
+    const workDateFilter = computed(() => normalizedFilters.value.date ?? formatLocalDate())
+
     // Query danh sách chấm công hôm nay (map DTO API + join nhân viên theo employeeId)
-    const attendanceQuery = useQuery<Attendance[]>({
-        queryKey: computed(() => [...queryKeys.attendance.today(), normalizedFilters.value] as const),
+    const baseAttendanceQuery = useQuery<Attendance[]>({
+        queryKey: computed(() => [...queryKeys.attendance.today(), { date: workDateFilter.value }] as const),
         queryFn: async () => {
-            const activeFilters = normalizedFilters.value
-            const workDate = activeFilters.date ?? formatLocalDate()
             const [attRes, empRes] = await Promise.all([
-                attendanceApi.getToday({ date: workDate }),
-                fetchAllEmployees(),
+                attendanceApi.getToday({ date: workDateFilter.value }),
+                queryClient.fetchQuery({
+                    queryKey: [...queryKeys.employees.all(), 'attendance-active'] as const,
+                    queryFn: fetchEmployeesForAttendanceView,
+                    staleTime: 1000 * 60 * 3,
+                    gcTime: 1000 * 60 * 10,
+                }),
             ])
             const result = attRes.data?.result
             const rows = Array.isArray(result) ? result : (result?.content ?? [])
-            const employees = empRes
+            const employees = empRes ?? []
             const byEmployeeId = new Map(employees.map((e) => [e.id, e]))
             const recordedRows = mergeTodayAttendance(rows, byEmployeeId)
+
+            if (!empRes) {
+                return recordedRows
+            }
+
             const recordedByEmployeeId = new Map(
                 recordedRows
                     .filter((row) => row.employeeId != null)
@@ -134,7 +159,7 @@ export function useAttendance(filters?: MaybeRefOrGetter<AttendanceTodayFilters>
             const mergedRows = employees.map(
                 (employee) =>
                     recordedByEmployeeId.get(employee.id) ??
-                    createUnrecordedTodayAttendance(employee, workDate),
+                    createUnrecordedTodayAttendance(employee, workDateFilter.value),
             )
 
             for (const row of recordedRows) {
@@ -143,10 +168,15 @@ export function useAttendance(filters?: MaybeRefOrGetter<AttendanceTodayFilters>
                 }
             }
 
-            return applyTodayFilters(mergedRows, activeFilters)
+            return mergedRows
         },
         staleTime: 1000 * 60 * 1, // 1 phút
     })
+
+    const attendanceQuery = {
+        ...baseAttendanceQuery,
+        data: computed(() => applyTodayFilters(baseAttendanceQuery.data.value ?? [], normalizedFilters.value)),
+    }
 
     const deleteAttendance = useMutation({
         mutationFn: (id: string | number) => attendanceApi.delete(id),

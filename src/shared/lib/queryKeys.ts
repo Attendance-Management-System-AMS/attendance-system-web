@@ -26,6 +26,10 @@ export const queryKeys = {
   leaves: {
     all: () => ['leaves'] as const,
   },
+  overtime: {
+    all: () => ['overtime-requests'] as const,
+    me: () => ['overtime-requests', 'me'] as const,
+  },
   attendance: {
     today: () => ['attendance', 'today'] as const,
   },

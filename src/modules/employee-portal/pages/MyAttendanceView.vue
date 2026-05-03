@@ -77,6 +77,16 @@ const getAttendanceTimestamp = (logEntry: Attendance | undefined, key: 'checkIn'
     : logEntry.checkOut || logEntry.checkOutTime || logEntry.check_out_time || null
 }
 
+const formatMinutes = (minutes?: number | null) => {
+  const value = minutes ?? 0
+  const hours = Math.floor(value / 60)
+  const rest = value % 60
+  if (!value) return '—'
+  if (!hours) return `${rest}p`
+  if (!rest) return `${hours}h`
+  return `${hours}h ${rest}p`
+}
+
 const resolveAttendanceStatus = (
   logEntry: Attendance | undefined,
   dateStr: string,
@@ -136,7 +146,6 @@ const logs = computed(() => {
     const resolvedStatus = (() => {
       const status = resolveAttendanceStatus(logEntry, dateStr, todayStr)
       if (status) return status
-      if (dateStr < todayStr && hasSchedule) return 'ABSENT'
       return ''
     })()
 
@@ -181,6 +190,9 @@ const logs = computed(() => {
         : '—',
       status: resolvedStatus,
       lateMinutes: logEntry?.lateMinutes || 0,
+      actualOvertimeMinutes: logEntry?.actualOvertimeMinutes || 0,
+      payableOvertimeMinutes: logEntry?.payableOvertimeMinutes || 0,
+      overtimeStatus: logEntry?.overtimeStatus || 'NONE',
       canCreateCorrection: canCreateCorrection(resolvedStatus),
       isToday: dateStr === todayStr,
     })
@@ -197,13 +209,14 @@ const summary = computed(() => {
     late: data.filter((row) => row.status === 'LATE').length,
     absent: data.filter((row) => row.status === 'ABSENT').length,
     correctionNeeded: data.filter((row) => ['INCOMPLETE', 'MISSING_CHECKOUT'].includes(row.status)).length,
+    overtimeMinutes: data.reduce((sum, row) => sum + row.payableOvertimeMinutes, 0),
   }
 })
 
 const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) => {
   if (!status) {
     if (isToday) return { label: 'Đang đợi', class: 'bg-primary/10 text-primary' }
-    return { label: 'Trống', class: 'bg-surface text-tertiary-text italic' }
+    return { label: 'Chưa ghi nhận', class: 'bg-surface text-tertiary-text italic' }
   }
 
   switch (String(status || '').toUpperCase()) {
@@ -247,7 +260,7 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
             <ChevronLeft class="h-4 w-4" />
           </Button>
           <div
-            class="min-w-[132px] px-3 text-center text-xs font-semibold text-primary-text"
+            class="min-w-33 px-3 text-center text-xs font-semibold text-primary-text"
           >
             {{ monthLabel }}
           </div>
@@ -266,7 +279,7 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
     </div>
 
     <!-- Summary Statistics -->
-    <div v-else class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div v-else class="grid grid-cols-2 gap-3 lg:grid-cols-5">
       <Card
         v-for="item in [
           {
@@ -296,6 +309,13 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
             icon: HelpCircle,
             color: 'text-primary',
             bg: 'bg-primary/10',
+          },
+          {
+            label: 'Tăng ca',
+            value: formatMinutes(summary.overtimeMinutes),
+            icon: Clock,
+            color: 'text-indigo-500',
+            bg: 'bg-indigo-500/10',
           },
         ]"
         :key="item.label"
@@ -413,6 +433,12 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
               <span v-else class="text-sm text-muted-foreground/50">--:--:--</span>
             </div>
           </div>
+          <div
+            v-if="row.payableOvertimeMinutes > 0"
+            class="mt-2 rounded-lg bg-indigo-500/10 px-3 py-2 text-xs font-semibold text-indigo-500"
+          >
+            Tăng ca tính công: {{ formatMinutes(row.payableOvertimeMinutes) }}
+          </div>
         </div>
       </div>
 
@@ -429,6 +455,7 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
                 <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Ca làm việc</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Giờ vào</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Giờ ra</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Tăng ca</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-secondary-text">Trạng thái</th>
               </tr>
             </thead>
@@ -496,6 +523,15 @@ const getStatusBadge = (status: string, lateMinutes: number, isToday: boolean) =
                     {{ row.displayCheckOut }}
                   </code>
                   <span v-else class="font-mono text-xs text-muted-foreground/50">--:--:--</span>
+                </td>
+
+                <td class="px-5 py-4">
+                  <span
+                    class="text-sm font-semibold"
+                    :class="row.payableOvertimeMinutes > 0 ? 'text-indigo-500' : 'text-tertiary-text'"
+                  >
+                    {{ formatMinutes(row.payableOvertimeMinutes) }}
+                  </span>
                 </td>
 
                 <!-- Status Column -->

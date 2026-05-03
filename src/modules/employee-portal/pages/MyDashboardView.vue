@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   ClipboardList,
+  Star,
   Timer,
   TrendingUp,
 } from 'lucide-vue-next'
@@ -31,14 +32,25 @@ const formatDateStr = (date: Date) => {
 const getStartOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1)
 const getEndOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
 
-const filters = computed(() => ({
+const monthlyFilters = computed(() => ({
   fromDate: formatDateStr(getStartOfMonth(today)),
   toDate: formatDateStr(getEndOfMonth(today)),
   page: 0,
   size: 100,
 }))
 
-const { historyQuery, todayQuery, scheduleQuery } = useMyAttendance(filters)
+const recentStart = new Date(today)
+recentStart.setDate(recentStart.getDate() - 6)
+
+const recentFilters = computed(() => ({
+  fromDate: formatDateStr(recentStart),
+  toDate: formatDateStr(today),
+  page: 0,
+  size: 20,
+}))
+
+const { historyQuery, todayQuery, scheduleQuery } = useMyAttendance(monthlyFilters)
+const { historyQuery: recentHistoryQuery } = useMyAttendance(recentFilters)
 const { leavesQuery } = useMyLeaves()
 
 const userProfile = computed(() => ({
@@ -117,7 +129,7 @@ const stats = computed(() => [
 ])
 
 const dailyBars = computed(() => {
-  const data = historyQuery.data.value?.content || []
+  const data = recentHistoryQuery.data.value?.content || []
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = new Date()
     date.setDate(date.getDate() - (6 - index))
@@ -169,9 +181,9 @@ const recentActivities = computed(() => {
             </RouterLink>
           </Button>
           <Button as-child size="sm" class="h-8 bg-primary hover:bg-primary/90 text-xs font-semibold gap-2">
-            <RouterLink to="/kiosk">
-            <Timer class="h-3 w-3" />
-              Chấm công
+            <RouterLink to="/my/attendance">
+              <Timer class="h-3 w-3" />
+              Bảng công
             </RouterLink>
           </Button>
         </div>
@@ -270,7 +282,7 @@ const recentActivities = computed(() => {
           </div>
         </CardHeader>
         <CardContent class="p-4 sm:p-8">
-          <div class="h-[200px] flex items-end justify-between gap-2 sm:gap-4 px-2">
+          <div class="h-50 flex items-end justify-between gap-2 sm:gap-4 px-2">
             <div
               v-for="bar in dailyBars"
               :key="bar.label"

@@ -2,6 +2,7 @@ import { departmentApi } from '@/modules/departments/api/department.api';
 import type { Department } from '@/modules/departments/types/department.types';
 import type { Page } from '@/shared/types/api';
 import { queryKeys } from '@/shared/lib/queryKeys'
+import axios from 'axios'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { type MaybeRefOrGetter, toValue, computed } from 'vue'
 
@@ -11,6 +12,19 @@ export interface UseDepartmentsParams {
     sort?: MaybeRefOrGetter<string>;
     sortDir?: MaybeRefOrGetter<string>;
     keyword?: MaybeRefOrGetter<string>;
+}
+
+function emptyDepartmentsPage(): Page<Department> {
+    return {
+        content: [],
+        page: 0,
+        size: 0,
+        totalElements: 0,
+        totalPages: 0,
+        last: true,
+        first: true,
+        numberOfElements: 0,
+    }
 }
 
 export function useDepartments(params?: UseDepartmentsParams) {
@@ -29,14 +43,21 @@ export function useDepartments(params?: UseDepartmentsParams) {
             }
         ]),
         queryFn: async () => {
-            const response = await departmentApi.getAll({
-                keyword: toValue(params?.keyword),
-                page: toValue(params?.page),
-                size: toValue(params?.size),
-                sort: toValue(params?.sort),
-                sortDir: toValue(params?.sortDir),
-            })
-            return response.data?.result
+            try {
+                const response = await departmentApi.getAll({
+                    keyword: toValue(params?.keyword),
+                    page: toValue(params?.page),
+                    size: toValue(params?.size),
+                    sort: toValue(params?.sort),
+                    sortDir: toValue(params?.sortDir),
+                })
+                return response.data?.result ?? emptyDepartmentsPage()
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response?.status === 403) {
+                    return emptyDepartmentsPage()
+                }
+                throw error
+            }
         },
         staleTime: 1000 * 60 * 3, // 3 phút
         gcTime: 1000 * 60 * 10,   // giữ cache 10 phút

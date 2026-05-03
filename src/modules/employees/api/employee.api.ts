@@ -28,4 +28,6 @@ export const employeeApi = {
   // Đăng ký khuôn mặt
   registerFaceDescriptor: (id: number, body: FaceDescriptorRequest) =>
     api.put<ApiResponse<Employee>>(`/employees/${id}/face-descriptor`, body),
+  deleteFaceDescriptor: (id: number) =>
+    api.delete<ApiResponse<Employee>>(`/employees/${id}/face-descriptor`),
 }

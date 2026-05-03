@@ -3,39 +3,33 @@ import PageHeader from '@/shared/ui/PageHeader.vue'
 import { ref, computed } from 'vue'
 import { useAttendance } from '@/modules/attendance/composables/useAttendance'
 import { useDepartments } from '@/modules/departments/composables/useDepartments'
-import type { Attendance } from '@/modules/attendance/types/attendance.types'
 import { Badge } from '@/shared/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import SearchToolbar from '@/shared/ui/SearchToolbar.vue'
 import FilterSelect from '@/shared/ui/FilterSelect.vue'
-import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
 import DataTable from '@/shared/ui/DataTable.vue'
-import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
-import { toast } from 'vue-sonner'
 import { Monitor, X } from 'lucide-vue-next'
 
 const search = ref('')
 const filterDept = ref('')
-const filterShift = ref('')
 const filterStatus = ref('')
 const { departmentsQuery } = useDepartments({ size: 200, sort: 'name', sortDir: 'asc' })
 
 const attendanceFilters = computed(() => ({
   search: search.value,
   department: filterDept.value,
-  shift: filterShift.value,
   status: filterStatus.value,
 }))
 
-const { attendanceQuery, deleteAttendance } = useAttendance(attendanceFilters)
+const { attendanceQuery } = useAttendance(attendanceFilters)
 const { data: records, isLoading } = attendanceQuery
 
 const columns = [
   { key: 'employee', label: 'Nhân viên' },
   { key: 'checkIn', label: 'Giờ vào' },
   { key: 'checkOut', label: 'Giờ ra' },
+  { key: 'overtime', label: 'Tăng ca' },
   { key: 'status', label: 'Trạng thái' },
-  { key: 'actions', label: 'Hành động', align: 'right' as const },
 ]
 
 const departments = computed(
@@ -45,12 +39,6 @@ const departments = computed(
       value: String(department.id),
     })) ?? [],
 )
-
-const shifts = [
-  { label: 'Ca sáng', value: 'morning' },
-  { label: 'Ca chiều', value: 'afternoon' },
-  { label: 'Ca đêm', value: 'night' },
-]
 
 const statuses = [
   { label: 'Chưa chấm công', value: 'UNRECORDED' },
@@ -62,34 +50,8 @@ const statuses = [
   { label: 'Ngày lễ', value: 'HOLIDAY' },
   { label: 'Vắng mặt', value: 'ABSENT' },
   { label: 'Thiếu checkout', value: 'MISSING_CHECKOUT' },
+  { label: 'Chưa đủ công', value: 'INCOMPLETE' },
 ]
-
-const deleteTarget = ref<Attendance | null>(null)
-const isAlertOpen = ref(false)
-const deleteTargetName = computed(() => deleteTarget.value?.employee?.fullName ?? '')
-
-const handleDelete = (id: string | number) => {
-  const record = records.value?.find(r => String(r.id) === String(id))
-  if (record?.isRecorded) {
-    deleteTarget.value = record
-    isAlertOpen.value = true
-  }
-}
-
-const confirmDelete = () => {
-  if (deleteTarget.value) {
-    deleteAttendance.mutate(deleteTarget.value.id, {
-      onSuccess: () => {
-        toast.success('Đã xóa hồ sơ chấm công thành công')
-        isAlertOpen.value = false
-        deleteTarget.value = null
-      },
-      onError: () => {
-        toast.error('Không thể xóa hồ sơ chấm công')
-      }
-    })
-  }
-}
 
 const getInitials = (name?: string) => {
   if (!name) return '??'
@@ -100,6 +62,48 @@ const getInitials = (name?: string) => {
     return (first + last).toUpperCase() || '??'
   }
   return (parts[0]?.charAt(0) || '?').toUpperCase()
+}
+
+const formatOvertimeMinutes = (minutes?: number | null) => {
+  const value = minutes ?? 0
+  const hours = Math.floor(value / 60)
+  const rest = value % 60
+  if (!value) return '0p'
+  if (!hours) return `${rest}p`
+  if (!rest) return `${hours}h`
+  return `${hours}h ${rest}p`
+}
+
+const getOvertimeStatusLabel = (status?: string | null) => {
+  switch (String(status || '').toUpperCase()) {
+    case 'APPROVED':
+      return 'Đã tính'
+    case 'PENDING_APPROVAL':
+      return 'Chờ duyệt'
+    case 'NO_CHECKOUT':
+      return 'Thiếu checkout'
+    case 'UNAPPROVED':
+      return 'Chưa duyệt'
+    case 'REJECTED':
+      return 'Không tính'
+    default:
+      return 'Không có'
+  }
+}
+
+const getOvertimeStatusClass = (status?: string | null) => {
+  switch (String(status || '').toUpperCase()) {
+    case 'APPROVED':
+      return 'bg-indigo-500/10 text-indigo-500'
+    case 'PENDING_APPROVAL':
+      return 'bg-amber-500/10 text-amber-500'
+    case 'NO_CHECKOUT':
+      return 'bg-orange-500/10 text-orange-500'
+    case 'REJECTED':
+      return 'bg-rose-500/10 text-rose-500'
+    default:
+      return 'bg-muted text-secondary-text dark:bg-elevated'
+  }
 }
 
 // --- Kiosk Device Connection ---
@@ -142,7 +146,7 @@ const qrCodeUrl = computed(
                 </div>
                 <div>
                   <p class="text-sm font-bold text-primary-text">Kết nối máy chấm công</p>
-                  <p class="text-[10px] text-tertiary-text">Quét mã QR bằng thiết bị cần kết nối</p>
+                  <p class="text-[10px] text-tertiary-text">Quét mã QR và đăng nhập tài khoản vận hành</p>
                 </div>
               </div>
               <button @click="showKioskDialog = false"
@@ -156,7 +160,9 @@ const qrCodeUrl = computed(
               <div class="rounded-xl border border-border-standard p-3 bg-white">
                 <img :src="qrCodeUrl" alt="Máy chấm công QR" class="h-48 w-48" />
               </div>
-              <p class="text-xs text-secondary-text text-center">Mở camera của thiết bị và quét mã QR để kết nối</p>
+              <p class="text-xs text-secondary-text text-center">
+                Không cần thiết bị camera chuyên dụng. Chỉ cần mở kiosk trên thiết bị có camera và đăng nhập bằng tài khoản Admin, HR hoặc Quản lý trước khi dùng.
+              </p>
             </div>
           </div>
         </div>
@@ -166,7 +172,6 @@ const qrCodeUrl = computed(
     <SearchToolbar v-model="search" placeholder="Tìm theo tên, mã nhân viên...">
       <template #filters>
         <FilterSelect v-model="filterDept" label="Phòng ban" :options="departments" />
-        <FilterSelect v-model="filterShift" label="Ca" :options="shifts" />
         <FilterSelect v-model="filterStatus" label="Trạng thái" :options="statuses" />
       </template>
     </SearchToolbar>
@@ -176,7 +181,7 @@ const qrCodeUrl = computed(
         <template #cell-employee="{ row }">
           <div class="flex items-center gap-3">
             <Avatar class="size-9 h-9 w-9 border border-primary/20 dark:border-primary/20">
-              <AvatarImage :src="`/api/avatar/${row.employee?.id}`" />
+              <AvatarImage v-if="row.employee?.avatarUrl" :src="row.employee.avatarUrl" />
               <AvatarFallback class="bg-primary/10 text-primary text-[10px] font-bold">
                 {{ getInitials(row.employee?.fullName) }}
               </AvatarFallback>
@@ -206,6 +211,28 @@ const qrCodeUrl = computed(
                     </code>
         </template>
 
+        <template #cell-overtime="{ row }">
+          <div
+            v-if="
+              row.actualOvertimeMinutes ||
+              row.payableOvertimeMinutes ||
+              String(row.overtimeStatus || 'NONE').toUpperCase() !== 'NONE'
+            "
+            class="space-y-1"
+          >
+            <Badge
+              class="border-none px-2.5 py-0.5 text-[10px] font-bold"
+              :class="getOvertimeStatusClass(row.overtimeStatus)"
+            >
+              {{ getOvertimeStatusLabel(row.overtimeStatus) }}
+            </Badge>
+            <p class="text-[11px] text-tertiary-text">
+              Tính công {{ formatOvertimeMinutes(row.payableOvertimeMinutes) }}
+            </p>
+          </div>
+          <span v-else class="text-xs text-tertiary-text">—</span>
+        </template>
+
         <template #cell-status="{ value }">
           <Badge :variant="value === 'Có mặt' ? 'default' : value === 'Đi muộn' ? 'outline' : 'secondary'"
             class="px-2.5 py-0.5 text-[10px] font-bold  tracking-normal border-none" :class="{
@@ -213,21 +240,13 @@ const qrCodeUrl = computed(
               'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/30': value === 'Đi muộn' || value === 'Muộn + về sớm',
               'bg-primary/10 text-primary hover:bg-primary/10 dark:bg-primary/10': value === 'Về sớm',
               'bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/30': value === 'Vắng mặt' || value === 'Thiếu checkout',
+              'bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-950/30': value === 'Chưa đủ công',
               'bg-muted text-secondary-text hover:bg-muted dark:bg-elevated': value === 'Chưa chấm công' || value === 'Nghỉ phép' || value === 'Ngày lễ'
             }">
             {{ value }}
           </Badge>
         </template>
-
-        <template #cell-actions="{ row }">
-          <ActionDropdown v-if="row.isRecorded" :item-id="row.id" @delete="handleDelete" />
-          <span v-else class="text-xs text-tertiary-text">—</span>
-        </template>
       </DataTable>
     </div>
-
-    <DeleteConfirmDialog :open="isAlertOpen" title="Xác nhận xóa bản ghi"
-      description="Lịch sử chấm công của ngày này sẽ bị gỡ bỏ khỏi hệ thống."
-      :item-name="deleteTargetName" @confirm="confirmDelete" @cancel="isAlertOpen = false" />
   </div>
 </template>

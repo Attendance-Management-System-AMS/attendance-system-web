@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { queryKeys } from '@/shared/lib/queryKeys'
 import { leaveApi } from '@/modules/leaves/api/leave.api'
 import type { CreateLeaveRequest, LeaveRequest, LeaveType } from '@/modules/leaves/types/leave.types'
+import type { Page } from '@/shared/types/api'
 
 type LeaveListResult =
   | LeaveRequest[]
@@ -101,4 +102,21 @@ export function useLeaves() {
     approveLeave,
     rejectLeave,
   }
+}
+
+export function usePendingLeaveCount() {
+  return useQuery<number>({
+    queryKey: [...queryKeys.leaves.all(), 'pending-count'],
+    queryFn: async () => {
+      const response = await leaveApi.getAll({
+        page: 0,
+        size: 1,
+        status: 'PENDING',
+      })
+      const result = response.data?.result as Page<LeaveRequest> | undefined
+      return result?.totalElements ?? 0
+    },
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: false,
+  })
 }

@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { clearAuthToken, getAuthToken, getRefreshToken, setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
-import { resetAuthSession } from '@/shared/auth/session'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',

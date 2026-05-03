@@ -128,7 +128,7 @@ const handleSubmit = () => {
       <DialogOverlay
         class="fixed inset-0 bg-primary/10 backdrop-blur-sm data-[state=open]:animate-overlayShow data-[state=closed]:animate-overlayHide z-50" />
       <DialogContent
-        class="fixed left-1/2 top-1/2 max-h-[85vh] w-[95vw] max-w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-card shadow-2xl focus:outline-none data-[state=open]:animate-contentShow data-[state=closed]:animate-contentHide overflow-hidden border-none z-50">
+        class="fixed left-1/2 top-1/2 max-h-[85vh] w-[95vw] max-w-112.5 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-card shadow-2xl focus:outline-none data-[state=open]:animate-contentShow data-[state=closed]:animate-contentHide overflow-hidden border-none z-50">
         
         <div class="p-4 sm:p-6 bg-primary/10/50 border-b border-primary/20/50">
           <DialogTitle class="m-0 text-lg sm:text-xl font-semibold text-primary-text  tracking-normal">

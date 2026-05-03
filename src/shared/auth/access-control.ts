@@ -153,10 +153,11 @@ export const permissionScreens: PermissionScreen[] = [
     label: 'Bảng lịch làm việc',
     route: '/schedule',
     description: 'Xem lịch đang có hiệu lực, đối chiếu lịch theo ngày và nhân viên.',
+    note: 'Màn này dùng dữ liệu danh mục nhân sự và ca làm nên chỉ mở cho Admin/HR.',
     access: {
       ROLE_ADMIN: 'view',
       ROLE_HR: 'view',
-      ROLE_MANAGER: 'view',
+      ROLE_MANAGER: 'none',
       ROLE_EMPLOYEE: 'none',
     },
   },

@@ -9,11 +9,16 @@ export type AttendanceStatus =
   | 'Ngày lễ'
   | 'Vắng mặt'
   | 'Thiếu checkout'
+  | 'Chưa đủ công'
 
 export interface Attendance {
   id: string | number
   employeeId?: number
   employee?: Employee
+  employeeFullName?: string | null
+  employeeSnapshotCode?: string | null
+  employeeSnapshotDepartmentName?: string | null
+  employeeSnapshotPositionName?: string | null
   checkIn?: string
   checkInTime?: string
   check_in_time?: string
@@ -27,5 +32,10 @@ export interface Attendance {
   earlyLeaveMinutes?: number
   workedMinutes?: number
   expectedMinutes?: number
+  actualOvertimeMinutes?: number
+  approvedOvertimeMinutes?: number
+  payableOvertimeMinutes?: number
+  overtimeStatus?: string
+  createdAt?: string
   isRecorded?: boolean
 }

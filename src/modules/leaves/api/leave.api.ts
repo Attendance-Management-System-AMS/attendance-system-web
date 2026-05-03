@@ -2,6 +2,16 @@ import api from '@/shared/api/client'
 import type { ApiResponse, Page } from '@/shared/types/api'
 import type { CreateLeaveRequest, CreateMyLeaveRequest, LeaveRequest, LeaveType } from '@/modules/leaves/types/leave.types'
 
+export interface LeaveQueryParams {
+  page?: number
+  size?: number
+  sort?: string
+  sortDir?: string
+  keyword?: string
+  employeeId?: string | number
+  status?: string
+}
+
 function normalizeOptionalTime(value?: string | null): string | null {
   const normalized = value?.trim()
   return normalized ? normalized : null
@@ -20,7 +30,8 @@ function buildCreateLeaveBody(data: CreateLeaveRequest | CreateMyLeaveRequest): 
 }
 
 export const leaveApi = {
-  getAll: () => api.get<ApiResponse<Page<LeaveRequest>>>('/leaves'),
+  getAll: (params?: LeaveQueryParams) =>
+    api.get<ApiResponse<Page<LeaveRequest>>>('/leaves', { params }),
   getTypes: () => api.get<ApiResponse<LeaveType[]>>('/leaves/types'),
   getById: (id: string | number) => api.get<ApiResponse<LeaveRequest>>(`/leaves/${id}`),
   getByEmployee: (employeeId: string | number) =>

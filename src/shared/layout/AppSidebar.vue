@@ -13,6 +13,7 @@ import {
   Lock,
   Settings,
   Timer,
+  TimerReset,
   Users,
 } from 'lucide-vue-next'
 import { useAuth, type UserRole } from '@/modules/auth/composables/useAuth'
@@ -75,7 +76,7 @@ const navGroups: NavGroup[] = [
         label: 'Lịch làm việc',
         to: '/schedule',
         icon: CalendarDays,
-        roles: roleGroups.operations,
+        roles: roleGroups.adminHr,
         children: [
           { label: 'Phân công lịch', to: '/schedule/assignments', roles: roleGroups.adminHr },
           { label: 'Mẫu lịch làm việc', to: '/schedule/templates', roles: roleGroups.adminHr },
@@ -110,6 +111,7 @@ const navGroups: NavGroup[] = [
     roles: roleGroups.operations,
     items: [
       { label: 'Nghỉ phép', to: '/leaves', icon: ClipboardList },
+      { label: 'Tăng ca', to: '/overtime', icon: TimerReset },
     ],
   },
   {

@@ -17,11 +17,12 @@ const API_STATUS_TO_UI: Record<string, AttendanceStatus> = {
   EARLY_LEAVE: 'Về sớm',
   LATE_AND_EARLY_LEAVE: 'Muộn + về sớm',
   MISSING_CHECKOUT: 'Thiếu checkout',
+  INCOMPLETE: 'Chưa đủ công',
 }
 
 export function mapAttendanceStatusFromApi(raw: string | undefined | null): AttendanceStatus {
   const key = String(raw ?? '').trim().toUpperCase()
-  return API_STATUS_TO_UI[key] ?? 'Có mặt'
+  return API_STATUS_TO_UI[key] ?? 'Chưa chấm công'
 }
 
 export function formatAttendanceClock(iso: string | null | undefined): string {
@@ -66,6 +67,10 @@ export function mergeTodayAttendance(
     earlyLeaveMinutes: row.earlyLeaveMinutes ?? undefined,
     workedMinutes: row.workedMinutes ?? undefined,
     expectedMinutes: row.expectedMinutes ?? undefined,
+    actualOvertimeMinutes: row.actualOvertimeMinutes ?? undefined,
+    approvedOvertimeMinutes: row.approvedOvertimeMinutes ?? undefined,
+    payableOvertimeMinutes: row.payableOvertimeMinutes ?? undefined,
+    overtimeStatus: row.overtimeStatus ?? undefined,
     isRecorded: true,
   }))
 }
