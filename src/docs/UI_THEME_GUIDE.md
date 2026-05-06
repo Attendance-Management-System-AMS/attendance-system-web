@@ -1,6 +1,6 @@
 # TimeMaster UI Theme Guide
 
-Tai lieu nay mo ta cach ap dung giao dien "dark-first, neutral surface, primary accent" cho TimeMaster theo dung stack hien tai: Vue 3, Tailwind CSS v4, shadcn-vue/Reka UI va he bien CSS trong `src/assets/main.css`.
+Tai lieu nay mo ta cach ap dung giao dien "light-default, dark-supported, neutral surface, primary accent" cho TimeMaster theo dung stack hien tai: Vue 3, Tailwind CSS v4, shadcn-vue/Reka UI va he bien CSS trong `src/assets/main.css`.
 
 Muc tieu la dong bo giao dien ma khong pha vo cac component hien co.
 
@@ -8,7 +8,7 @@ Muc tieu la dong bo giao dien ma khong pha vo cac component hien co.
 
 ## 1. Nguyen Tac
 
-- **Dark-first, light-supported**: Dark mode la trai nghiem chinh, nhung light mode van phai doc duoc va dung token.
+- **Light-default, dark-supported**: Light mode la mac dinh khi khoi tao app, nhung dark mode van phai doc duoc va dung token.
 - **Neutral surface truoc, accent sau**: Nen, card, table, dialog dung mau trung tinh. Mau `primary` chi dung cho CTA, active state, link quan trong, progress va icon nhan manh.
 - **Khong hard-code mau moi khi khong can**: Uu tien token semantic nhu `bg-background`, `bg-card`, `bg-surface`, `text-foreground`, `text-muted-foreground`, `border-border`.
 - **Khong de so lieu gia trong UI van hanh**: Neu chua co API, hien empty state hoac note "chua co API tong hop".
@@ -254,4 +254,3 @@ Truoc khi merge mot thay doi UI:
 - Bang du lieu khong bi mat density.
 - Khong co mock data trong man hinh van hanh.
 - Build khong phat sinh warning moi ngoai chunk face-api da biet.
-

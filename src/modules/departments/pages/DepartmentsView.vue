@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useDepartments } from '@/modules/departments/composables/useDepartments'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
+import { useBackgroundTask } from '@/shared/lib/useBackgroundTask'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import SearchToolbar from '@/shared/ui/SearchToolbar.vue'
 import ActionDropdown from '@/shared/ui/ActionDropdown.vue'
@@ -36,6 +37,7 @@ watch(search, updateDebounced)
 
 const currentPage = ref(0)
 const pageSize = ref(10)
+const { executeBackgroundTask } = useBackgroundTask()
 
 const { departmentsQuery, createDepartment, deleteDepartment, updateDepartment } = useDepartments({
   keyword: debouncedSearch,
@@ -61,23 +63,41 @@ const deleteDialog = ref(false)
 const deleteTarget = ref<Department | null>(null)
 const createError = ref<string | null>(null)
 const editError = ref<string | null>(null)
+const createDraft = ref<{ name: string; description: string } | null>(null)
+
+const openCreateModal = () => {
+  createDraft.value = null
+  createError.value = null
+  isCreateModalOpen.value = true
+}
 
 const handleCloseCreateModal = () => {
   isCreateModalOpen.value = false
   createError.value = null
+  createDraft.value = null
 }
 
-const handleCreated = (payload: {
-  data: { name: string; description: string }
-  onSuccess: () => void
-  onError: (err: unknown) => void
-}) => {
-  createError.value = null
-  createDepartment.mutate(payload.data, {
-    onSuccess: () => {
-      payload.onSuccess()
+const handleCreated = (payload: { name: string; description: string }) => {
+  void executeBackgroundTask({
+    draft: payload,
+    payload,
+    run: (nextPayload) => createDepartment.mutateAsync(nextPayload),
+    pendingMessage: `Đã tiếp nhận phòng ban ${payload.name}. Hệ thống đang đồng bộ.`,
+    successMessage: `Đã tạo phòng ban ${payload.name}.`,
+    errorMessage: ({ error }) => getApiErrorMessage(error, 'Không thể tạo phòng ban.'),
+    onStart: () => {
+      createError.value = null
+      createDraft.value = payload
+      isCreateModalOpen.value = false
     },
-    onError: (err) => payload.onError(err),
+    onSuccess: () => {
+      createDraft.value = null
+    },
+    onError: ({ draft, message }) => {
+      createError.value = message || 'Không thể tạo phòng ban.'
+      createDraft.value = draft
+      isCreateModalOpen.value = true
+    },
   })
 }
 
@@ -85,7 +105,7 @@ const handleEdit = (id: string | number) => {
   const dept = filteredDepartments.value.find((d: Department) => String(d.id) === String(id))
   if (dept) {
     editError.value = null
-    editTarget.value = dept
+    editTarget.value = { ...dept }
     isEditModalOpen.value = true
   }
 }
@@ -93,22 +113,38 @@ const handleEdit = (id: string | number) => {
 const handleUpdated = (payload: {
   id: string | number
   data: Partial<Department>
-  onSuccess: () => void
-  onError: (err: unknown) => void
 }) => {
-  editError.value = null
-  updateDepartment.mutate(
-    { id: String(payload.id), data: payload.data },
-    {
-      onSuccess: () => {
-        payload.onSuccess()
-      },
-      onError: (err) => {
-        editError.value = getApiErrorMessage(err, 'Không thể cập nhật phòng ban.')
-        payload.onError(err)
-      },
+  if (!editTarget.value) {
+    return
+  }
+
+  const draftDepartment = {
+    ...editTarget.value,
+    ...payload.data,
+    id: String(payload.id),
+  } as Department
+
+  void executeBackgroundTask({
+    draft: draftDepartment,
+    payload,
+    run: (nextPayload) => updateDepartment.mutateAsync({ id: String(nextPayload.id), data: nextPayload.data }),
+    pendingMessage: `Đã tiếp nhận cập nhật cho ${draftDepartment.name}. Hệ thống đang đồng bộ.`,
+    successMessage: `Đã cập nhật phòng ban ${draftDepartment.name}.`,
+    errorMessage: ({ error }) => getApiErrorMessage(error, 'Không thể cập nhật phòng ban.'),
+    onStart: () => {
+      editError.value = null
+      editTarget.value = draftDepartment
+      isEditModalOpen.value = false
     },
-  )
+    onSuccess: () => {
+      editTarget.value = null
+    },
+    onError: ({ draft, message }) => {
+      editError.value = message || 'Không thể cập nhật phòng ban.'
+      editTarget.value = draft
+      isEditModalOpen.value = true
+    },
+  })
 }
 
 const handleCloseEditModal = () => {
@@ -126,10 +162,23 @@ const handleDelete = (id: string | number) => {
 }
 
 const confirmDelete = () => {
-  if (deleteTarget.value) {
-    deleteDepartment.mutate(String(deleteTarget.value.id))
+  if (!deleteTarget.value) {
+    return
   }
-  deleteDialog.value = false
+
+  const target = { ...deleteTarget.value }
+  void executeBackgroundTask({
+    draft: target,
+    payload: target,
+    run: (nextTarget) => deleteDepartment.mutateAsync(String(nextTarget.id)),
+    pendingMessage: `Đã tiếp nhận yêu cầu xóa ${target.name}. Hệ thống đang đồng bộ.`,
+    successMessage: `Đã xóa phòng ban ${target.name}.`,
+    errorMessage: ({ error }) => getApiErrorMessage(error, 'Không thể xóa phòng ban.'),
+    onStart: () => {
+      deleteDialog.value = false
+      deleteTarget.value = null
+    },
+  })
 }
 
 const columns = [
@@ -145,7 +194,7 @@ const columns = [
   <div class="space-y-6">
     <PageHeader title="Phòng ban" description="Quản lý các phòng ban trong tổ chức">
       <template #actions>
-        <Button @click="isCreateModalOpen = true" class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
+        <Button @click="openCreateModal" class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <Plus class="h-4 w-4" />
           Thêm phòng ban
         </Button>
@@ -214,6 +263,7 @@ const columns = [
     <!-- Modals -->
     <DepartmentCreateModal
       :open="isCreateModalOpen"
+      :draft="createDraft"
       :is-submitting="createDepartment.isPending.value"
       :submit-error="createError"
       @close="handleCloseCreateModal"

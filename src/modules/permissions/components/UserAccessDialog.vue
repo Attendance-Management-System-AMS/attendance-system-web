@@ -106,7 +106,7 @@ function getRoleLabel(roleName: string) {
 </script>
 
 <template>
-  <Dialog :open="open" @update:open="(value) => !value && closeDialog()">
+  <Dialog :open="open" @update:open="(value) => !value && !isSubmitting && closeDialog()">
     <DialogContent class="sm:max-w-xl">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
@@ -146,6 +146,7 @@ function getRoleLabel(roleName: string) {
                 type="checkbox"
                 class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 data-testid="permissions-enabled-toggle"
+                :disabled="isSubmitting"
                 @change="enabled = ($event.target as HTMLInputElement).checked"
               />
               Đang hoạt động
@@ -169,6 +170,7 @@ function getRoleLabel(roleName: string) {
                   type="checkbox"
                   class="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                   :data-testid="`permissions-role-${role.roleName}`"
+                  :disabled="isSubmitting"
                   @change="toggleRole(role.roleName, ($event.target as HTMLInputElement).checked)"
                 />
                 <div class="min-w-0">

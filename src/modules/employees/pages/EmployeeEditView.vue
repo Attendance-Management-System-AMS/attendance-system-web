@@ -132,6 +132,10 @@ watchEffect(() => {
 })
 
 const submitError = ref('')
+const isRedirectingAfterSubmit = ref(false)
+const isFormBusy = computed(
+  () => updateEmployee.isPending.value || isRedirectingAfterSubmit.value,
+)
 
 const validateForm = () => {
   errors.fullName = form.fullName.trim() ? '' : 'Vui lòng nhập họ và tên'
@@ -149,6 +153,10 @@ const validateForm = () => {
 }
 
 const handleSubmit = async () => {
+  if (isFormBusy.value) {
+    return
+  }
+
   submitError.value = ''
 
   if (!validateForm()) {
@@ -171,11 +179,11 @@ const handleSubmit = async () => {
 
   try {
     await updateEmployee.mutateAsync({ id: employeeId.value, data: payload })
+    isRedirectingAfterSubmit.value = true
     toast.success('Cập nhật nhân viên thành công')
-    setTimeout(() => {
-      router.push(`/employees/${employeeId.value}`)
-    }, 1500)
+    await router.push(`/employees/${employeeId.value}`)
   } catch (err) {
+    isRedirectingAfterSubmit.value = false
     console.error('Update employee failed:', err)
     toast.error('Lỗi khi cập nhật nhân viên. Vui lòng thử lại.')
     submitError.value = 'Cập nhật thất bại. Vui lòng thử lại.'
@@ -192,6 +200,7 @@ const handleSubmit = async () => {
       <template #actions>
         <button
           @click="router.back()"
+          :disabled="isFormBusy"
           class="flex items-center gap-2 h-10 rounded-lg border border-border-standard bg-card px-4 text-sm font-medium text-secondary-text shadow-sm hover:bg-surface transition-colors"
         >
           <ArrowLeft class="h-4 w-4" />
@@ -352,19 +361,20 @@ const handleSubmit = async () => {
           </div>
           <button
             @click="handleSubmit"
-            :disabled="updateEmployee.isPending.value"
+            :disabled="isFormBusy"
             :class="[
               'flex w-full items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-colors dark:shadow-none',
-              updateEmployee.isPending.value
+              isFormBusy
                 ? 'bg-primary/70 cursor-not-allowed'
                 : 'bg-primary hover:brightness-110',
             ]"
           >
-            <RefreshCw :class="['h-4 w-4', { 'animate-spin': updateEmployee.isPending.value }]" />
-            {{ updateEmployee.isPending.value ? 'Đang cập nhật...' : 'Cập nhật thay đổi' }}
+            <RefreshCw :class="['h-4 w-4', { 'animate-spin': isFormBusy }]" />
+            {{ isFormBusy ? 'Đang hoàn tất...' : 'Cập nhật thay đổi' }}
           </button>
           <button
             @click="router.push('/employees')"
+            :disabled="isFormBusy"
             class="flex w-full items-center justify-center h-10 rounded-lg border border-border-standard text-sm font-medium text-secondary-text hover:bg-surface transition-colors"
           >
             Hủy bỏ

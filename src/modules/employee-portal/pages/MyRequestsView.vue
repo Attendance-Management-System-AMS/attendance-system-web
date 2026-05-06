@@ -37,14 +37,15 @@ import {
 } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
+import { useBackgroundTask } from '@/shared/lib/useBackgroundTask'
 import { useMyLeaves } from '@/modules/leaves/composables/useMyLeaves'
 import {
   formatMinutes,
   overtimeStatusLabel,
   useMyOvertimeRequests,
 } from '@/modules/overtime/composables/useOvertime'
-import type { LeaveRequest } from '@/modules/leaves/types/leave.types'
-import type { OvertimeRequest } from '@/modules/overtime/types/overtime.types'
+import type { CreateMyLeaveRequest, LeaveRequest } from '@/modules/leaves/types/leave.types'
+import type { CreateOvertimeRequest, OvertimeRequest } from '@/modules/overtime/types/overtime.types'
 
 type RequestKind = 'LEAVE' | 'OVERTIME'
 
@@ -74,6 +75,24 @@ type UnifiedRequest = {
   leaveTypeCode?: string
 }
 
+type RequestSubmission =
+  | {
+      kind: 'LEAVE'
+      payload: CreateMyLeaveRequest
+      optimisticRequest: UnifiedRequest
+      syncMessage: string
+      successMessage: string
+      draft: MyRequestForm
+    }
+  | {
+      kind: 'OVERTIME'
+      payload: CreateOvertimeRequest
+      optimisticRequest: UnifiedRequest
+      syncMessage: string
+      successMessage: string
+      draft: MyRequestForm
+    }
+
 const { leavesQuery, createMe, leaveTypesQuery } = useMyLeaves()
 const { overtimeQuery, createOvertime } = useMyOvertimeRequests({
   page: 0,
@@ -85,6 +104,7 @@ const { overtimeQuery, createOvertime } = useMyOvertimeRequests({
 const route = useRoute()
 const router = useRouter()
 const isCreateModalOpen = ref(false)
+const { executeBackgroundTask } = useBackgroundTask()
 
 const today = new Date()
 const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
@@ -103,6 +123,7 @@ const createEmptyRequest = (): MyRequestForm => ({
 })
 
 const newRequest = ref<MyRequestForm>(createEmptyRequest())
+const optimisticRequests = ref<UnifiedRequest[]>([])
 
 const resetForm = () => {
   newRequest.value = createEmptyRequest()
@@ -206,6 +227,7 @@ const toOvertimeRequestItem = (request: OvertimeRequest): UnifiedRequest => ({
 
 const requests = computed(() =>
   [
+    ...optimisticRequests.value,
     ...leaves.value.map(toLeaveRequestItem),
     ...overtimeRequests.value.map(toOvertimeRequestItem),
   ].sort((left, right) => normalizeCreatedAt(right.createdAt) - normalizeCreatedAt(left.createdAt)),
@@ -255,67 +277,151 @@ const handleCreateRequest = () => {
   isCreateModalOpen.value = true
 }
 
-async function submitOvertimeRequest() {
+const createOptimisticId = () => `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+const getLeaveTypeNameByCode = (code: string) =>
+  leaveTypesQuery.data.value?.find((type) => type.code === code)?.name || code
+
+const removeOptimisticRequest = (id: string) => {
+  optimisticRequests.value = optimisticRequests.value.filter((request) => request.id !== id)
+}
+
+function buildOvertimeSubmission(): RequestSubmission | null {
+  const reason = newRequest.value.reason.trim()
+
   if (
     !newRequest.value.overtimeDate ||
     !newRequest.value.overtimeStartTime ||
     !newRequest.value.overtimeEndTime ||
-    !newRequest.value.reason.trim()
+    !reason
   ) {
     toast.error('Vui lòng điền đầy đủ thông tin tăng ca')
-    return
+    return null
   }
 
-  await createOvertime.mutateAsync({
-    workDate: newRequest.value.overtimeDate,
-    startTime: newRequest.value.overtimeStartTime,
-    endTime: newRequest.value.overtimeEndTime,
-    reason: newRequest.value.reason,
-  })
+  const draft = { ...newRequest.value, reason }
+
+  return {
+    kind: 'OVERTIME',
+    payload: {
+      workDate: draft.overtimeDate,
+      startTime: draft.overtimeStartTime,
+      endTime: draft.overtimeEndTime,
+      reason: draft.reason,
+    },
+    optimisticRequest: {
+      id: createOptimisticId(),
+      kind: 'overtime',
+      title: 'Tăng ca',
+      dateLabel: formatDateRange(draft.overtimeDate, draft.overtimeDate),
+      status: 'SYNCING',
+      statusLabel: 'Đang đồng bộ',
+      reason: draft.reason,
+      createdAt: new Date().toISOString(),
+      extra: `${draft.overtimeStartTime.slice(0, 5)} - ${draft.overtimeEndTime.slice(0, 5)}`,
+    },
+    syncMessage: 'Đã tiếp nhận đơn tăng ca. Hệ thống đang đồng bộ.',
+    successMessage: 'Đơn tăng ca đã được ghi nhận.',
+    draft,
+  }
 }
 
-async function submitLeaveRequest() {
-  if (!newRequest.value.leaveTypeCode || !newRequest.value.fromDate || !newRequest.value.reason) {
+function buildLeaveSubmission(): RequestSubmission | null {
+  const reason = newRequest.value.reason.trim()
+
+  if (!newRequest.value.leaveTypeCode || !newRequest.value.fromDate || !reason) {
     toast.error('Vui lòng điền đầy đủ thông tin')
-    return
+    return null
   }
+
+  const draft = { ...newRequest.value, reason }
 
   if (newRequest.value.leaveTypeCode === 'AC') {
-    newRequest.value.toDate = newRequest.value.fromDate
-    if (!newRequest.value.correctedCheckIn && !newRequest.value.correctedCheckOut) {
+    draft.toDate = draft.fromDate
+    if (!draft.correctedCheckIn && !draft.correctedCheckOut) {
       toast.error('Vui lòng điền ít nhất giờ vào hoặc giờ ra bổ sung')
-      return
+      return null
     }
-  } else if (!newRequest.value.toDate) {
+  } else if (!draft.toDate) {
     toast.error('Vui lòng điền ngày kết thúc')
+    return null
+  }
+
+  return {
+    kind: 'LEAVE',
+    payload: {
+      leaveTypeCode: draft.leaveTypeCode,
+      fromDate: draft.fromDate,
+      toDate: draft.toDate,
+      reason: draft.reason,
+      correctedCheckIn: draft.correctedCheckIn || null,
+      correctedCheckOut: draft.correctedCheckOut || null,
+    },
+    optimisticRequest: {
+      id: createOptimisticId(),
+      kind: 'leave',
+      title: getLeaveTypeNameByCode(draft.leaveTypeCode),
+      dateLabel: formatDateRange(draft.fromDate, draft.toDate),
+      status: 'SYNCING',
+      statusLabel: 'Đang đồng bộ',
+      reason: draft.reason,
+      createdAt: new Date().toISOString(),
+      leaveTypeCode: draft.leaveTypeCode,
+      extra:
+        draft.leaveTypeCode === 'AC' && (draft.correctedCheckIn || draft.correctedCheckOut)
+          ? `Bổ sung công: ${draft.correctedCheckIn || '--:--'} - ${draft.correctedCheckOut || '--:--'}`
+          : undefined,
+    },
+    syncMessage: 'Đã tiếp nhận đơn. Hệ thống đang đồng bộ.',
+    successMessage: 'Đơn từ đã được ghi nhận.',
+    draft,
+  }
+}
+
+const handleSubmit = () => {
+  const submission =
+    newRequest.value.requestKind === 'OVERTIME' ? buildOvertimeSubmission() : buildLeaveSubmission()
+
+  if (!submission) {
     return
   }
 
-  await createMe.mutateAsync({
-    leaveTypeCode: newRequest.value.leaveTypeCode,
-    fromDate: newRequest.value.fromDate,
-    toDate: newRequest.value.toDate,
-    reason: newRequest.value.reason,
-    correctedCheckIn: newRequest.value.correctedCheckIn || null,
-    correctedCheckOut: newRequest.value.correctedCheckOut || null,
-  })
-}
-
-const handleSubmit = async () => {
-  try {
-    if (newRequest.value.requestKind === 'OVERTIME') {
-      await submitOvertimeRequest()
-      toast.success('Gửi đơn tăng ca thành công! Đang chờ duyệt.')
-    } else {
-      await submitLeaveRequest()
-      toast.success('Gửi đơn thành công! Đang chờ duyệt.')
-    }
-
-    isCreateModalOpen.value = false
-    resetForm()
-  } catch (err) {
-    toast.error(getApiErrorMessage(err, 'Có lỗi xảy ra khi gửi đơn'))
+  const sharedOptions = {
+    pendingMessage: submission.syncMessage,
+    successMessage: submission.successMessage,
+    errorMessage: ({ error }: { error: unknown }) =>
+      getApiErrorMessage(error, 'Có lỗi xảy ra khi gửi đơn'),
+    onStart: () => {
+      optimisticRequests.value = [submission.optimisticRequest, ...optimisticRequests.value]
+      isCreateModalOpen.value = false
+      resetForm()
+    },
+    onSuccess: () => {
+      removeOptimisticRequest(submission.optimisticRequest.id)
+    },
+    onError: ({ draft }: { draft: MyRequestForm }) => {
+      removeOptimisticRequest(submission.optimisticRequest.id)
+      newRequest.value = { ...draft }
+      isCreateModalOpen.value = true
+    },
   }
+
+  if (submission.kind === 'OVERTIME') {
+    void executeBackgroundTask({
+      draft: submission.draft,
+      payload: submission.payload,
+      run: (payload) => createOvertime.mutateAsync(payload),
+      ...sharedOptions,
+    })
+    return
+  }
+
+  void executeBackgroundTask({
+    draft: submission.draft,
+    payload: submission.payload,
+    run: (payload) => createMe.mutateAsync(payload),
+    ...sharedOptions,
+  })
 }
 </script>
 

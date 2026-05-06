@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import {
     DialogRoot,
     DialogPortal,
@@ -9,26 +9,36 @@ import {
     DialogDescription,
     DialogClose,
 } from 'reka-ui'
-import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
 
-defineProps<{
+const props = defineProps<{
     open: boolean
+    draft?: { name: string; description: string } | null
     isSubmitting?: boolean
     submitError?: string | null
 }>()
 
 const emit = defineEmits<{
     (e: 'close'): void
-    (e: 'created', payload: {
-        data: { name: string; description: string }
-        onSuccess: () => void
-        onError: (err: unknown) => void
-    }): void
+    (e: 'created', payload: { name: string; description: string }): void
 }>()
 
 const name = ref('')
 const description = ref('')
 const error = ref<string | null>(null)
+
+watch(
+    () => [props.open, props.draft] as const,
+    ([isOpen, draft]) => {
+        if (!isOpen) {
+            return
+        }
+
+        name.value = draft?.name ?? ''
+        description.value = draft?.description ?? ''
+        error.value = null
+    },
+    { immediate: true },
+)
 
 const handleSubmit = () => {
     if (!name.value.trim()) {
@@ -39,14 +49,8 @@ const handleSubmit = () => {
     error.value = null
 
     emit('created', {
-        data: { name: name.value, description: description.value },
-        onSuccess: () => {
-            resetForm()
-            emit('close')
-        },
-        onError: (err: unknown) => {
-            error.value = getApiErrorMessage(err, 'Lỗi khi tạo phòng ban')
-        },
+        name: name.value.trim(),
+        description: description.value.trim(),
     })
 }
 
@@ -57,6 +61,9 @@ const resetForm = () => {
 }
 
 const handleClose = () => {
+    if (props.isSubmitting) {
+        return
+    }
     resetForm()
     emit('close')
 }

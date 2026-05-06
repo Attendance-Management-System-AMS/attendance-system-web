@@ -6,10 +6,12 @@ import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
 import { useScheduleTemplates } from '@/modules/schedules/composables/useScheduleTemplates'
 import { useShifts } from '@/modules/schedules/composables/useShifts'
 import { getApiErrorMessage } from '@/shared/api/apiErrorMessage'
+import { useBackgroundTask } from '@/shared/lib/useBackgroundTask'
 import type { ScheduleTemplate } from '@/modules/schedules/types/schedule.types'
 
 const { templatesQuery, createTemplate, updateTemplate, deleteTemplate } = useScheduleTemplates()
 const { shiftsQuery } = useShifts()
+const { executeBackgroundTask } = useBackgroundTask()
 
 const templates = computed(() => templatesQuery.data.value ?? [])
 const shifts = computed(() => shiftsQuery.data.value ?? [])
@@ -21,13 +23,22 @@ const deleteDialogOpen = ref(false)
 const deleteTarget = ref<ScheduleTemplate | null>(null)
 
 const errorMessage = ref('')
-const successMessage = ref('')
 
 const templateForm = reactive({
   name: '',
   description: '',
   items: [] as { dayOfWeek: number; shiftId: string }[],
 })
+
+type TemplateDraft = {
+  isEditMode: boolean
+  editingId: number | null
+  form: {
+    name: string
+    description: string
+    items: { dayOfWeek: number; shiftId: string }[]
+  }
+}
 
 const daysOfWeek = [
   { label: 'Thứ 2', value: 1 },
@@ -48,10 +59,40 @@ const initForm = () => {
   }))
 }
 
+const cloneTemplateItems = () =>
+  templateForm.items.map((item) => ({
+    dayOfWeek: item.dayOfWeek,
+    shiftId: item.shiftId,
+  }))
+
+const snapshotTemplateDraft = (): TemplateDraft => ({
+  isEditMode: isEditMode.value,
+  editingId: editingId.value,
+  form: {
+    name: templateForm.name,
+    description: templateForm.description,
+    items: cloneTemplateItems(),
+  },
+})
+
+const restoreTemplateDraft = (draft: TemplateDraft) => {
+  isEditMode.value = draft.isEditMode
+  editingId.value = draft.editingId
+  templateForm.name = draft.form.name
+  templateForm.description = draft.form.description
+  templateForm.items = draft.form.items.map((item) => ({ ...item }))
+}
+
+const closeTemplateModal = () => {
+  isModalOpen.value = false
+  errorMessage.value = ''
+}
+
 const openCreateModal = () => {
   isEditMode.value = false
   editingId.value = null
   initForm()
+  errorMessage.value = ''
   isModalOpen.value = true
 }
 
@@ -70,12 +111,12 @@ const openEditModal = (template: ScheduleTemplate) => {
     }
   })
 
+  errorMessage.value = ''
   isModalOpen.value = true
 }
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
   errorMessage.value = ''
-  successMessage.value = ''
 
   if (!templateForm.name) {
     errorMessage.value = 'Vui lòng nhập tên mẫu lịch.'
@@ -94,28 +135,36 @@ const handleSubmit = async () => {
     return
   }
 
-  try {
-    const data = {
-      name: templateForm.name,
-      description: templateForm.description,
-      items: validItems,
-    }
-
-    if (isEditMode.value && editingId.value) {
-      await updateTemplate.mutateAsync({ id: editingId.value, data })
-      successMessage.value = 'Cập nhật mẫu lịch thành công.'
-    } else {
-      await createTemplate.mutateAsync(data)
-      successMessage.value = 'Tạo mẫu lịch mới thành công.'
-    }
-
-    setTimeout(() => {
-      isModalOpen.value = false
-      successMessage.value = ''
-    }, 1000)
-  } catch (err) {
-    errorMessage.value = getApiErrorMessage(err, 'Thao tác thất bại. Vui lòng thử lại.')
+  const draft = snapshotTemplateDraft()
+  const data = {
+    name: templateForm.name.trim(),
+    description: templateForm.description.trim(),
+    items: validItems,
   }
+
+  void executeBackgroundTask({
+    draft,
+    payload: data,
+    run: (nextData) =>
+      draft.isEditMode && draft.editingId
+        ? updateTemplate.mutateAsync({ id: draft.editingId, data: nextData })
+        : createTemplate.mutateAsync(nextData),
+    pendingMessage: draft.isEditMode
+      ? `Đã tiếp nhận cập nhật cho mẫu lịch ${data.name}. Hệ thống đang đồng bộ.`
+      : `Đã tiếp nhận mẫu lịch ${data.name}. Hệ thống đang đồng bộ.`,
+    successMessage: draft.isEditMode
+      ? `Đã cập nhật mẫu lịch ${data.name}.`
+      : `Đã tạo mẫu lịch ${data.name}.`,
+    errorMessage: ({ error }) => getApiErrorMessage(error, 'Thao tác thất bại. Vui lòng thử lại.'),
+    onStart: () => {
+      closeTemplateModal()
+    },
+    onError: ({ draft: previousDraft, message }) => {
+      restoreTemplateDraft(previousDraft)
+      errorMessage.value = message || 'Thao tác thất bại. Vui lòng thử lại.'
+      isModalOpen.value = true
+    },
+  })
 }
 
 const requestDelete = (template: ScheduleTemplate) => {
@@ -123,15 +172,25 @@ const requestDelete = (template: ScheduleTemplate) => {
   deleteDialogOpen.value = true
 }
 
-const confirmDelete = async () => {
+const confirmDelete = () => {
   if (!deleteTarget.value) return
-  try {
-    await deleteTemplate.mutateAsync(deleteTarget.value.id)
-    deleteDialogOpen.value = false
-    deleteTarget.value = null
-  } catch (err) {
-    errorMessage.value = getApiErrorMessage(err, 'Không thể xóa mẫu lịch.')
-  }
+
+  const target = { ...deleteTarget.value }
+  void executeBackgroundTask({
+    draft: target,
+    payload: target,
+    run: (nextTarget) => deleteTemplate.mutateAsync(nextTarget.id),
+    pendingMessage: `Đã tiếp nhận yêu cầu xóa mẫu lịch ${target.name}. Hệ thống đang đồng bộ.`,
+    successMessage: `Đã xóa mẫu lịch ${target.name}.`,
+    errorMessage: ({ error }) => getApiErrorMessage(error, 'Không thể xóa mẫu lịch.'),
+    onStart: () => {
+      deleteDialogOpen.value = false
+      deleteTarget.value = null
+    },
+    onError: ({ message }) => {
+      errorMessage.value = message || 'Không thể xóa mẫu lịch.'
+    },
+  })
 }
 
 const getShiftName = (shiftId: string | number | null | undefined) => {
@@ -285,7 +344,7 @@ const applyToWeekdays = (shiftId: string) => {
         <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             class="absolute inset-0 bg-card/50 backdrop-blur-sm"
-            @click="isModalOpen = false"
+            @click="closeTemplateModal()"
           ></div>
 
           <Transition
@@ -318,7 +377,7 @@ const applyToWeekdays = (shiftId: string) => {
                   </div>
                 </div>
                 <button
-                  @click="isModalOpen = false"
+                  @click="closeTemplateModal()"
                   class="rounded-lg p-2 text-tertiary-text hover:bg-muted dark:hover:bg-elevated"
                 >
                   <ArrowLeft class="h-5 w-5 rotate-180" />
@@ -435,15 +494,6 @@ const applyToWeekdays = (shiftId: string) => {
                     {{ errorMessage }}
                   </div>
                 </Transition>
-                <Transition name="fade">
-                  <div
-                    v-if="successMessage"
-                    class="flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-600"
-                  >
-                    <div class="h-1.5 w-1.5 rounded-full bg-emerald-600"></div>
-                    {{ successMessage }}
-                  </div>
-                </Transition>
               </div>
 
               <!-- Footer -->
@@ -451,7 +501,7 @@ const applyToWeekdays = (shiftId: string) => {
                   class="flex items-center justify-end gap-3 border-t border-border p-6 dark:border-border"
                 >
                   <button
-                    @click="isModalOpen = false"
+                    @click="closeTemplateModal()"
                     class="h-10 rounded-lg border border-border px-6 text-sm font-medium text-secondary-text hover:bg-muted dark:border-border dark:text-tertiary-text"
                   >
                     Hủy
