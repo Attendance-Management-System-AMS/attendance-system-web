@@ -109,7 +109,7 @@ const handleSubmit = async () => {
                   data-testid="login-email"
                   type="text"
                   autocomplete="username"
-                  placeholder="EMP-0001 hoặc admin@timemaster.vn"
+                  placeholder="Nhập tên đăng nhập hoặc email"
                   class="h-11 w-full rounded-lg border border-border-standard bg-surface pl-10 pr-3 text-sm text-primary-text outline-none transition-colors placeholder:text-tertiary-text focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/40"
                 />
               </div>
