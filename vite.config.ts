@@ -7,6 +7,8 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -69,6 +71,7 @@ export default defineConfig(({ mode }) => {
             }),
           ]
         : []),
+      cloudflare()
     ],
     server: {
       host: true,
@@ -97,5 +100,5 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-  }
+  };
 })
