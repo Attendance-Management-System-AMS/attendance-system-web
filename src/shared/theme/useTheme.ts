@@ -43,7 +43,7 @@ export const THEMES: ThemeConfig[] = [
 ]
 
 const activeThemeName = useStorage('ams-active-theme', 'indigo')
-const activeColorScheme = useStorage<'light' | 'dark' | 'system'>('ams-color-scheme', 'dark')
+const activeColorScheme = useStorage<'light' | 'dark' | 'system'>('ams-color-scheme', 'light')
 
 function applyColorScheme(scheme: 'light' | 'dark' | 'system') {
   const root = document.documentElement

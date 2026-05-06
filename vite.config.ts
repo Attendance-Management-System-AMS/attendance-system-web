@@ -66,6 +66,7 @@ export default defineConfig(({ mode }) => {
               },
               workbox: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,vue}'],
+                globIgnores: ['assets/face-recognition-*.js'],
                 navigateFallback: 'index.html',
               },
             }),
