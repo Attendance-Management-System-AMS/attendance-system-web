@@ -334,21 +334,8 @@ const handleActionDelete = async () => {
 }
 
 const getSchedulesForEmployeeDate = (employee: Employee, date: string): ScheduleWithShift[] => {
-  const matchingSchedules = enrichedSchedules.value.filter(
+  return enrichedSchedules.value.filter(
     (s) => String(s.employeeId) === String(employee.id) && appliesToDate(s, date),
-  )
-
-  if (matchingSchedules.length === 0) return []
-
-  const latestEffectiveFrom = matchingSchedules
-    .map((schedule) => normalizeYmd(schedule.effectiveFrom) ?? '')
-    .sort()
-    .slice(-1)[0]
-
-  if (!latestEffectiveFrom) return matchingSchedules
-
-  return matchingSchedules.filter(
-    (schedule) => normalizeYmd(schedule.effectiveFrom) === latestEffectiveFrom,
   )
 }
 

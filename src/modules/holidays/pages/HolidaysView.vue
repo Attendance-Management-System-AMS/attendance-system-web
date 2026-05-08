@@ -18,18 +18,29 @@ import {
 } from '@/shared/ui/alert-dialog'
 import { useHolidays } from '@/modules/holidays/composables/useHolidays'
 import type { Holiday } from '@/modules/holidays/types/holiday.types'
+import { useAuth } from '@/modules/auth/composables/useAuth'
+import { hasAnyRoleAccess, roleGroups } from '@/shared/auth/access-control'
 
 const { holidaysQuery, deleteHoliday } = useHolidays()
 const { data: holidaysRaw, isLoading } = holidaysQuery
 const holidays = computed(() => holidaysRaw.value ?? [])
 
-const columns = [
+const { user } = useAuth()
+const canManage = computed(() => hasAnyRoleAccess(user.value?.roles ?? [], roleGroups.adminHr))
+
+const baseColumns = [
   { key: 'holidayName', label: 'Tên ngày nghỉ' },
   { key: 'dateRange', label: 'Thời gian' },
   { key: 'isPaid', label: 'Hưởng lương', align: 'center' as const },
   { key: 'status', label: 'Trạng thái' },
-  { key: 'actions', label: 'Hành động', align: 'right' as const },
 ]
+
+const columns = computed(() => {
+  if (canManage.value) {
+    return [...baseColumns, { key: 'actions', label: 'Hành động', align: 'right' as const }]
+  }
+  return baseColumns
+})
 
 const deleteTarget = ref<Holiday | null>(null)
 const isAlertOpen = ref(false)
@@ -55,7 +66,7 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Ngày nghỉ" description="Quản lý ngày nghỉ lễ và nghỉ hưởng lương">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
+        <Button v-if="canManage" as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/holidays/new">
             <Plus class="h-4 w-4" />
             Tạo mới
