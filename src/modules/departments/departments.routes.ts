@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export default [
   {
     path: '/departments',
-    meta: { roles: ['ROLE_ADMIN', 'ROLE_HR'] },
+    meta: { roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'] },
     children: [
       {
         path: '',

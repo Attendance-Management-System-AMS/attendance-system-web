@@ -5,7 +5,7 @@ export default [
     path: '/holidays',
     name: 'holidays',
     component: () => import('@/modules/holidays/pages/HolidaysView.vue'),
-    meta: { title: 'Ngày nghỉ', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
+    meta: { title: 'Ngày nghỉ', roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER', 'ROLE_EMPLOYEE'] },
   },
   {
     path: '/holidays/new',

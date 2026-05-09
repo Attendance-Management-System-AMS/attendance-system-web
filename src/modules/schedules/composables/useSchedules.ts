@@ -52,12 +52,10 @@ export function useSchedules(
   const resolvedParams = computed(() => unref(params))
 
   // Query lịch làm việc: có employeeId thì lấy theo nhân viên, không có thì lấy toàn bộ
-  const schedulesQuery = useQuery<Schedule[]>({
-    queryKey: computed(() =>
-      resolvedEmployeeId.value
+  const schedulesQuery = useQuery<Schedule[]>(computed(() => ({
+    queryKey: resolvedEmployeeId.value
         ? queryKeys.schedules.byEmployee(resolvedEmployeeId.value)
         : [...queryKeys.schedules.all(), resolvedParams.value],
-    ),
     queryFn: async () => {
       const id = resolvedEmployeeId.value
       const queryParams = resolvedParams.value || {}
@@ -71,7 +69,7 @@ export function useSchedules(
     staleTime: 1000 * 60 * 3,
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
-  })
+  })))
 
   // Mutation tạo schedule
   const createSchedule = useMutation({

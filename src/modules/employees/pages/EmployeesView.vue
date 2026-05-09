@@ -17,12 +17,17 @@ import DataTable from '@/shared/ui/DataTable.vue'
 import DeleteConfirmDialog from '@/shared/ui/DeleteConfirmDialog.vue'
 import { toast } from 'vue-sonner'
 import type { Employee } from '@/modules/employees/types/employee.types'
+import { useAuth } from '@/modules/auth/composables/useAuth'
+import { hasAnyRoleAccess, roleGroups } from '@/shared/auth/access-control'
 
 const search = ref('')
 const debouncedSearch = ref('')
 const filterDept = ref<string>('')
 const filterPos = ref<string>('')
 const filterStatus = ref<string>('')
+
+const { user } = useAuth()
+const canManage = computed(() => hasAnyRoleAccess(user.value?.roles ?? [], roleGroups.adminHr))
 
 const currentPage = ref(0)
 const pageSize = ref(15)
@@ -126,7 +131,7 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Danh sách nhân viên" description="Quản lý toàn bộ nhân viên trong hệ thống">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
+        <Button v-if="canManage" as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/employees/new">
             <Plus class="h-4 w-4" />
             Thêm nhân viên
@@ -195,6 +200,8 @@ const confirmDelete = () => {
             :item-id="row.id" 
             :view-to="`/employees/${row.id}`"
             :edit-to="`/employees/${row.id}/edit`" 
+            :can-edit="canManage"
+            :can-delete="canManage"
             @delete="handleDelete" 
           />
         </template>

@@ -18,19 +18,30 @@ import {
 } from '@/shared/ui/alert-dialog'
 import { usePositions } from '@/modules/positions/composables/usePositions'
 import type { Position } from '@/modules/positions/types/position.types'
+import { useAuth } from '@/modules/auth/composables/useAuth'
+import { hasAnyRoleAccess, roleGroups } from '@/shared/auth/access-control'
 
 const { positionsQuery, deletePosition } = usePositions()
 const { data: positionsRaw, isLoading } = positionsQuery
 const positions = computed(() => positionsRaw.value ?? [])
 
-const columns = [
+const { user } = useAuth()
+const canManage = computed(() => hasAnyRoleAccess(user.value?.roles ?? [], roleGroups.adminHr))
+
+const baseColumns = [
   { key: 'name', label: 'Chức vụ' },
   { key: 'code', label: 'Mã' },
   { key: 'departmentName', label: 'Phòng ban' },
   { key: 'level', label: 'Level', align: 'center' as const },
   { key: 'status', label: 'Trạng thái' },
-  { key: 'actions', label: 'Hành động', align: 'right' as const },
 ]
+
+const columns = computed(() => {
+  if (canManage.value) {
+    return [...baseColumns, { key: 'actions', label: 'Hành động', align: 'right' as const }]
+  }
+  return baseColumns
+})
 
 const deleteTarget = ref<Position | null>(null)
 const isAlertOpen = ref(false)
@@ -56,7 +67,7 @@ const confirmDelete = () => {
   <div class="space-y-6">
     <PageHeader title="Chức vụ" description="Quản lý chức vụ nhân sự">
       <template #actions>
-        <Button as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
+        <Button v-if="canManage" as-child class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <RouterLink to="/positions/new">
             <Plus class="h-4 w-4" />
             Tạo mới
