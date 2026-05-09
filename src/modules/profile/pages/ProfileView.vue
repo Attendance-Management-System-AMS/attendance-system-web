@@ -2,10 +2,30 @@
 import FormCard from '@/shared/ui/FormCard.vue'
 import PageHeader from '@/shared/ui/PageHeader.vue'
 import { computed, ref } from 'vue'
-import { Bell, Camera, Mail, Phone, Shield, User } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Bell, Camera, LogOut, Mail, Phone, Shield, User } from 'lucide-vue-next'
 import { useAuth } from '@/modules/auth/composables/useAuth'
+import { authApi } from '@/modules/auth/api/auth.api'
+import { getRefreshToken } from '@/shared/auth/token'
+import { resetAuthSession } from '@/shared/auth/session'
 
 const { user } = useAuth()
+const router = useRouter()
+const isLoggingOut = ref(false)
+
+const handleLogout = async () => {
+  if (isLoggingOut.value) return
+  isLoggingOut.value = true
+  try {
+    await authApi.logout({ refreshToken: getRefreshToken() })
+  } catch {
+    // Still clear local session even if backend request fails
+  } finally {
+    resetAuthSession()
+    isLoggingOut.value = false
+    await router.push('/login')
+  }
+}
 
 const displayName = computed(() => user.value?.fullName || 'Người dùng')
 const email = computed(() => user.value?.email || '')
@@ -162,14 +182,19 @@ const notifyPush = ref(false)
             >
               Đổi mật khẩu
             </button>
-            <button
-              type="button"
-              class="rounded-lg border border-border-standard bg-card px-4 py-2.5 text-sm font-medium text-primary-text hover:bg-surface dark:border-border dark:bg-elevated dark:text-primary-text"
-            >
-              Phiên đăng nhập
-            </button>
           </div>
         </FormCard>
+
+        <!-- Logout button -->
+        <button
+          type="button"
+          @click="handleLogout"
+          :disabled="isLoggingOut"
+          class="flex w-full items-center justify-center gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600 shadow-sm transition-all hover:bg-rose-100 hover:border-rose-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400 dark:hover:bg-rose-950/50 dark:hover:border-rose-800"
+        >
+          <LogOut class="h-4.5 w-4.5" />
+          {{ isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất tài khoản' }}
+        </button>
       </div>
     </div>
   </div>
