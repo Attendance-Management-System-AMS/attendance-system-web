@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { isAuthenticated, setAuthTokens, clearAuthToken } from '@/shared/auth/token'
+import { isAuthenticated, setAuthTokens } from '@/shared/auth/token'
 import { authApi, resolveAuthToken } from '@/modules/auth/api/auth.api'
-import { useAuth, type UserRole } from '@/modules/auth/composables/useAuth'
+import { useAuth, type UserRole, type UserProfile } from '@/modules/auth/composables/useAuth'
 import { resetAuthSession } from '@/shared/auth/session'
+import api from '@/shared/api/client'
+import type { ApiResponse } from '@/shared/types/api'
 
 // Route nghiệp vụ nằm trong chính module để dễ lần theo chức năng.
 import attendance from '@/modules/attendance/attendance.routes'
@@ -85,38 +87,18 @@ router.beforeEach(async (to) => {
   }
 
   // 2. Fetch Profile nếu đã có token nhưng chưa có user data trong store
+  //    Dùng `api` (main client) thay vì `authHttp` để interceptor tự xử lý 401 refresh
+  //    với mutex, tránh race condition gọi refresh song song.
   if (isAuthenticated() && !user.value) {
     try {
-      const resp = await authApi.getProfile()
+      const resp = await api.get<ApiResponse<UserProfile>>('/auth/me').then((r) => r.data)
       if (resp.result) {
         setUser(resp.result)
       }
-    } catch (profileErr: unknown) {
-      // Nếu 401 (access token hết hạn) → thử refresh 1 lần rồi retry getProfile
-      const is401 = typeof profileErr === 'object' && profileErr !== null
-        && 'response' in profileErr
-        && (profileErr as { response?: { status?: number } }).response?.status === 401
-
-      if (is401) {
-        try {
-          const refreshResponse = await authApi.refresh()
-          const token = resolveAuthToken(refreshResponse.result)
-          if (!token) throw new Error('No token from refresh')
-          setAuthTokens(token, refreshResponse.result?.refreshToken)
-
-          // Retry getProfile với token mới
-          const retryResp = await authApi.getProfile()
-          if (retryResp.result) {
-            setUser(retryResp.result)
-          }
-        } catch {
-          // Refresh cũng thất bại → token thực sự hết hạn → logout
-          clearAuthToken()
-          setUser(null)
-          resetAuthSession()
-          if (!isLoginRoute) return { name: 'login' }
-        }
-      }
+    } catch {
+      // Interceptor đã thử refresh rồi mà vẫn thất bại → token thực sự hết hạn
+      resetAuthSession()
+      if (!isLoginRoute) return { name: 'login' }
     }
   }
 
