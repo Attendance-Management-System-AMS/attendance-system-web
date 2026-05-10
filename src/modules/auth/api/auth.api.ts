@@ -23,6 +23,11 @@ export interface LogoutRequest {
     refreshToken?: string | null
 }
 
+export interface ChangePasswordRequest {
+    currentPassword?: string
+    newPassword?: string
+}
+
 export function resolveAuthToken(result?: LoginResult | RefreshResult | null): string | undefined {
     return result?.token || result?.accessToken || result?.jwt
 }
@@ -43,5 +48,7 @@ export const authApi = {
         authHttp.post<ApiResponse<string>>('/auth/logout', payload ?? {}).then((res) => res.data),
     getProfile: () =>
         authHttp.get<ApiResponse<UserProfile>>('/auth/me').then((res) => res.data),
+    changePassword: (payload: ChangePasswordRequest) =>
+        authHttp.post<ApiResponse<string>>('/auth/change-password', payload).then((res) => res.data),
 }
 

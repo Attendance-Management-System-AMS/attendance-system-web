@@ -8,10 +8,12 @@ import { useAuth } from '@/modules/auth/composables/useAuth'
 import { authApi } from '@/modules/auth/api/auth.api'
 import { getRefreshToken } from '@/shared/auth/token'
 import { resetAuthSession } from '@/shared/auth/session'
+import ChangePasswordDialog from '@/modules/profile/components/ChangePasswordDialog.vue'
 
 const { user } = useAuth()
 const router = useRouter()
 const isLoggingOut = ref(false)
+const isChangePasswordOpen = ref(false)
 
 const handleLogout = async () => {
   if (isLoggingOut.value) return
@@ -178,6 +180,7 @@ const notifyPush = ref(false)
           <div class="flex flex-wrap gap-3">
             <button
               type="button"
+              @click="isChangePasswordOpen = true"
               class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary"
             >
               Đổi mật khẩu
@@ -197,5 +200,7 @@ const notifyPush = ref(false)
         </button>
       </div>
     </div>
+    
+    <ChangePasswordDialog v-model:open="isChangePasswordOpen" />
   </div>
 </template>
