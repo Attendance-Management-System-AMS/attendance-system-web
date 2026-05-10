@@ -60,6 +60,7 @@ function formatTime(value?: string | null) {
     if (!value) return '--'
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return value.slice(11, 16) || '--'
+    date.setHours(date.getHours() + 7)
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
 }
 

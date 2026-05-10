@@ -62,11 +62,14 @@ const todayDayOfWeek = today.getDay() === 0 ? 7 : today.getDay()
 
 const formatTime = (value?: string | null) => {
   if (!value) return '--:--'
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return '--:--'
+  d.setHours(d.getHours() + 7)
   return new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).format(new Date(value))
+  }).format(d)
 }
 
 const getAttendanceTimestamp = (key: 'checkIn' | 'checkOut') => {
