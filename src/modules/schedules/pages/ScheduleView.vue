@@ -257,7 +257,7 @@ const handleActionSubmit = async () => {
       toast.error(pastActionMessage(mode))
       return
     }
-    
+
     if (mode === 'edit' && schedule) {
       const selectedShiftId = Number(actionShiftId.value)
       const scheduleEffectiveFrom = normalizeYmd(schedule.effectiveFrom)
@@ -321,6 +321,10 @@ const handleActionSubmit = async () => {
 
 const handleActionDelete = async () => {
   if (!actionTarget.value || !actionTarget.value.schedule) return
+  if (isPastYmd(actionTarget.value.date)) {
+    toast.error('Không thể xóa ca làm cho ngày trong quá khứ.')
+    return
+  }
   isActionLoading.value = true
   try {
     await deleteSchedule.mutateAsync(actionTarget.value.schedule.id)
@@ -619,7 +623,7 @@ const isReadOnlyPastAction = computed(() =>
               </button>
 
               <h3 class="text-lg font-semibold mb-4 pr-10">{{ actionTarget?.mode === 'edit' ? 'Chi tiết ca làm' : 'Phân ca nhanh' }}</h3>
-              
+
               <div class="space-y-4">
                 <div>
                   <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Nhân viên</p>
@@ -629,7 +633,7 @@ const isReadOnlyPastAction = computed(() =>
                   <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Ngày làm việc</p>
                   <p class="text-sm font-semibold">{{ actionTarget?.date }}</p>
                 </div>
-                
+
                 <div>
                   <p class="text-[10px] text-tertiary-text font-semibold uppercase tracking-wider mb-1">Chọn ca làm</p>
                   <select
@@ -656,14 +660,14 @@ const isReadOnlyPastAction = computed(() =>
 
               <div class="mt-8 flex gap-3">
                 <Button @click="closeActionModal" variant="outline" class="flex-1" :disabled="isActionLoading">Đóng</Button>
-                <Button v-if="actionTarget?.mode === 'edit'" @click="handleActionDelete" variant="outline" class="flex-1 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border-rose-200" :disabled="isActionLoading">
+                <Button v-if="actionTarget?.mode === 'edit' && !isReadOnlyPastAction" @click="handleActionDelete" variant="outline" class="flex-1 text-rose-500 hover:text-rose-600 hover:bg-rose-50 border-rose-200" :disabled="isActionLoading">
                   {{ isActionLoading ? 'Đang xóa...' : 'Xóa ca' }}
                 </Button>
                 <Button @click="handleActionSubmit" class="flex-1 bg-primary hover:bg-primary/90 text-white" :disabled="isActionLoading || !actionShiftId || isReadOnlyPastAction">
                   {{
                     isReadOnlyPastAction
                       ? actionTarget?.mode === 'edit'
-                        ? 'Không sửa quá khứ'
+                        ? 'Chỉnh sửa'
                         : 'Không phân ca quá khứ'
                       : isActionLoading
                         ? 'Đang lưu...'
