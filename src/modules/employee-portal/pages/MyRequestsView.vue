@@ -73,6 +73,7 @@ type UnifiedRequest = {
   createdAt?: string | null
   extra?: string
   leaveTypeCode?: string
+  originalId?: string | number
 }
 
 type RequestSubmission =
@@ -93,7 +94,7 @@ type RequestSubmission =
       draft: MyRequestForm
     }
 
-const { leavesQuery, createMe, leaveTypesQuery } = useMyLeaves()
+const { leavesQuery, createMe, deleteMe, leaveTypesQuery } = useMyLeaves()
 const { overtimeQuery, createOvertime } = useMyOvertimeRequests({
   page: 0,
   size: 50,
@@ -207,6 +208,7 @@ const toLeaveRequestItem = (request: LeaveRequest): UnifiedRequest => ({
   reason: request.reason,
   createdAt: request.createdAt || request.fromDate || request.startDate,
   leaveTypeCode: request.leaveTypeCode,
+  originalId: request.id,
   extra:
     request.leaveTypeCode === 'AC' && (request.correctedCheckIn || request.correctedCheckOut)
       ? `Bổ sung công: ${request.correctedCheckIn || '--:--'} - ${request.correctedCheckOut || '--:--'}`
@@ -423,6 +425,18 @@ const handleSubmit = () => {
     ...sharedOptions,
   })
 }
+
+const handleCancelRequest = async (request: UnifiedRequest) => {
+  if (request.kind !== 'leave' || !request.originalId) return
+  if (!confirm('Bạn có chắc chắn muốn huỷ đơn này không?')) return
+
+  try {
+    await deleteMe.mutateAsync(request.originalId)
+    toast.success('Đã huỷ đơn thành công.')
+  } catch (err) {
+    toast.error(getApiErrorMessage(err, 'Không thể huỷ đơn.'))
+  }
+}
 </script>
 
 <template>
@@ -495,9 +509,20 @@ const handleSubmit = () => {
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground/40">
-              <ChevronRight class="h-4 w-4" />
-            </Button>
+            <div class="flex items-center gap-1">
+              <Button
+                v-if="request.kind === 'leave' && request.status === 'PENDING'"
+                variant="destructive"
+                size="sm"
+                class="h-7 px-2.5 text-[10px] font-bold shadow-none"
+                @click="handleCancelRequest(request)"
+              >
+                Huỷ đơn
+              </Button>
+              <Button variant="ghost" size="icon" class="h-7 w-7 text-muted-foreground/40">
+                <ChevronRight class="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           <div class="mt-3 pl-12">
             <p class="line-clamp-1 text-xs font-medium italic text-secondary-text">

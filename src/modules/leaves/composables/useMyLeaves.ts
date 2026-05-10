@@ -17,6 +17,13 @@ export function useMyLeaves(filters?: { status?: string }) {
     },
   })
 
+  const deleteMe = useMutation({
+    mutationFn: (id: string | number) => leaveApi.deleteMe(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaves', 'me'] })
+    },
+  })
+
   const leaveTypesQuery = useQuery({
     queryKey: ['leaves', 'types'],
     queryFn: () => leaveApi.getTypes().then(res => res.data.result),
@@ -25,6 +32,7 @@ export function useMyLeaves(filters?: { status?: string }) {
   return {
     leavesQuery,
     createMe,
+    deleteMe,
     leaveTypesQuery,
   }
 }

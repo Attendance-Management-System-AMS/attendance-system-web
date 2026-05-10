@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 export default [
   {
     path: '/employees',
-    meta: { roles: ['ROLE_ADMIN', 'ROLE_HR'] },
+    meta: { roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'] },
     children: [
       {
         path: '',
@@ -15,19 +15,19 @@ export default [
         path: 'new',
         name: 'employee-new',
         component: () => import('@/modules/employees/pages/EmployeeNewView.vue'),
-        meta: { title: 'Thêm nhân viên' },
+        meta: { title: 'Thêm nhân viên', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
       },
       {
         path: ':id/register-face',
         name: 'employee-register-face',
         component: () => import('@/modules/employees/pages/EmployeeFaceRegisterView.vue'),
-        meta: { title: 'Đăng ký khuôn mặt' },
+        meta: { title: 'Đăng ký khuôn mặt', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
       },
       {
         path: ':id/edit',
         name: 'employee-edit',
         component: () => import('@/modules/employees/pages/EmployeeEditView.vue'),
-        meta: { title: 'Chỉnh sửa nhân viên' },
+        meta: { title: 'Chỉnh sửa nhân viên', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
       },
       {
         path: ':id',

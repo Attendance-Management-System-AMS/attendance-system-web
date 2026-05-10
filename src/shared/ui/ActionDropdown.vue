@@ -13,6 +13,8 @@ defineProps<{
   editTo?: string
   viewTo?: string
   itemId?: string | number
+  canEdit?: boolean
+  canDelete?: boolean
 }>()
 
 defineEmits<{
@@ -39,14 +41,15 @@ defineEmits<{
           <span>Xem chi tiết</span>
         </DropdownMenuItem>
         
-        <DropdownMenuItem @click="itemId !== undefined && (editTo ? $router.push(editTo) : $emit('edit', itemId))">
+        <DropdownMenuItem v-if="canEdit !== false" @click="itemId !== undefined && (editTo ? $router.push(editTo) : $emit('edit', itemId))">
           <Pencil class="mr-2 h-4 w-4 text-tertiary-text" />
           <span>Chỉnh sửa</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator v-if="canDelete !== false && (canEdit !== false || viewTo)" />
         
         <DropdownMenuItem 
+          v-if="canDelete !== false"
           variant="destructive" 
           class="text-rose-600 focus:bg-rose-50 focus:text-rose-600 dark:focus:bg-rose-950/30"
           @click="itemId !== undefined && $emit('delete', itemId)"

@@ -26,9 +26,14 @@ import { Plus } from 'lucide-vue-next'
 import Pagination from '@/shared/ui/Pagination.vue'
 import DataTable from '@/shared/ui/DataTable.vue'
 import type { Department } from '@/modules/departments/types/department.types'
+import { useAuth } from '@/modules/auth/composables/useAuth'
+import { hasAnyRoleAccess, roleGroups } from '@/shared/auth/access-control'
 
 const search = ref('')
 const debouncedSearch = ref('')
+const { user } = useAuth()
+const canManage = computed(() => hasAnyRoleAccess(user.value?.roles ?? [], roleGroups.adminHr))
+
 const updateDebounced = useDebounceFn((val: string) => {
   debouncedSearch.value = val
 }, 500)
@@ -181,20 +186,26 @@ const confirmDelete = () => {
   })
 }
 
-const columns = [
+const baseColumns = [
   { key: 'name', label: 'Tên phòng ban' },
   { key: 'description', label: 'Mô tả' },
   { key: 'totalEmployees', label: 'Số NV', align: 'center' as const },
   { key: 'status', label: 'Trạng thái' },
-  { key: 'actions', label: 'Hành động', align: 'right' as const },
 ]
+
+const columns = computed(() => {
+  if (canManage.value) {
+    return [...baseColumns, { key: 'actions', label: 'Hành động', align: 'right' as const }]
+  }
+  return baseColumns
+})
 </script>
 
 <template>
   <div class="space-y-6">
     <PageHeader title="Phòng ban" description="Quản lý các phòng ban trong tổ chức">
       <template #actions>
-        <Button @click="openCreateModal" class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
+        <Button v-if="canManage" @click="openCreateModal" class="gap-2 shadow-lg shadow-primary/20 dark:shadow-none bg-primary hover:bg-primary">
           <Plus class="h-4 w-4" />
           Thêm phòng ban
         </Button>

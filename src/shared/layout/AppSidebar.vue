@@ -64,7 +64,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'Lịch & Chấm công',
-    roles: roleGroups.operations,
+    roles: roleGroups.authenticated,
     items: [
       {
         label: 'Chấm công hôm nay',
@@ -83,12 +83,12 @@ const navGroups: NavGroup[] = [
         ],
       },
       { label: 'Ca làm việc', to: '/shifts', icon: Timer, roles: roleGroups.adminHr },
-      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays, roles: roleGroups.adminHr },
+      { label: 'Ngày nghỉ', to: '/holidays', icon: CalendarDays, roles: roleGroups.authenticated },
     ],
   },
   {
     label: 'Nhân sự',
-    roles: roleGroups.adminHr,
+    roles: roleGroups.operations,
     items: [
       { label: 'Nhân viên', to: '/employees', icon: Users },
       { label: 'Phòng ban', to: '/departments', icon: Building2 },
