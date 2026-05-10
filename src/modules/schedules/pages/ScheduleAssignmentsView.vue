@@ -176,8 +176,8 @@ const normalizeScheduleSearchData = (result: unknown): ScheduleSearchData => {
   }
 }
 
-const assignedSchedulesQuery = useQuery<ScheduleSearchData>({
-  queryKey: computed(() => [
+const assignedSchedulesQuery = useQuery<ScheduleSearchData>(computed(() => ({
+  queryKey: [
     'schedules',
     'search',
     {
@@ -188,7 +188,7 @@ const assignedSchedulesQuery = useQuery<ScheduleSearchData>({
       page: assignedPage.value,
       size: assignedPageSize.value,
     },
-  ]),
+  ],
   queryFn: async () => {
     const keyword = scheduleSearch.value.trim()
     const params: Record<string, unknown> = {
@@ -210,7 +210,7 @@ const assignedSchedulesQuery = useQuery<ScheduleSearchData>({
   },
   staleTime: 1000 * 30,
   refetchOnMount: 'always',
-})
+})))
 
 watch([scheduleEmployeeFilter, scheduleShiftFilter, scheduleDayFilter, scheduleSearch], () => {
   assignedPage.value = 1

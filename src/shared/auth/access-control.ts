@@ -209,8 +209,8 @@ export const permissionScreens: PermissionScreen[] = [
     access: {
       ROLE_ADMIN: 'manage',
       ROLE_HR: 'manage',
-      ROLE_MANAGER: 'none',
-      ROLE_EMPLOYEE: 'none',
+      ROLE_MANAGER: 'view',
+      ROLE_EMPLOYEE: 'view',
     },
   },
   {
@@ -222,7 +222,7 @@ export const permissionScreens: PermissionScreen[] = [
     access: {
       ROLE_ADMIN: 'manage',
       ROLE_HR: 'manage',
-      ROLE_MANAGER: 'none',
+      ROLE_MANAGER: 'view',
       ROLE_EMPLOYEE: 'none',
     },
   },
@@ -235,7 +235,7 @@ export const permissionScreens: PermissionScreen[] = [
     access: {
       ROLE_ADMIN: 'manage',
       ROLE_HR: 'manage',
-      ROLE_MANAGER: 'none',
+      ROLE_MANAGER: 'view',
       ROLE_EMPLOYEE: 'none',
     },
   },
@@ -248,7 +248,7 @@ export const permissionScreens: PermissionScreen[] = [
     access: {
       ROLE_ADMIN: 'manage',
       ROLE_HR: 'manage',
-      ROLE_MANAGER: 'none',
+      ROLE_MANAGER: 'view',
       ROLE_EMPLOYEE: 'none',
     },
   },

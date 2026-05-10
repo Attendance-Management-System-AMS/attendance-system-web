@@ -47,4 +47,5 @@ export const leaveApi = {
     api.get<ApiResponse<Page<LeaveRequest>>>('/leaves/me', { params }),
   createMe: (data: CreateMyLeaveRequest) =>
     api.post<ApiResponse<LeaveRequest>>('/leaves/me', buildCreateLeaveBody(data)),
+  deleteMe: (id: string | number) => api.delete<ApiResponse<void>>(`/leaves/me/${id}`),
 }

@@ -5,7 +5,7 @@ export default [
     path: '/positions',
     name: 'positions',
     component: () => import('@/modules/positions/pages/PositionsView.vue'),
-    meta: { title: 'Chức vụ', roles: ['ROLE_ADMIN', 'ROLE_HR'] },
+    meta: { title: 'Chức vụ', roles: ['ROLE_ADMIN', 'ROLE_HR', 'ROLE_MANAGER'] },
   },
   {
     path: '/positions/new',
