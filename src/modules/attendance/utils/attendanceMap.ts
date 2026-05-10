@@ -25,10 +25,21 @@ export function mapAttendanceStatusFromApi(raw: string | undefined | null): Atte
   return API_STATUS_TO_UI[key] ?? 'Chưa chấm công'
 }
 
-export function formatAttendanceClock(iso: string | null | undefined): string {
-  if (iso == null || iso === '') return '—'
+/**
+ * Workaround: Backend JVM chạy ở UTC, trả về LocalDateTime thiếu 7 tiếng.
+ * Hàm này cộng thêm 7 giờ để hiển thị đúng giờ Việt Nam.
+ */
+export function toVN(iso: string | null | undefined): Date | null {
+  if (iso == null || iso === '') return null
   const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return '—'
+  if (Number.isNaN(d.getTime())) return null
+  d.setHours(d.getHours() + 7)
+  return d
+}
+
+export function formatAttendanceClock(iso: string | null | undefined): string {
+  const d = toVN(iso)
+  if (!d) return '—'
   return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
 }
 

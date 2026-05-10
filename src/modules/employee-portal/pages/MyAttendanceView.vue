@@ -128,7 +128,9 @@ const logs = computed(() => {
     const checkOutValue = getAttendanceTimestamp(logEntry, 'checkOut')
 
     const checkInDate = checkInValue ? new Date(checkInValue) : null
+    if (checkInDate) checkInDate.setHours(checkInDate.getHours() + 7)
     const checkOutDate = checkOutValue ? new Date(checkOutValue) : null
+    if (checkOutDate) checkOutDate.setHours(checkOutDate.getHours() + 7)
 
     const hasSchedule = (() => {
       const backendDay = dayOfWeek === 0 ? 7 : dayOfWeek

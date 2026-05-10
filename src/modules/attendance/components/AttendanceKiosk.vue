@@ -76,9 +76,9 @@ function employeeFromBrief(row: AttendanceCheckInResult, brief: AttendanceEmploy
 function formatCheckInTime(iso?: string): string {
   if (!iso) return '—'
   const d = new Date(iso)
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString('vi-VN', {
+  if (Number.isNaN(d.getTime())) return iso
+  d.setHours(d.getHours() + 7)
+  return d.toLocaleString('vi-VN', {
       weekday: 'short',
       day: '2-digit',
       month: '2-digit',
